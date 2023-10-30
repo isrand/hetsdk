@@ -42,7 +42,7 @@ const encryptedTopic = new EncryptedTopic({
     hederaPrivateKey: hederaPrivateKey
 });
 
-// Create a new encrypted topic with Kyber512 as the encryption algorithm
+// Create a new encrypted topic with Kyber-512 as the encryption algorithm
 const topicId = await encryptedTopic.create({
     participants: [
         {
@@ -85,7 +85,7 @@ Messages can be decrypted and shared by distributing their individual encryption
 When using the Hedera Hashgraph network, space is at a premium. Consensus Service messages are limited to 20 chunks in size, each chunk being 1024 bytes of length at maximum.
 
 The package sends the Topic Configuration Message as a Consensus Service message, which means that there is an upper limit to the size of the topic metadata object, or the amount of participants that can be added to an encrypted topic.
-Larger, more secure key sizes (like Kyber1024) will also affect the maximum length of the Topic Configuration Message.
+Larger, more secure key sizes (like Kyber-1024) will also affect the maximum length of the Topic Configuration Message.
 
 > You can choose to **not** store the participants array in the Topic Configuration to save space. However, by doing so you will not be able to see or know the topic participants
 
