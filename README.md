@@ -8,7 +8,7 @@ Encrypted Topics are standard Hedera topics that are configured and behave in sp
 > 
 ## Installation
 
-To install the npm package, run
+To install the NPM package, run
 
 ```bash
 npm install github:isrand/hetsdk
@@ -42,7 +42,7 @@ const encryptedTopic = new EncryptedTopic({
     hederaPrivateKey: hederaPrivateKey
 });
 
-// Create a ne encrypted topic with Kyber512 as the encryption algorithm
+// Create a new encrypted topic with Kyber512 as the encryption algorithm
 const topicId = await encryptedTopic.create(
     [
         {
