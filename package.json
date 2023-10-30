@@ -1,0 +1,25 @@
+{
+  "name": "hetsdk",
+  "version": "1.0.0",
+  "description": "",
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "rm -rf lib && tsc -p tsconfig.json"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/isrand/hetsdk.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/isrand/hetsdk/issues"
+  },
+  "homepage": "https://github.com/isrand/hetsdk#readme",
+  "dependencies": {
+    "@hashgraph/sdk": "2.36.0",
+    "crystals-kyber": "5.1.0",
+    "typescript": "5.2.2"
+  }
+}
