@@ -4,6 +4,8 @@ This repository contains an NPM package that can be used to create and interact 
 
 Encrypted Topics are standard Hedera topics that are configured and behave in specific ways to implement private messaging exchanges, most notably with a post-quantum cryptography encryption algorithm: CRYSTALS-Kyber.
 
+> Note: an implementation of RSA-2048 public-key encryption is currently in development.
+> 
 ## Installation
 
 To install the npm package, run
