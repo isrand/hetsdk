@@ -14,6 +14,7 @@ import {Long} from "@hashgraph/sdk/lib/long";
 import {TopicEncryptionKeyAndInitVector} from "./hedera/interfaces/TopicEncryptionKeyAndInitVector";
 import {TopicEncryptedMessage} from "./hedera/interfaces/TopicEncryptedMessage";
 import {TopicConfigurationMessage} from "./hedera/interfaces/TopicConfigurationMessage";
+import {CreateEncryptedTopicConfiguration} from "./hedera/interfaces/CreateEncryptedTopicConfiguration";
 
 export class EncryptedTopic {
     private readonly client: Client;
@@ -27,28 +28,28 @@ export class EncryptedTopic {
     }
 
     // "create" creates a new encrypted topic in the Hedera network
-    public async create(topicParticipants: Array<TopicParticipant>, topicEncryptionAlgorithm: TopicEncryptionAlgorithms, storeParticipants: boolean, topicMetadata?: any): Promise<string> {
-        const algorithm = topicEncryptionAlgorithm.split('-')[0];
-        const size = parseInt(topicEncryptionAlgorithm.split('-')[1]);
+    public async create(createEncryptedTopicConfiguration: CreateEncryptedTopicConfiguration): Promise<string> {
+        const algorithm = createEncryptedTopicConfiguration.algorithm.split('-')[0];
+        const size = parseInt(createEncryptedTopicConfiguration.algorithm.split('-')[1]);
         this.crypto = new Crypto(algorithm, size);
 
-        this.crypto.validateParticipantKeys(topicParticipants, size);
+        this.crypto.validateParticipantKeys(createEncryptedTopicConfiguration.participants, size);
 
         const submitKey: string = PrivateKey.generateED25519().toStringRaw();
         const topicEncryptionKey: Buffer = Buffer.from(crypto.randomBytes(32));
         const topicEncryptionInitVector: Buffer = Buffer.from(crypto.randomBytes(16));
 
         // Remove doubles from participants array
-        const uniqueParticipantsArray = topicParticipants.filter((obj, index, self) =>
+        const uniqueParticipantsArray = createEncryptedTopicConfiguration.participants.filter((obj, index, self) =>
             index === self.findIndex(o => (o.hederaPublicKey === obj.hederaPublicKey || o.publicKey === obj.publicKey))
         );
 
         const topicConfigurationObject: TopicConfigurationObject = {
             s: submitKey,
-            m: topicMetadata
+            m: createEncryptedTopicConfiguration.metadata
         };
 
-        if (storeParticipants) {
+        if (createEncryptedTopicConfiguration.storeParticipantsArray) {
             topicConfigurationObject.p = uniqueParticipantsArray
         }
 
@@ -57,7 +58,7 @@ export class EncryptedTopic {
         const topicEncryptionConfiguration: TopicEncryptionConfiguration = {
             a: algorithm,
             s: size,
-            e: this.crypto.getEncryptedTopicKeysObject(topicEncryptionKey, topicEncryptionInitVector, topicParticipants)
+            e: this.crypto.getEncryptedTopicKeysObject(topicEncryptionKey, topicEncryptionInitVector, uniqueParticipantsArray)
         };
 
         const topicEncryptionConfigurationInBase64 = Buffer.from(JSON.stringify(topicEncryptionConfiguration)).toString('base64');

@@ -43,8 +43,8 @@ const encryptedTopic = new EncryptedTopic({
 });
 
 // Create a new encrypted topic with Kyber512 as the encryption algorithm
-const topicId = await encryptedTopic.create(
-    [
+const topicId = await encryptedTopic.create({
+    participants: [
         {
             publicKey: kyberPublicKey,
             hederaPublicKey: hederaPublicKey
@@ -54,12 +54,12 @@ const topicId = await encryptedTopic.create(
             hederaPublicKey: otherHederaPublicKey
         }
     ],
-    'kyber-512',
-    false, // Don't store the participants array for space-saving purposes
-    {
+    algorithm: 'kyber-512',
+    storeParticipantsArray: false, // Don't store the participants array for space-saving purposes
+    metadata: {
         name: "Supply Chain Logistics"
     }
-);
+});
 
 // Submit a message to the encrypted topic
 const messageSequenceNumber = await encryptedTopic.submitMessage(topicId, 'Hey there!', kyberPrivateKey);
