@@ -34,37 +34,41 @@ const kyberPrivateKey = '...';
 const otherHederaPublicKey = '...';
 const otherKyberPublicKey = '...';
 
-// Initialize the encryptedTopic object
-const encryptedTopic = new EncryptedTopic({
-    hederaAccountId: hederaAccountId,
-    hederaPrivateKey: hederaPrivateKey
-});
-
-// Create a new encrypted topic with Kyber-512 as the encryption algorithm
-const topicId = await encryptedTopic.create({
-    participants: [
-        {
-            publicKey: kyberPublicKey,
-            hederaPublicKey: hederaPublicKey
-        },
-        {
-            publicKey: otherKyberPublicKey,
-            hederaPublicKey: otherHederaPublicKey
+async function main() {
+    // Initialize the encryptedTopic object
+    const encryptedTopic = new EncryptedTopic({
+        hederaAccountId: hederaAccountId,
+        hederaPrivateKey: hederaPrivateKey
+    });
+    
+    // Create a new encrypted topic with Kyber-512 as the encryption algorithm
+    const topicId = await encryptedTopic.create({
+        participants: [
+            {
+                publicKey: kyberPublicKey,
+                hederaPublicKey: hederaPublicKey
+            },
+            {
+                publicKey: otherKyberPublicKey,
+                hederaPublicKey: otherHederaPublicKey
+            }
+        ],
+        algorithm: 'kyber-512',
+        storeParticipantsArray: false, // Don't store the participants array for space-saving purposes
+        metadata: {
+            name: "Supply Chain Logistics"
         }
-    ],
-    algorithm: 'kyber-512',
-    storeParticipantsArray: false, // Don't store the participants array for space-saving purposes
-    metadata: {
-        name: "Supply Chain Logistics"
-    }
-});
+    });
+    
+    // Submit a message to the encrypted topic
+    const messageSequenceNumber = await encryptedTopic.submitMessage(topicId, 'Hey there!', kyberPrivateKey);
+    
+    // Get a message from the encrypted topic
+    const message = await encryptedTopic.getMessage(topicId, messageSequenceNumber, kyberPrivateKey);
+    console.log(message); // "Hey there!"
+}
 
-// Submit a message to the encrypted topic
-const messageSequenceNumber = await encryptedTopic.submitMessage(topicId, 'Hey there!', kyberPrivateKey);
-
-// Get a message from the encrypted topic
-const message = await encryptedTopic.getMessage(topicId, messageSequenceNumber, kyberPrivateKey);
-console.log(message); // "Hey there!"
+main();
 ```
 
 > Note: the above piece of code may fail due to issues when connecting to the Hedera Network, or due to consensus delays. Ensure that enough time has passed between topic creation, message submission and subsequent fetching of the message.
