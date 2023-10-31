@@ -1,16 +1,17 @@
 import {CryptoAdapter} from "../interfaces/CryptoAdapter";
 import {EncryptedTopicKeysObject} from "../interfaces/EncryptedTopicKeysObject";
 import {TopicParticipant} from "../../hedera/interfaces/TopicParticipant";
-import crypto from "crypto";
 import {TopicConfigurationMessage} from "../../hedera/interfaces/TopicConfigurationMessage";
 import {TopicEncryptionConfiguration} from "../../hedera/interfaces/TopicEncryptionConfiguration";
 import {TopicConfigurationObject} from "../../hedera/interfaces/TopicConfigurationObject";
 import {TopicEncryptionKeyAndInitVector} from "../../hedera/interfaces/TopicEncryptionKeyAndInitVector";
+import {DefaultAdapter} from "./DefaultAdapter";
 
 const kyber = require('crystals-kyber');
 
-export class Kyber implements CryptoAdapter {
+export class Kyber extends DefaultAdapter implements CryptoAdapter {
     public constructor(private readonly keySize: number) {
+        super();
     }
 
     public getEncryptedTopicKeysObject(topicEncryptionKey: Buffer, topicEncryptionInitVector: Buffer, topicParticipants:Array<TopicParticipant>): EncryptedTopicKeysObject {
@@ -45,22 +46,6 @@ export class Kyber implements CryptoAdapter {
         }
 
         return encryptedTopicKeysObject;
-    }
-
-    public symmetricEncrypt(data: string, symmetricKey: Buffer, initVector: Buffer): string {
-        const messageCipher = crypto.createCipheriv('aes256', Buffer.from(symmetricKey), Buffer.from(initVector));
-        let encryptedData = messageCipher.update(data, 'utf-8', 'base64');
-        encryptedData += messageCipher.final('base64');
-
-        return encryptedData;
-    }
-
-    public symmetricDecrypt(data: string, symmetricKey: Buffer, initVector: Buffer): string {
-        const decipher = crypto.createDecipheriv('aes256', Buffer.from(symmetricKey), Buffer.from(initVector));
-        let decryptedData = decipher.update(data, 'base64', 'utf-8');
-        decryptedData += decipher.final('utf-8');
-
-        return decryptedData;
     }
 
     public decryptTopicConfigurationMessage(topicConfigurationMessageInBase64: string, privateKey: string): TopicConfigurationObject {

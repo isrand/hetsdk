@@ -4,7 +4,7 @@ import {
     TopicCreateTransaction, TopicInfo, TopicInfoQuery, TopicMessage, TopicMessageQuery,
     TopicMessageSubmitTransaction
 } from "@hashgraph/sdk";
-import {Crypto, TopicEncryptionAlgorithms} from "./crypto/Crypto";
+import {Crypto} from "./crypto/Crypto";
 import {TopicParticipant} from "./hedera/interfaces/TopicParticipant";
 import {HederaConfiguration} from "./hedera/interfaces/HederaConfiguration";
 import * as crypto from 'crypto';

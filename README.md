@@ -4,8 +4,6 @@ This repository contains an NPM package that can be used to create and interact 
 
 Encrypted Topics are standard Hedera topics that are configured and behave in specific ways to implement private messaging exchanges, most notably with a post-quantum cryptography encryption algorithm: CRYSTALS-Kyber.
 
-> Note: an implementation of RSA-2048 public-key encryption is currently in development.
-> 
 ## Installation
 
 To install the NPM package, run
@@ -73,18 +71,22 @@ console.log(message); // "Hey there!"
 
 ## Encryption process
 
-The SDK uses a topic-wide symmetric key for encryption. The topic configuration object, containing the submit key for the topic, is encrypted with this symmetric key. The topic-wide symmetric key is encrypted with each of the participant's public key, be it Kyber or RSA-2048.
+The SDK uses a topic-wide symmetric key for encryption: `tek`. The topic configuration object, containing the submit key for the topic, is encrypted with `tek`.
 
-Messages are encrypted with a one-time use symmetric key, that in turn is encrypted with the topic key.
+`tek` is encrypted with each participant's public key, be it Kyber or RSA-2048.
 
-Messages can be decrypted and shared by distributing their individual encryption key, without compromising the rest of the messages of the topic. This can be useful for auditing purposes.
+Messages are encrypted with a one-time use symmetric key: `mek`, that in turn is encrypted with `tek` and placed next to the encrypted payload.
+
+Users with access to `tek` can then decrypt `mek` and see the contents of the message.
+
+Furthermore, messages can be decrypted and shared by distributing their `mek`, without compromising the privacy rest of the messages of the topic. This can be useful for auditing purposes.
 
 
 ## Limitations
 
 When using the Hedera Hashgraph network, space is at a premium. Consensus Service messages are limited to 20 chunks in size, each chunk being 1024 bytes of length at maximum.
 
-The package sends the Topic Configuration Message as a Consensus Service message, which means that there is an upper limit to the size of the topic metadata object, or the amount of participants that can be added to an encrypted topic.
+The SDK sends the Topic Configuration Message as a Consensus Service message, which means that there is an upper limit to the size of the topic metadata object, or the amount of participants that can be added to an encrypted topic.
 Larger, more secure key sizes (like Kyber-1024) will also affect the maximum length of the Topic Configuration Message.
 
 > You can choose to **not** store the participants array in the Topic Configuration to save space. However, by doing so you will not be able to see or know the topic participants
@@ -94,6 +96,7 @@ Below is a reference table with the maximum number of participants allowed per e
 
 | Encryption algorithm | Max number of participants (storing participant list) | Max number of participants (without storing participant list) |
 |----------------------|-------------------------------------------------------|---------------------------------------------------------------|
+| RSA-2048             | 7                                                     | 16                                                            |
 | Kyber-512            | 4                                                     | 9                                                             |
 | Kyber-768            | 3                                                     | 7                                                             |
 | Kyber-1024           | 2                                                     | 5                                                             |
