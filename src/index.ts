@@ -20,6 +20,10 @@ export class EncryptedTopic {
     private readonly client: Client;
     private crypto!: Crypto;
 
+    // Hold a copy of the topic configuration message in base64 for further use,
+    // so we don't have to get it from the Hedera network every single time.
+    private topicConfigurationMessageInBase64!: string;
+
     public constructor(private readonly hederaConfiguration: HederaConfiguration) {
         this.client = Client.forTestnet().setOperator(
             hederaConfiguration.hederaAccountId,
@@ -101,6 +105,9 @@ export class EncryptedTopic {
 
             await topicSubmitMessageTransaction.execute(this.client);
 
+            // Cache the topic configuration message in base64...
+            this.topicConfigurationMessageInBase64 = Buffer.from(JSON.stringify(topicConfigurationMessage)).toString('base64');
+
             return topicId;
         } catch (error: unknown) {
             console.error(error);
@@ -169,31 +176,41 @@ export class EncryptedTopic {
 
     // "getConfiguration" returns a topic's configuration object (if the user has access)
     public async getConfiguration(topicId: string, privateKey: string): Promise<TopicConfigurationObject> {
-        let topicConfigurationMessageInBase64: string = await this.getTopicMessageInBase64(topicId, 1);
-        topicConfigurationMessageInBase64 = Buffer.from(topicConfigurationMessageInBase64, 'base64').toString('utf8');
-
-        if (!this.crypto) {
-            const topicConfigurationMessage: TopicConfigurationMessage = JSON.parse(Buffer.from(topicConfigurationMessageInBase64, 'base64').toString('utf8'));
-            const topicEncryptionConfiguration: TopicEncryptionConfiguration = JSON.parse(Buffer.from(topicConfigurationMessage.b, 'base64').toString('utf8'));
-
-            this.crypto = new Crypto(topicEncryptionConfiguration.a, topicEncryptionConfiguration.s);
+        if (!this.topicConfigurationMessageInBase64) {
+            await this.setTopicConfigurationMessageInBase64(topicId);
         }
 
-        return this.crypto.decryptTopicConfigurationMessage(topicConfigurationMessageInBase64, privateKey);
+        if (!this.crypto) {
+            await this.initializeCryptoWithTopicConfiguration(this.topicConfigurationMessageInBase64);
+        }
+
+        return this.crypto.decryptTopicConfigurationMessage(this.topicConfigurationMessageInBase64, privateKey);
     }
 
     private async getTopicEncryptionKeyAndInitVector(topicId: string, privateKey: string): Promise<TopicEncryptionKeyAndInitVector> {
+        if (!this.topicConfigurationMessageInBase64) {
+            await this.setTopicConfigurationMessageInBase64(topicId);
+        }
+
+        if (!this.crypto) {
+            await this.initializeCryptoWithTopicConfiguration(this.topicConfigurationMessageInBase64);
+        }
+
+        return this.crypto.getTopicEncryptionKeyAndInitVector(this.topicConfigurationMessageInBase64, privateKey);
+    }
+
+    private async setTopicConfigurationMessageInBase64(topicId: string): Promise<void> {
         let topicConfigurationMessageInBase64: string = await this.getTopicMessageInBase64(topicId, 1);
         topicConfigurationMessageInBase64 = Buffer.from(topicConfigurationMessageInBase64, 'base64').toString('utf8');
 
-        if (!this.crypto) {
-            const topicConfigurationMessage: TopicConfigurationMessage = JSON.parse(Buffer.from(topicConfigurationMessageInBase64, 'base64').toString('utf8'));
-            const topicEncryptionConfiguration: TopicEncryptionConfiguration = JSON.parse(Buffer.from(topicConfigurationMessage.b, 'base64').toString('utf8'));
+        this.topicConfigurationMessageInBase64 = topicConfigurationMessageInBase64;
+    }
 
-            this.crypto = new Crypto(topicEncryptionConfiguration.a, topicEncryptionConfiguration.s);
-        }
+    private async initializeCryptoWithTopicConfiguration(topicConfigurationMessageInBase64: string): Promise<void> {
+        const topicConfigurationMessage: TopicConfigurationMessage = JSON.parse(Buffer.from(topicConfigurationMessageInBase64, 'base64').toString('utf8'));
+        const topicEncryptionConfiguration: TopicEncryptionConfiguration = JSON.parse(Buffer.from(topicConfigurationMessage.b, 'base64').toString('utf8'));
 
-        return this.crypto.getTopicEncryptionKeyAndInitVector(topicConfigurationMessageInBase64, privateKey);
+        this.crypto = new Crypto(topicEncryptionConfiguration.a, topicEncryptionConfiguration.s);
     }
 
     private async getTopicSubmitKey(topicId: string, privateKey: string): Promise<string> {
