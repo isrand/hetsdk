@@ -54,7 +54,11 @@ async function main() {
             }
         ],
         algorithm: 'kyber-512',
-        storeParticipantsArray: false, // Don't store the participants array for space-saving purposes
+        storageOptions: {
+            storeParticipantsArray: false,
+            configuration: StorageOption.Message,
+            messages: StorageOption.Message
+        },
         metadata: {
             name: "Supply Chain Logistics"
         }
@@ -73,6 +77,43 @@ main();
 
 > Note: the above piece of code may fail due to issues when connecting to the Hedera Network, or due to consensus delays. Ensure that enough time has passed between topic creation, message submission and subsequent fetching of the message.
 
+# Storage
+
+The SDK can be configured to store the two main artifacts (topic configuration message and encrypted messages) either in the Consensus Service as standard messages, or in the File Service as files (which are then referenced in a Consensus Service message).
+These artifact storage mediums are decoupled, meaning that you can choose to store the topic configuration message in the File Service and the messages in the Consensus Service, and viceversa.
+There are benefits and drawbacks to each medium:
+
+- Consensus Service: the cheaper approach, but it's limited to messages of at most 20 chunks in size, each chunk being at most 1024KB in length. Good for use cases with few participants (see table below) and / or small message sizes, like simple JSON payloads.
+- File Service: a bit more costly, but it allows for more topic participants and / or bigger messages. It also opens the door for new participants to be added in the future via file updates (currently not implemented).
+
+When creating a topic you can choose whether to store the participants array to keep track of them or not.
+
+To set the storage medium, simply set the `storageOptions` object when calling the `create` method:
+
+
+```typescript
+storageOptions: {
+    storeParticipantsArray: true | false
+    configuration: StorageOption.Message | StorageOption.File // Consensus Service or File Service
+    messages: StorageOption.Message | StorageOption.File // Consensus Service or File Service
+}
+```
+
+> Topics are configured from the start to use one approach or the other, and currently can't be changed after creation. Further decoupling is in the works to allow for a fully hybrid approach.
+
+### Consensus Service Limitations
+
+When using the Consensus Service as the storage medium for the topic configuration message, the following table describes the maximum number of participants that can be part of said topic, assuming no topic metadata object is passed. Providing a rich topic metadata object will reduce the remaining available size for extra participants.
+
+
+| Encryption algorithm | Max number of participants (storing participant list) | Max number of participants (without storing participant list) |
+|----------------------|-------------------------------------------------------|---------------------------------------------------------------|
+| RSA-2048             | 7                                                     | 16                                                            |
+| Kyber-512            | 4                                                     | 9                                                             |
+| Kyber-768            | 3                                                     | 7                                                             |
+| Kyber-1024           | 2                                                     | 5                                                             |
+
+
 ## Encryption process
 
 The SDK uses a topic-wide symmetric key for encryption: `tek`. The topic configuration object, containing the submit key for the topic, is encrypted with `tek`.
@@ -83,26 +124,10 @@ Messages are encrypted with a one-time use symmetric key: `mek`, that in turn is
 
 Users with access to `tek` can then decrypt `mek` and see the contents of the message.
 
-Furthermore, messages can be decrypted and shared by distributing their `mek`, without compromising the privacy rest of the messages of the topic. This can be useful for auditing purposes.
+Furthermore, messages can be decrypted and shared by distributing their `mek`, without compromising the privacy of the rest of the messages of the topic. This can be useful for auditing purposes.
 
+# In the works
 
-## Limitations
-
-When using the Hedera Hashgraph network, space is at a premium. Consensus Service messages are limited to 20 chunks in size, each chunk being 1024 bytes of length at maximum.
-
-The SDK sends the Topic Configuration Message as a Consensus Service message, which means that there is an upper limit to the size of the topic metadata object, or the amount of participants that can be added to an encrypted topic.
-Larger, more secure key sizes (like Kyber-1024) will also affect the maximum length of the Topic Configuration Message.
-
-> You can choose to **not** store the participants array in the Topic Configuration to save space. However, by doing so you will not be able to see or know the topic participants
-
-
-Below is a reference table with the maximum number of participants allowed per encrypted topic (assuming no topic metadata is passed):
-
-| Encryption algorithm | Max number of participants (storing participant list) | Max number of participants (without storing participant list) |
-|----------------------|-------------------------------------------------------|---------------------------------------------------------------|
-| RSA-2048             | 7                                                     | 16                                                            |
-| Kyber-512            | 4                                                     | 9                                                             |
-| Kyber-768            | 3                                                     | 7                                                             |
-| Kyber-1024           | 2                                                     | 5                                                             |
-
-> Feel free to change the implementation of the package to utilise the File Service to store the Encrypted Topic Configuration Message. Doing so would also open the door to adding new participants to a topic via file update transactions, for just a few more cents.
+- Calculate maximum possible JSON payload size with Consensus Service as storage medium for messages.
+- Calculate maximum possible JSON payload size with File Service as storage medium for messages.
+- Calculate maximum number of participants possible with File Service as storage medium for topic configuration message given an empty topic metadata object.

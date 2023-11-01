@@ -1,9 +1,10 @@
 import {TopicParticipant} from "./TopicParticipant";
-import {TopicEncryptionAlgorithms} from "../../crypto/Crypto";
+import {EncryptionAlgorithm} from "../../crypto/enums/EncryptionAlgorithm";
+import {TopicStorageOptions} from "./TopicStorageOptions";
 
 export interface CreateEncryptedTopicConfiguration {
     participants: Array<TopicParticipant>;
-    algorithm: TopicEncryptionAlgorithms;
-    storeParticipantsArray: boolean;
+    algorithm: EncryptionAlgorithm;
+    storageOptions: TopicStorageOptions;
     metadata?: any;
 }

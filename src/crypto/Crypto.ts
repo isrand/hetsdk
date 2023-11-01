@@ -6,13 +6,11 @@ import {TopicEncryptionKeyAndInitVector} from "../hedera/interfaces/TopicEncrypt
 import {TopicConfigurationObject} from "../hedera/interfaces/TopicConfigurationObject";
 import {RSA} from "./adapters/RSA";
 
-export type TopicEncryptionAlgorithms = 'rsa-2048' | 'kyber-512' | 'kyber-768' | 'kyber-1024';
-
 export class Crypto {
     private adapter: CryptoAdapter;
 
     public constructor(private readonly algorithm: string, private readonly size: number) {
-        if(algorithm === 'kyber') {
+        if (algorithm === 'kyber') {
             this.adapter = new Kyber(size);
         }
 

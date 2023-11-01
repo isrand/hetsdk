@@ -1,7 +1,11 @@
 import {
-    Client,
+    Client, FileContentsQuery, FileCreateTransaction, FileUpdateTransaction,
     PrivateKey,
-    TopicCreateTransaction, TopicInfo, TopicInfoQuery, TopicMessage, TopicMessageQuery,
+    TopicCreateTransaction,
+    TopicInfo,
+    TopicInfoQuery,
+    TopicMessage,
+    TopicMessageQuery,
     TopicMessageSubmitTransaction
 } from "@hashgraph/sdk";
 import {Crypto} from "./crypto/Crypto";
@@ -15,6 +19,9 @@ import {TopicEncryptionKeyAndInitVector} from "./hedera/interfaces/TopicEncrypti
 import {TopicEncryptedMessage} from "./hedera/interfaces/TopicEncryptedMessage";
 import {TopicConfigurationMessage} from "./hedera/interfaces/TopicConfigurationMessage";
 import {CreateEncryptedTopicConfiguration} from "./hedera/interfaces/CreateEncryptedTopicConfiguration";
+import {TopicMemoObject} from "./hedera/interfaces/TopicMemoObject";
+import {TopicStorageOptions} from "./hedera/interfaces/TopicStorageOptions";
+import {StorageOption} from "./hedera/enums/StorageOption";
 
 export class EncryptedTopic {
     private readonly client: Client;
@@ -23,6 +30,10 @@ export class EncryptedTopic {
     // Hold a copy of the topic configuration message in base64 for further use,
     // so we don't have to get it from the Hedera network every single time.
     private topicConfigurationMessageInBase64!: string;
+
+    // Hold a copy of the topic memo object for further use,
+    // so we don't have to get it from the Hedera network every single time.
+    private topicMemoObject!: TopicMemoObject;
 
     public constructor(private readonly hederaConfiguration: HederaConfiguration) {
         this.client = Client.forTestnet().setOperator(
@@ -53,7 +64,7 @@ export class EncryptedTopic {
             m: createEncryptedTopicConfiguration.metadata
         };
 
-        if (createEncryptedTopicConfiguration.storeParticipantsArray) {
+        if (createEncryptedTopicConfiguration.storageOptions.storeParticipantsArray) {
             topicConfigurationObject.p = uniqueParticipantsArray
         }
 
@@ -72,7 +83,71 @@ export class EncryptedTopic {
             b: topicEncryptionConfigurationInBase64
         };
 
+        const topicConfigurationMessageInBase64: string = Buffer.from(JSON.stringify(topicConfigurationMessage)).toString('base64');
+
         try {
+            // Use the File Service to store the topic configuration message
+            if (createEncryptedTopicConfiguration.storageOptions.configuration === StorageOption.File) {
+                // Create the file containing the topic configuration message
+                const fileCreateTransaction: FileCreateTransaction = new FileCreateTransaction({
+                    keys: [PrivateKey.fromStringED25519(this.hederaConfiguration.hederaPrivateKey).publicKey]
+                });
+                await fileCreateTransaction.freezeWith(this.client);
+                await fileCreateTransaction.sign(PrivateKey.fromString(this.hederaConfiguration.hederaPrivateKey));
+
+                const fileCreateTransactionResponse = await fileCreateTransaction.execute(this.client);
+                const fileCreateTransactionReceipt = await fileCreateTransactionResponse.getReceipt(this.client);
+
+                if (!fileCreateTransactionReceipt.fileId) {
+                    throw new Error('Error while fetching file id from file creation transaction receipt');
+                }
+
+                const fileId: string = fileCreateTransactionReceipt.fileId.toString();
+
+                const fileUpdateTransaction: FileUpdateTransaction = new FileUpdateTransaction({
+                    fileId: fileId,
+                    contents: topicConfigurationMessageInBase64,
+                    keys: [PrivateKey.fromStringED25519(this.hederaConfiguration.hederaPrivateKey).publicKey]
+                });
+                await fileUpdateTransaction.freezeWith(this.client);
+                await fileUpdateTransaction.sign(PrivateKey.fromString(this.hederaConfiguration.hederaPrivateKey));
+
+                await fileUpdateTransaction.execute(this.client);
+
+                // Create topic
+                const topicCreateTransaction: TopicCreateTransaction = new TopicCreateTransaction({
+                    adminKey: PrivateKey.fromString(this.hederaConfiguration.hederaPrivateKey),
+                    autoRenewAccountId: this.hederaConfiguration.hederaAccountId
+                });
+
+                topicCreateTransaction.setSubmitKey(PrivateKey.fromString(submitKey));
+
+                const topicMemoObject = this.createTopicMemoObject(createEncryptedTopicConfiguration.storageOptions, fileId);
+
+                // Set the topic memo to point at the file containing the topic configuration message
+                topicCreateTransaction.setTopicMemo(JSON.stringify(topicMemoObject));
+
+                await topicCreateTransaction.freezeWith(this.client);
+                await topicCreateTransaction.sign(PrivateKey.fromString(this.hederaConfiguration.hederaPrivateKey));
+
+                const encryptedTopicCreationResponse = await topicCreateTransaction.execute(this.client);
+                const encryptedTopicCreationReceipt = await encryptedTopicCreationResponse.getReceipt(this.client);
+
+                if (!encryptedTopicCreationReceipt.topicId) {
+                    throw new Error('Topic Id not found in encrypted topic creation transaction receipt.');
+                }
+
+                const topicId = encryptedTopicCreationReceipt.topicId.toString();
+
+                // Cache the topic memo object for future use
+                this.topicMemoObject = topicMemoObject;
+
+                // Cache the topic configuration message in base64 for future use
+                this.topicConfigurationMessageInBase64 = Buffer.from(JSON.stringify(topicConfigurationMessage)).toString('base64');
+
+                return topicId;
+            }
+
             // Create topic
             const topicCreateTransaction: TopicCreateTransaction = new TopicCreateTransaction({
                 adminKey: PrivateKey.fromString(this.hederaConfiguration.hederaPrivateKey),
@@ -80,6 +155,10 @@ export class EncryptedTopic {
             });
 
             topicCreateTransaction.setSubmitKey(PrivateKey.fromString(submitKey));
+
+            const topicMemoObject = this.createTopicMemoObject(createEncryptedTopicConfiguration.storageOptions);
+
+            topicCreateTransaction.setTopicMemo(JSON.stringify(topicMemoObject));
 
             await topicCreateTransaction.freezeWith(this.client);
             await topicCreateTransaction.sign(PrivateKey.fromString(this.hederaConfiguration.hederaPrivateKey));
@@ -105,7 +184,10 @@ export class EncryptedTopic {
 
             await topicSubmitMessageTransaction.execute(this.client);
 
-            // Cache the topic configuration message in base64...
+            // Cache the topic memo object for future use
+            this.topicMemoObject = topicMemoObject;
+
+            // Cache the topic configuration message in base64 for future use
             this.topicConfigurationMessageInBase64 = Buffer.from(JSON.stringify(topicConfigurationMessage)).toString('base64');
 
             return topicId;
@@ -119,6 +201,7 @@ export class EncryptedTopic {
     // "submitMessage" submits a message on an encrypted topic (if the user has access)
     // and returns the sequence number of the message
     public async submitMessage(topicId: string, message: string, privateKey: string): Promise<number> {
+        const topicMemoObject: TopicMemoObject = await this.getTopicMemo(topicId);
         const topicEncryptionKeyAndInitVector = await this.getTopicEncryptionKeyAndInitVector(topicId, privateKey);
 
         const messageEncryptionKey: Buffer = Buffer.from(crypto.randomBytes(32));
@@ -134,6 +217,48 @@ export class EncryptedTopic {
 
         const finalMessageInBase64 = Buffer.from(JSON.stringify(finalMessage)).toString('base64');
         const submitKey = await this.getTopicSubmitKey(topicId, privateKey);
+
+        // Topic memo specifies that topic messages should be stored using the File Service
+        if (topicMemoObject.s.m.u) {
+            const fileCreateTransaction: FileCreateTransaction = new FileCreateTransaction({
+                keys: [PrivateKey.fromStringED25519(this.hederaConfiguration.hederaPrivateKey).publicKey]
+            });
+            await fileCreateTransaction.freezeWith(this.client);
+            await fileCreateTransaction.sign(PrivateKey.fromString(this.hederaConfiguration.hederaPrivateKey));
+
+            const fileCreateTransactionResponse = await fileCreateTransaction.execute(this.client);
+            const fileCreateTransactionReceipt = await fileCreateTransactionResponse.getReceipt(this.client);
+
+            if (!fileCreateTransactionReceipt.fileId) {
+                throw new Error('Error while fetching file id from file creation transaction receipt');
+            }
+
+            const fileId: string = fileCreateTransactionReceipt.fileId.toString();
+
+            const fileUpdateTransaction: FileUpdateTransaction = new FileUpdateTransaction({
+                fileId: fileId,
+                contents: finalMessageInBase64,
+                keys: [PrivateKey.fromStringED25519(this.hederaConfiguration.hederaPrivateKey).publicKey]
+            });
+            await fileUpdateTransaction.freezeWith(this.client);
+            await fileUpdateTransaction.sign(PrivateKey.fromString(this.hederaConfiguration.hederaPrivateKey));
+
+            await fileUpdateTransaction.execute(this.client);
+
+            const transaction: TopicMessageSubmitTransaction = await new TopicMessageSubmitTransaction({
+                topicId: topicId,
+                message: Buffer.from(fileId).toString('base64')
+            });
+
+            await transaction.freezeWith(this.client);
+            await transaction.sign(PrivateKey.fromString(this.hederaConfiguration.hederaPrivateKey));
+            await transaction.sign(PrivateKey.fromString(submitKey));
+
+            const result = await transaction.execute(this.client);
+            const receipt = await result.getReceipt(this.client);
+
+            return receipt.topicSequenceNumber.toNumber();
+        }
 
         const transaction: TopicMessageSubmitTransaction = await new TopicMessageSubmitTransaction({
             topicId: topicId,
@@ -152,8 +277,23 @@ export class EncryptedTopic {
 
     // "getMessage" gets a message from an encrypted topic (if the user has access)
     public async getMessage(topicId: string, sequenceNumber: number, privateKey: string): Promise<string> {
+        const topicMemoObject: TopicMemoObject = await this.getTopicMemo(topicId);
         const topicEncryptionKeyAndInitVector = await this.getTopicEncryptionKeyAndInitVector(topicId, privateKey);
-        let encryptedMessageInBase64 = await this.getTopicMessageInBase64(topicId, sequenceNumber);
+
+        // Topic memo specifies that topic messages should be stored using the File Service
+        if (topicMemoObject.s.m.u) {
+            const messageFileIdInBase64 = await this.getMessageFromTopicInBase64(topicId, sequenceNumber);
+            let fileId = Buffer.from(messageFileIdInBase64, 'base64').toString('utf8');
+            const encryptedMessageInBase64: string = await this.getFileContentsInBase64(Buffer.from(fileId, 'base64').toString('utf8'));
+
+            const encryptedMessage: TopicEncryptedMessage = JSON.parse(Buffer.from(encryptedMessageInBase64, 'base64').toString('utf8'));
+            const decryptedMessageEncryptionKey = Buffer.from(this.crypto.symmetricDecrypt(encryptedMessage.k, Buffer.from(topicEncryptionKeyAndInitVector.encryptionKey, 'base64'),  Buffer.from(topicEncryptionKeyAndInitVector.initVector, 'base64')), 'base64');
+            const decryptedMessageInitVector = Buffer.from(this.crypto.symmetricDecrypt(encryptedMessage.i, Buffer.from(topicEncryptionKeyAndInitVector.encryptionKey, 'base64'),  Buffer.from(topicEncryptionKeyAndInitVector.initVector, 'base64')), 'base64');
+
+            return this.crypto.symmetricDecrypt(encryptedMessage.m, decryptedMessageEncryptionKey, decryptedMessageInitVector);
+        }
+
+        let encryptedMessageInBase64 = await this.getMessageFromTopicInBase64(topicId, sequenceNumber);
         encryptedMessageInBase64 = Buffer.from(encryptedMessageInBase64, 'base64').toString('utf8');
 
         const encryptedMessage: TopicEncryptedMessage = JSON.parse(Buffer.from(encryptedMessageInBase64, 'base64').toString('utf8'));
@@ -175,7 +315,7 @@ export class EncryptedTopic {
     }
 
     // "getConfiguration" returns a topic's configuration object (if the user has access)
-    public async getConfiguration(topicId: string, privateKey: string): Promise<TopicConfigurationObject> {
+    private async getConfiguration(topicId: string, privateKey: string): Promise<TopicConfigurationObject> {
         if (!this.topicConfigurationMessageInBase64) {
             await this.setTopicConfigurationMessageInBase64(topicId);
         }
@@ -185,6 +325,34 @@ export class EncryptedTopic {
         }
 
         return this.crypto.decryptTopicConfigurationMessage(this.topicConfigurationMessageInBase64, privateKey);
+    }
+
+    private async getTopicMemo(topicId: string): Promise<TopicMemoObject> {
+        if (!this.topicMemoObject) {
+            const topicInfo = new TopicInfoQuery({
+                topicId: topicId
+            });
+
+            const topicInfoResponse: TopicInfo = await topicInfo.execute(this.client);
+
+            this.topicMemoObject = JSON.parse(topicInfoResponse.topicMemo) as TopicMemoObject;
+        }
+
+        return this.topicMemoObject;
+    }
+
+    private createTopicMemoObject(topicStorageOptions: TopicStorageOptions, topicConfigurationFileId?: string): TopicMemoObject {
+        return {
+            s: {
+                c: {
+                    i: topicConfigurationFileId,
+                    u: topicStorageOptions.configuration === StorageOption.File,
+                },
+                m: {
+                    u: topicStorageOptions.messages === StorageOption.File
+                }
+            }
+        }
     }
 
     private async getTopicEncryptionKeyAndInitVector(topicId: string, privateKey: string): Promise<TopicEncryptionKeyAndInitVector> {
@@ -200,10 +368,25 @@ export class EncryptedTopic {
     }
 
     private async setTopicConfigurationMessageInBase64(topicId: string): Promise<void> {
-        let topicConfigurationMessageInBase64: string = await this.getTopicMessageInBase64(topicId, 1);
+        const topicMemoObject: TopicMemoObject = await this.getTopicMemo(topicId);
+        let topicConfigurationMessageInBase64: string;
+
+        // Topic memo specifies that topic configuration message is stored using the File Service
+        if (topicMemoObject.s.c.u) {
+            if (!topicMemoObject.s.c.i) {
+                throw new Error('Topic memo object does not specify file Id');
+            }
+
+            topicConfigurationMessageInBase64 = await this.getFileContentsInBase64(topicMemoObject.s.c.i);
+        // Topic memo specifies that topic configuration message is stored using the Consensus Service
+        } else {
+            topicConfigurationMessageInBase64 = await this.getMessageFromTopicInBase64(topicId, 1);
+            topicConfigurationMessageInBase64 = Buffer.from(topicConfigurationMessageInBase64, 'base64').toString('utf8');
+        }
+
         topicConfigurationMessageInBase64 = Buffer.from(topicConfigurationMessageInBase64, 'base64').toString('utf8');
 
-        this.topicConfigurationMessageInBase64 = topicConfigurationMessageInBase64;
+        this.topicConfigurationMessageInBase64 = Buffer.from(topicConfigurationMessageInBase64).toString('base64');
     }
 
     private async initializeCryptoWithTopicConfiguration(topicConfigurationMessageInBase64: string): Promise<void> {
@@ -219,7 +402,18 @@ export class EncryptedTopic {
         return topicConfigurationObject.s;
     }
 
-    private async getTopicMessageInBase64(topicId: string, sequenceNumber: number): Promise<string> {
+    public async getFileContentsInBase64(fileId: string): Promise<string> {
+        const fileGetContentsQuery: FileContentsQuery = new FileContentsQuery({
+            fileId: fileId
+        });
+
+        const fileContentsUint8Array: Uint8Array = await fileGetContentsQuery.execute(this.client);
+        let fileContentsString: string = fileContentsUint8Array.toString();
+
+        return fileContentsString;
+    }
+
+    private async getMessageFromTopicInBase64(topicId: string, sequenceNumber: number): Promise<string> {
         // First, check if topic has messages up to "sequenceNumber"
         const topicInfo = new TopicInfoQuery({
             topicId: topicId
