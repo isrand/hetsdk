@@ -4,9 +4,9 @@ This repository contains an NPM package that can be used to create and interact 
 
 Encrypted Topics are standard Hedera topics that are configured and behave in specific ways to implement private messaging exchanges, most notably with a post-quantum cryptography encryption algorithm: CRYSTALS-Kyber.
 
-
 ## Table of contents
 
+- [Introduction](#introduction)
 - [Installation](#installation)
 - [Example](#example)
 - [API](#api-reference)
@@ -16,8 +16,16 @@ Encrypted Topics are standard Hedera topics that are configured and behave in sp
   - [getParticipants](#getparticipants-topicid-privatekey)
 - [Storage](#storage)
   - [Consensus Service Limitations](#consensus-service-limitations)
+    - [Topic configuration message](#topic-configuration-message)
+    - [Topic messages](#topic-messages)
 - [Encryption process](#encryption-process)
 - [In the works](#in-the-works)
+
+## Introduction
+
+The Hedera Hashgraph Encrypted Topic SDK is an NPM package that provides a layer of abstraction above the `@hashgraph/sdk` package when dealing with Consensus Service topics. It adds an extra layer of privacy for users that want to implement multi-party private message exchanges using the Hedera Network.
+
+It has been developed as the backbone for enterprise applications that want to leverage the low costs and efficient consensus algorithm that the Hedera Network provides.
 
 ## Installation
 
@@ -211,7 +219,7 @@ or
 
 **Description**
 
-Get the participants belonging to an encrypted topic, only if the creator chose to store them in the topic configuration message.
+Get the participants belonging to an encrypted topic, only if the creator chose to store them in the topic configuration message, and if the user has access to the topic.
 
 **Parameters**
 
@@ -230,7 +238,7 @@ const topicParticipants = await encryptedTopic.getParticipants(topicId, kyberPri
 
 or
 
-`ERROR`: if the creator of the topic didn't choose to store them in the topic configuration message.
+`ERROR`: if the creator of the topic didn't choose to store them in the topic configuration message, or the user doesn't have access to the topic.
 
 ---
 
@@ -238,7 +246,7 @@ or
 
 The SDK can be configured to store the two main artifacts (topic configuration message and encrypted messages) either in the Consensus Service as standard messages, or in the File Service as files (which are then referenced in a Consensus Service message).
 These artifact storage mediums are decoupled, meaning that you can choose to store the topic configuration message in the File Service and the messages in the Consensus Service, and viceversa.
-There are benefits and drawbacks to each medium:
+There are benefits and drawbacks to each medium.
 
 - Consensus Service: the cheaper approach, but it's limited to messages of at most 20 chunks in size, each chunk being at most 1024KB in length. Good for use cases with few participants (see table below) and / or small message sizes, like simple JSON payloads.
 - File Service: a bit more costly, but it allows for more topic participants and / or bigger messages. It also opens the door for new participants to be added in the future via file updates (currently not implemented).
@@ -259,16 +267,24 @@ The storage options are themselves stored as the topic memo, so the SDK can know
 
 > Topics are configured from the start to use one approach or the other, and currently can't be changed after creation. Further decoupling is in the works to allow for a fully hybrid approach.
 
-### Consensus Service Limitations
+### Consensus Service
 
-When using the Consensus Service as the storage medium for the topic configuration message, the following table describes the maximum number of participants that can be part of said topic, assuming no topic metadata object is passed. Providing a rich topic metadata object will reduce the remaining available size for extra participants.
+The cheaper approach, but it's limited to messages of at most 20 chunks in size, each chunk being at most 1024KB in length. Good for use cases with few participants (see table below) and / or small message sizes, like simple JSON payloads.
 
-| Encryption algorithm | Max number of participants (storing participant list) | Max number of participants (without storing participant list) |
-|----------------------|-------------------------------------------------------|---------------------------------------------------------------|
-| RSA-2048             | 7                                                     | 16                                                            |
-| Kyber-512            | 4                                                     | 9                                                             |
-| Kyber-768            | 3                                                     | 7                                                             |
-| Kyber-1024           | 2                                                     | 5                                                             |
+#### Limits: topic configuration message
+
+The following table describes the maximum number of participants that can be part of said topic, assuming no topic metadata object is passed. Providing a rich topic metadata object will reduce the remaining available size for extra participants.
+
+| Algorithm  | `storeParticipantsArray: true` | `storeParticipantsArray: false` |
+|------------|--------------------------------|---------------------------------|
+| RSA-2048   | 7                              | 16                              |
+| Kyber-512  | 4                              | 9                               |         
+| Kyber-768  | 3                              | 7                               |
+| Kyber-1024 | 2                              | 5                               |
+
+#### Limits: topic messages
+
+The maximum size of a base64-encoded JSON payload is `20480B (20.48KB) (20 chunks per message x 1024B per chunk)`.
 
 ## Encryption process
 
@@ -284,6 +300,6 @@ Furthermore, messages can be decrypted and shared by distributing their `mek`, w
 
 ## In the works
 
-- Calculate maximum possible JSON payload size with Consensus Service as storage medium for messages.
 - Calculate maximum possible JSON payload size with File Service as storage medium for messages.
 - Calculate maximum number of participants possible with File Service as storage medium for topic configuration message given an empty topic metadata object.
+- Provide a method to calculate storage costs and provide the user with recommendations on which storage medium to use.
