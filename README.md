@@ -13,7 +13,7 @@ Encrypted Topics are standard Hedera topics that are configured and behave in sp
   - [create](#create-createencryptedtopicconfiguration)
   - [submitMessage](#submitmessage-topicid-message-privatekey)
   - [getMessage](#getmessage-topicid-messagesequencenumber-privatekey)
-  - [getTopicParticipant](#gettopicparticipants-topicid-privatekey)
+  - [getTopicParticipants](#gettopicparticipants-topicid-privatekey)
 - [Storage](#storage)
   - [Consensus Service Limitations](#consensus-service-limitations)
 - [Encryption process](#encryption-process)
