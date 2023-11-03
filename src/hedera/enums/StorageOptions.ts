@@ -1,4 +1,4 @@
-export enum StorageOption {
+export enum StorageOptions {
     File = 'file',
     Message = 'message'
 }

@@ -1,6 +1,6 @@
-import { StorageOption } from "../enums/StorageOption";
+import { StorageOptions } from "../enums/StorageOptions";
 export interface TopicStorageOptions {
-    configuration: StorageOption;
-    messages: StorageOption;
+    configuration: StorageOptions;
+    messages: StorageOptions;
     storeParticipantsArray: boolean;
 }

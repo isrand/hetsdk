@@ -21,7 +21,8 @@ import {TopicConfigurationMessage} from "./hedera/interfaces/TopicConfigurationM
 import {CreateEncryptedTopicConfiguration} from "./hedera/interfaces/CreateEncryptedTopicConfiguration";
 import {TopicMemoObject} from "./hedera/interfaces/TopicMemoObject";
 import {TopicStorageOptions} from "./hedera/interfaces/TopicStorageOptions";
-import {StorageOption} from "./hedera/enums/StorageOption";
+import {StorageOptions} from "./hedera/enums/StorageOptions";
+import {EncryptionAlgorithm} from "./crypto/enums/EncryptionAlgorithm";
 
 export class EncryptedTopic {
     private readonly client: Client;
@@ -87,7 +88,7 @@ export class EncryptedTopic {
 
         try {
             // Use the File Service to store the topic configuration message
-            if (createEncryptedTopicConfiguration.storageOptions.configuration === StorageOption.File) {
+            if (createEncryptedTopicConfiguration.storageOptions.configuration === StorageOptions.File) {
                 // Create the file containing the topic configuration message
                 const fileCreateTransaction: FileCreateTransaction = new FileCreateTransaction({
                     keys: [PrivateKey.fromStringED25519(this.hederaConfiguration.hederaPrivateKey).publicKey]
@@ -346,10 +347,10 @@ export class EncryptedTopic {
             s: {
                 c: {
                     i: topicConfigurationFileId,
-                    u: topicStorageOptions.configuration === StorageOption.File,
+                    u: topicStorageOptions.configuration === StorageOptions.File,
                 },
                 m: {
-                    u: topicStorageOptions.messages === StorageOption.File
+                    u: topicStorageOptions.messages === StorageOptions.File
                 }
             }
         }
@@ -456,3 +457,9 @@ export class EncryptedTopic {
         return message;
     }
 }
+
+module.exports = {
+    EncryptedTopic,
+    EncryptionAlgorithm,
+    StorageOptions
+};

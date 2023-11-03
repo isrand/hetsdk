@@ -32,8 +32,7 @@ npm install github:isrand/hetsdk
 Here is a simple piece of code in TypeScript that you can use to get started quickly. Replace the keys with the real values.
 
 ```typescript
-import {EncryptedTopic} from 'hetsdk';
-import {EncryptionAlgorithm} from "./EncryptionAlgorithm";
+import {EncryptedTopic, EncryptionAlgorithm, StorageOptions} from "hetsdk";
 
 // Hedera account data
 // Public / private keys must be DER-encoded
@@ -72,8 +71,8 @@ async function main() {
     algorithm: EncryptionAlgorithm.Kyber512,
     storageOptions: {
       storeParticipantsArray: false,
-      configuration: StorageOption.Message,
-      messages: StorageOption.Message
+      configuration: StorageOptions.Message,
+      messages: StorageOptions.Message
     },
     metadata: {
       name: "Supply Chain Logistics"
@@ -109,8 +108,8 @@ Create a new encrypted topic.
     - `hederaPublicKey`: DER-encoded Hedera Network public key associated to the user's account.
   - `algorithm (EncryptionAlgorithm)`:  Enum that specifies the encryption algorithm and key size. Possible options are: `EncryptionAlgorithm.RSA2048`, `EncryptionAlgorithm.Kyber512`, `EncryptionAlgorithm.Kyber768`, `EncryptionAlgorithm.Kyber1024`.
   - `storageOptions (TopicStorageOptions)`: Object containing storage options for the topic artifacts:
-    - `configuration (StorageOption)`: Enum that specifies File Service (`StorageOption.File`) or Consensus Service (`StorageOption.Message`).
-    - `messages (StorageOption)`: Enum that specifies File Service (`StorageOption.File`) or Consensus Service (`StorageOption.Message`).
+    - `configuration (StorageOptions)`: Enum that specifies File Service (`StorageOptions.File`) or Consensus Service (`StorageOptions.Message`).
+    - `messages (StorageOptions)`: Enum that specifies File Service (`StorageOptions.File`) or Consensus Service (`StorageOptions.Message`).
     - `storeParticipantsArray (boolean)`: Boolean that specifies whether to store the participants array in the topic configuration message or not.
   - `metadata (?any)`: Object containing topic metadata
 
