@@ -305,7 +305,7 @@ export class EncryptedTopic {
 
     // "getTopicParticipants" returns the participants of a topic (if the user has access, and if the user that created the topic chose to
     // store said list in the topic configuration)
-    public async getTopicParticipants(topicId: string, privateKey: string): Promise<Array<TopicParticipant>> {
+    public async getParticipants(topicId: string, privateKey: string): Promise<Array<TopicParticipant>> {
         const topicConfigurationObject: TopicConfigurationObject = await this.getConfiguration(topicId, privateKey);
         if (topicConfigurationObject.p) {
             return topicConfigurationObject.p;

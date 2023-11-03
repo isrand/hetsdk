@@ -11,7 +11,7 @@ export declare class EncryptedTopic {
     create(createEncryptedTopicConfiguration: CreateEncryptedTopicConfiguration): Promise<string>;
     submitMessage(topicId: string, message: string, privateKey: string): Promise<number>;
     getMessage(topicId: string, sequenceNumber: number, privateKey: string): Promise<string>;
-    getTopicParticipants(topicId: string, privateKey: string): Promise<Array<TopicParticipant>>;
+    getParticipants(topicId: string, privateKey: string): Promise<Array<TopicParticipant>>;
     private createMemoObject;
     private getConfiguration;
     private getMemo;

@@ -13,7 +13,7 @@ Encrypted Topics are standard Hedera topics that are configured and behave in sp
   - [create](#create-createencryptedtopicconfiguration)
   - [submitMessage](#submitmessage-topicid-message-privatekey)
   - [getMessage](#getmessage-topicid-messagesequencenumber-privatekey)
-  - [getTopicParticipants](#gettopicparticipants-topicid-privatekey)
+  - [getParticipants](#getparticipants-topicid-privatekey)
 - [Storage](#storage)
   - [Consensus Service Limitations](#consensus-service-limitations)
 - [Encryption process](#encryption-process)
@@ -35,7 +35,7 @@ Here is a simple piece of code in JavaScript that you can use to get started qui
 
 ```javascript
 const EncryptedTopic = require('hetsdk').EncryptedTopic;
-const EncryptionAlgorithm = require("hetsdk/lib/crypto/enums/EncryptionAlgorithm").EncryptionAlgorithm;
+const EncryptionAlgorithms = require("hetsdk/lib/crypto/enums/EncryptionAlgorithms").EncryptionAlgorithms;
 const StorageOptions = require("hetsdk/lib/hedera/enums/StorageOptions").StorageOptions;
 
 // Hedera account data
@@ -72,7 +72,7 @@ async function main() {
         hederaPublicKey: otherHederaPublicKey
       }
     ],
-    algorithm: EncryptionAlgorithm.Kyber512,
+    algorithm: EncryptionAlgorithms.Kyber512,
     storageOptions: {
       storeParticipantsArray: false,
       configuration: StorageOptions.Message,
@@ -110,7 +110,7 @@ Create a new encrypted topic.
   - `participants (TopicParticipant[])`: Array of participants that will be part of the topic. The `TopicParticipant` object contains the following keys:
     - `publicKey`: base64-encoded public key used for encryption. The key's algorithm must match the chosen topic encryption algorithm.
     - `hederaPublicKey`: DER-encoded Hedera Network public key associated to the user's account.
-  - `algorithm (EncryptionAlgorithm)`:  Enum that specifies the encryption algorithm and key size. Possible options are: `EncryptionAlgorithm.RSA2048`, `EncryptionAlgorithm.Kyber512`, `EncryptionAlgorithm.Kyber768`, `EncryptionAlgorithm.Kyber1024`.
+  - `algorithm (EncryptionAlgorithms)`:  Enum that specifies the encryption algorithm and key size. Possible options are: `EncryptionAlgorithms.RSA2048`, `EncryptionAlgorithms.Kyber512`, `EncryptionAlgorithms.Kyber768`, `EncryptionAlgorithms.Kyber1024`.
   - `storageOptions (TopicStorageOptions)`: Object containing storage options for the topic artifacts:
     - `configuration (StorageOptions)`: Enum that specifies File Service (`StorageOptions.File`) or Consensus Service (`StorageOptions.Message`).
     - `messages (StorageOptions)`: Enum that specifies File Service (`StorageOptions.File`) or Consensus Service (`StorageOptions.Message`).
@@ -133,7 +133,7 @@ const topicId = await encryptedTopic.create({
       hederaPublicKey: otherHederaPublicKey
     }
   ],
-  algorithm: EncryptionAlgorithm.Kyber512,
+  algorithm: EncryptionAlgorithms.Kyber512,
   storageOptions: {
     storeParticipantsArray: false,
     configuration: StorageOptions.Message,
@@ -173,6 +173,10 @@ const messageSequenceNumber = await encryptedTopic.submitMessage(topicId, 'Hey t
 
 `messageSequenceNumber (number)`: sequence number of the message in the topic.
 
+or
+
+`ERROR`: if the user doesn't have access to the topic.
+
 ---
 
 ### `getMessage (topicId, messageSequenceNUmber, privateKey)`
@@ -197,9 +201,13 @@ const message = await encryptedTopic.getMessage(topicId, messageSequenceNumber, 
 
 `message (string)`: string with message contents.
 
+or
+
+`ERROR`: if the sequence number provided is greater than the current sequence number of the topic.
+
 ---
 
-### `getTopicParticipants (topicId, privateKey)`
+### `getParticipants (topicId, privateKey)`
 
 **Description**
 
@@ -213,12 +221,16 @@ Get the participants belonging to an encrypted topic, only if the creator chose 
 **Usage**
 
 ```typescript
-const topicParticipants = await encryptedTopic.getTopicParticipants(topicId, kyberPrivateKey);
+const topicParticipants = await encryptedTopic.getParticipants(topicId, kyberPrivateKey);
 ```
 
 **Return value**
 
 `topicParticipants (TopicParticipant[])`: array of participants belonging to the encrypted topic.
+
+or
+
+`ERROR`: if the creator of the topic didn't choose to store them in the topic configuration message.
 
 ---
 
