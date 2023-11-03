@@ -12,13 +12,13 @@ export declare class EncryptedTopic {
     submitMessage(topicId: string, message: string, privateKey: string): Promise<number>;
     getMessage(topicId: string, sequenceNumber: number, privateKey: string): Promise<string>;
     getTopicParticipants(topicId: string, privateKey: string): Promise<Array<TopicParticipant>>;
+    private createMemoObject;
     private getConfiguration;
-    private getTopicMemo;
-    private createTopicMemoObject;
-    private getTopicEncryptionKeyAndInitVector;
-    private setTopicConfigurationMessageInBase64;
-    private initializeCryptoWithTopicConfiguration;
-    private getTopicSubmitKey;
-    getFileContentsInBase64(fileId: string): Promise<string>;
+    private getMemo;
+    private getEncryptionKeyAndInitVector;
+    private setConfigurationMessageInBase64;
+    private initializeCrypto;
+    private getSubmitKey;
+    private getFileContentsInBase64;
     private getMessageFromTopicInBase64;
 }

@@ -122,7 +122,7 @@ export class EncryptedTopic {
 
                 topicCreateTransaction.setSubmitKey(PrivateKey.fromString(submitKey));
 
-                const topicMemoObject = this.createTopicMemoObject(createEncryptedTopicConfiguration.storageOptions, fileId);
+                const topicMemoObject = this.createMemoObject(createEncryptedTopicConfiguration.storageOptions, fileId);
 
                 // Set the topic memo to point at the file containing the topic configuration message
                 topicCreateTransaction.setTopicMemo(JSON.stringify(topicMemoObject));
@@ -156,7 +156,7 @@ export class EncryptedTopic {
 
             topicCreateTransaction.setSubmitKey(PrivateKey.fromString(submitKey));
 
-            const topicMemoObject = this.createTopicMemoObject(createEncryptedTopicConfiguration.storageOptions);
+            const topicMemoObject = this.createMemoObject(createEncryptedTopicConfiguration.storageOptions);
 
             topicCreateTransaction.setTopicMemo(JSON.stringify(topicMemoObject));
 
@@ -201,8 +201,8 @@ export class EncryptedTopic {
     // "submitMessage" submits a message on an encrypted topic (if the user has access)
     // and returns the sequence number of the message
     public async submitMessage(topicId: string, message: string, privateKey: string): Promise<number> {
-        const topicMemoObject: TopicMemoObject = await this.getTopicMemo(topicId);
-        const topicEncryptionKeyAndInitVector = await this.getTopicEncryptionKeyAndInitVector(topicId, privateKey);
+        const topicMemoObject: TopicMemoObject = await this.getMemo(topicId);
+        const topicEncryptionKeyAndInitVector = await this.getEncryptionKeyAndInitVector(topicId, privateKey);
 
         const messageEncryptionKey: Buffer = Buffer.from(crypto.randomBytes(32));
         const messageEncryptionInitVector: Buffer = Buffer.from(crypto.randomBytes(16));
@@ -216,7 +216,7 @@ export class EncryptedTopic {
         };
 
         const finalMessageInBase64 = Buffer.from(JSON.stringify(finalMessage)).toString('base64');
-        const submitKey = await this.getTopicSubmitKey(topicId, privateKey);
+        const submitKey = await this.getSubmitKey(topicId, privateKey);
 
         // Topic memo specifies that topic messages should be stored using the File Service
         if (topicMemoObject.s.m.u) {
@@ -277,8 +277,8 @@ export class EncryptedTopic {
 
     // "getMessage" gets a message from an encrypted topic (if the user has access)
     public async getMessage(topicId: string, sequenceNumber: number, privateKey: string): Promise<string> {
-        const topicMemoObject: TopicMemoObject = await this.getTopicMemo(topicId);
-        const topicEncryptionKeyAndInitVector = await this.getTopicEncryptionKeyAndInitVector(topicId, privateKey);
+        const topicMemoObject: TopicMemoObject = await this.getMemo(topicId);
+        const topicEncryptionKeyAndInitVector = await this.getEncryptionKeyAndInitVector(topicId, privateKey);
 
         // Topic memo specifies that topic messages should be stored using the File Service
         if (topicMemoObject.s.m.u) {
@@ -314,34 +314,7 @@ export class EncryptedTopic {
         throw new Error('Topic configuration object did not store participants on creation.');
     }
 
-    // "getConfiguration" returns a topic's configuration object (if the user has access)
-    private async getConfiguration(topicId: string, privateKey: string): Promise<TopicConfigurationObject> {
-        if (!this.topicConfigurationMessageInBase64) {
-            await this.setTopicConfigurationMessageInBase64(topicId);
-        }
-
-        if (!this.crypto) {
-            await this.initializeCryptoWithTopicConfiguration(this.topicConfigurationMessageInBase64);
-        }
-
-        return this.crypto.decryptTopicConfigurationMessage(this.topicConfigurationMessageInBase64, privateKey);
-    }
-
-    private async getTopicMemo(topicId: string): Promise<TopicMemoObject> {
-        if (!this.topicMemoObject) {
-            const topicInfo = new TopicInfoQuery({
-                topicId: topicId
-            });
-
-            const topicInfoResponse: TopicInfo = await topicInfo.execute(this.client);
-
-            this.topicMemoObject = JSON.parse(topicInfoResponse.topicMemo) as TopicMemoObject;
-        }
-
-        return this.topicMemoObject;
-    }
-
-    private createTopicMemoObject(topicStorageOptions: TopicStorageOptions, topicConfigurationFileId?: string): TopicMemoObject {
+    private createMemoObject(topicStorageOptions: TopicStorageOptions, topicConfigurationFileId?: string): TopicMemoObject {
         return {
             s: {
                 c: {
@@ -355,20 +328,46 @@ export class EncryptedTopic {
         }
     }
 
-    private async getTopicEncryptionKeyAndInitVector(topicId: string, privateKey: string): Promise<TopicEncryptionKeyAndInitVector> {
+    private async getConfiguration(topicId: string, privateKey: string): Promise<TopicConfigurationObject> {
         if (!this.topicConfigurationMessageInBase64) {
-            await this.setTopicConfigurationMessageInBase64(topicId);
+            await this.setConfigurationMessageInBase64(topicId);
         }
 
         if (!this.crypto) {
-            await this.initializeCryptoWithTopicConfiguration(this.topicConfigurationMessageInBase64);
+            await this.initializeCrypto(this.topicConfigurationMessageInBase64);
+        }
+
+        return this.crypto.decryptTopicConfigurationMessage(this.topicConfigurationMessageInBase64, privateKey);
+    }
+
+    private async getMemo(topicId: string): Promise<TopicMemoObject> {
+        if (!this.topicMemoObject) {
+            const topicInfo = new TopicInfoQuery({
+                topicId: topicId
+            });
+
+            const topicInfoResponse: TopicInfo = await topicInfo.execute(this.client);
+
+            this.topicMemoObject = JSON.parse(topicInfoResponse.topicMemo) as TopicMemoObject;
+        }
+
+        return this.topicMemoObject;
+    }
+
+    private async getEncryptionKeyAndInitVector(topicId: string, privateKey: string): Promise<TopicEncryptionKeyAndInitVector> {
+        if (!this.topicConfigurationMessageInBase64) {
+            await this.setConfigurationMessageInBase64(topicId);
+        }
+
+        if (!this.crypto) {
+            await this.initializeCrypto(this.topicConfigurationMessageInBase64);
         }
 
         return this.crypto.getTopicEncryptionKeyAndInitVector(this.topicConfigurationMessageInBase64, privateKey);
     }
 
-    private async setTopicConfigurationMessageInBase64(topicId: string): Promise<void> {
-        const topicMemoObject: TopicMemoObject = await this.getTopicMemo(topicId);
+    private async setConfigurationMessageInBase64(topicId: string): Promise<void> {
+        const topicMemoObject: TopicMemoObject = await this.getMemo(topicId);
         let topicConfigurationMessageInBase64: string;
 
         // Topic memo specifies that topic configuration message is stored using the File Service
@@ -389,20 +388,20 @@ export class EncryptedTopic {
         this.topicConfigurationMessageInBase64 = Buffer.from(topicConfigurationMessageInBase64).toString('base64');
     }
 
-    private async initializeCryptoWithTopicConfiguration(topicConfigurationMessageInBase64: string): Promise<void> {
+    private async initializeCrypto(topicConfigurationMessageInBase64: string): Promise<void> {
         const topicConfigurationMessage: TopicConfigurationMessage = JSON.parse(Buffer.from(topicConfigurationMessageInBase64, 'base64').toString('utf8'));
         const topicEncryptionConfiguration: TopicEncryptionConfiguration = JSON.parse(Buffer.from(topicConfigurationMessage.b, 'base64').toString('utf8'));
 
         this.crypto = new Crypto(topicEncryptionConfiguration.a, topicEncryptionConfiguration.s);
     }
 
-    private async getTopicSubmitKey(topicId: string, privateKey: string): Promise<string> {
+    private async getSubmitKey(topicId: string, privateKey: string): Promise<string> {
         const topicConfigurationObject = await this.getConfiguration(topicId, privateKey);
 
         return topicConfigurationObject.s;
     }
 
-    public async getFileContentsInBase64(fileId: string): Promise<string> {
+    private async getFileContentsInBase64(fileId: string): Promise<string> {
         const fileGetContentsQuery: FileContentsQuery = new FileContentsQuery({
             fileId: fileId
         });
