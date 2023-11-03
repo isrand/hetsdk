@@ -45,6 +45,7 @@ npm install github:isrand/hetsdk
 
 Here is a simple piece of code in JavaScript that you can use to get started quickly. Replace the keys with the real values.
 
+> [!INFORMATION]
 > The SDK also provides type definitions for TypeScript.
 
 ```javascript
