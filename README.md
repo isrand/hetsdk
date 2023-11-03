@@ -29,7 +29,7 @@ It has been developed as the backbone for enterprise applications that want to l
 
 > [!WARNING]
 > The Hedera Network will keep every transaction you create in its ledgers, forever. Be mindful of the information you choose to share and the encryption algorithm that you will use.
-> Harvest now, decrypt later techniques must be thought of as happening constantly given the open nature of the Network.
+> _Harvest now, decrypt later_ techniques must be thought of as happening constantly given the open nature of the Network.
 > The current implementation of CRYSTALS-Kyber is subject to future change as new attacks are discovered and mitigations are implemented.
 
 ## Installation
