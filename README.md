@@ -250,8 +250,8 @@ To set the storage medium, simply set the `storageOptions` object when calling t
 ```typescript
 storageOptions: {
     storeParticipantsArray: true | false
-    configuration: StorageOption.Message | StorageOption.File // Consensus Service or File Service
-    messages: StorageOption.Message | StorageOption.File // Consensus Service or File Service
+    configuration: StorageOptions.Message | StorageOptions.File // Consensus Service or File Service
+    messages: StorageOptions.Message | StorageOptions.File // Consensus Service or File Service
 }
 ```
 
