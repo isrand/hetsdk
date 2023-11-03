@@ -255,6 +255,8 @@ storageOptions: {
 }
 ```
 
+The storage options are themselves stored as the topic memo, so the SDK can know at a glance which storage medium to use when fetching the artifacts.
+
 > Topics are configured from the start to use one approach or the other, and currently can't be changed after creation. Further decoupling is in the works to allow for a fully hybrid approach.
 
 ### Consensus Service Limitations
