@@ -32,7 +32,9 @@ npm install github:isrand/hetsdk
 Here is a simple piece of code in TypeScript that you can use to get started quickly. Replace the keys with the real values.
 
 ```typescript
-import {EncryptedTopic, EncryptionAlgorithm, StorageOptions} from "hetsdk";
+import {EncryptedTopic} from "hetsdk";
+import {EncryptionAlgorithm} from "hetsdk/lib/crypto/enums/EncryptionAlgorithm";
+import {StorageOptions} from "hetsdk/lib/hedera/enums/StorageOptions";
 
 // Hedera account data
 // Public / private keys must be DER-encoded

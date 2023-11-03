@@ -22,7 +22,6 @@ import {CreateEncryptedTopicConfiguration} from "./hedera/interfaces/CreateEncry
 import {TopicMemoObject} from "./hedera/interfaces/TopicMemoObject";
 import {TopicStorageOptions} from "./hedera/interfaces/TopicStorageOptions";
 import {StorageOptions} from "./hedera/enums/StorageOptions";
-import {EncryptionAlgorithm} from "./crypto/enums/EncryptionAlgorithm";
 
 export class EncryptedTopic {
     private readonly client: Client;
@@ -457,9 +456,3 @@ export class EncryptedTopic {
         return message;
     }
 }
-
-module.exports = {
-    EncryptedTopic,
-    EncryptionAlgorithm,
-    StorageOptions
-};
