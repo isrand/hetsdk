@@ -203,7 +203,7 @@ const message = await encryptedTopic.getMessage(topicId, messageSequenceNumber, 
 
 or
 
-`ERROR`: if the sequence number provided is greater than the current sequence number of the topic.
+`ERROR`: if the sequence number provided is greater than the current sequence number of the topic, or the user doesn't have access to the topic.
 
 ---
 
