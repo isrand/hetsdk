@@ -136,8 +136,8 @@ const topicId = await encryptedTopic.create({
   algorithm: EncryptionAlgorithm.Kyber512,
   storageOptions: {
     storeParticipantsArray: false,
-    configuration: StorageOption.Message,
-    messages: StorageOption.Message
+    configuration: StorageOptions.Message,
+    messages: StorageOptions.Message
   },
   metadata: {
     name: "Supply Chain Logistics"
