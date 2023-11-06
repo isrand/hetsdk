@@ -192,6 +192,47 @@ or
 
 `ERROR`: if the user doesn't have access to the topic.
 
+
+---
+
+### `addParticipants (topicId, participants, privateKey)`
+
+**Description**
+
+Adds new participants to the encrypted topic, only if the storage medium of said topic for the configuration is set to File Service and the user can update the configuration file.
+
+> [!NOTE]
+> As of now, new participants have access to all messages, even those before they were addded.
+> An SDK-wide change is in development to allow for perfect forward secrecy, if needed, when adding new participants to the topic. It will be implemented in later versions.
+
+**Parameters**
+
+- `topicId (string)`: Id of the encrypted topic where the new participants will be added.
+- `participants (TopicParticipant[])`: Array of new participants to add to the topic. The `TopicParticipant` object contains the following keys:
+  - `publicKey`: base64-encoded public key used for encryption. The key's algorithm must match the chosen topic encryption algorithm.
+  - `hederaPublicKey`: DER-encoded Hedera Network public key associated to the user's account.
+- `privateKey (string)`: String containing the participant's private key. It must be base64-encoded.
+
+**Usage**
+
+```typescript
+const additionSuccess = await encryptedTopic.addParticipants(topicId,
+        [
+            {
+                publicKey: otherKyberPublicKey,
+                hederaPublicKey: otherHederaPublicKey
+            
+        ], kyberPrivateKey);
+```
+
+**Return value**
+
+`additionSuccess (boolean)`: boolean determining if the participants were added correctly or not.
+
+or
+
+`ERROR`: if the user doesn't have access to the topic, the participants can't be added or the topic is configured to use the Consensus Servie as the storage medium for the topic configuration message.
+
 ---
 
 ### `getMessage (topicId, messageSequenceNUmber, privateKey)`
@@ -256,7 +297,7 @@ These artifact storage mediums are decoupled, meaning that you can choose to sto
 There are benefits and drawbacks to each medium.
 
 - Consensus Service: the cheaper approach, but it's limited to messages of at most 20 chunks in size, each chunk being at most 1024KB in length. Good for use cases with few participants (see table below) and / or small message sizes, like simple JSON payloads.
-- File Service: a bit more costly, but it allows for more topic participants and / or bigger messages. It also opens the door for new participants to be added in the future via file updates (currently not implemented).
+- File Service: a bit more costly, but it allows for more topic participants and / or bigger messages, plus addition of new topic participants down the line.
 
 When creating a topic you can choose whether to store the participants array to keep track of them or not.
 
@@ -310,3 +351,4 @@ Furthermore, messages can be decrypted and shared by distributing their `mek`, w
 - Calculate maximum possible JSON payload size with File Service as storage medium for messages.
 - Calculate maximum number of participants possible with File Service as storage medium for topic configuration message given an empty topic metadata object.
 - Provide a method to calculate storage costs and provide the user with recommendations on which storage medium to use.
+- Implement perfect forward secrecy for topics that can add new participants down the line.

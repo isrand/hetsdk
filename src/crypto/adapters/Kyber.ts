@@ -69,7 +69,6 @@ export class Kyber extends DefaultAdapter implements CryptoAdapter {
                         topicEncryptionKey = this.symmetricDecrypt(encryptedTopicKey, symmetricKey, initVector);
                         topicEncryptionInitVector = this.symmetricDecrypt(encryptedTopicInitVector, symmetricKey, initVector);
                     } catch (error) {
-                        console.log(error);
                         continue;
                     }
 
@@ -108,7 +107,6 @@ export class Kyber extends DefaultAdapter implements CryptoAdapter {
                         topicEncryptionKey = this.symmetricDecrypt(encryptedTopicKey, symmetricKey, initVector);
                         topicEncryptionInitVector = this.symmetricDecrypt(encryptedTopicInitVector, symmetricKey, initVector);
                     } catch (error) {
-                        console.log(error);
                         continue;
                     }
 
