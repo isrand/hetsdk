@@ -143,10 +143,6 @@ const topicId = await encryptedTopic.create({
     {
       publicKey: kyberPublicKey,
       hederaPublicKey: hederaPublicKey
-    },
-    {
-      publicKey: otherKyberPublicKey,
-      hederaPublicKey: otherHederaPublicKey
     }
   ],
   algorithm: EncryptionAlgorithms.Kyber512,
