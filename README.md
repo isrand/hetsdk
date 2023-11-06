@@ -219,10 +219,10 @@ Adds new participants to the encrypted topic, only if the storage medium of said
 ```typescript
 const additionSuccess = await encryptedTopic.addParticipants(topicId,
         [
-            {
-                publicKey: otherKyberPublicKey,
-                hederaPublicKey: otherHederaPublicKey
-            
+          {
+            publicKey: otherKyberPublicKey,
+            hederaPublicKey: otherHederaPublicKey
+          }
         ], kyberPrivateKey);
 ```
 
