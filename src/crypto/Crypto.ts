@@ -12,9 +12,9 @@ export class Crypto {
     public constructor(private readonly algorithm: string, private readonly size: number) {
         if (algorithm === 'kyber') {
             this.adapter = new Kyber(size);
+        } else {
+            this.adapter = new RSA();
         }
-
-        this.adapter = new RSA();
     }
 
     public validateParticipantKeys(topicParticipants: Array<TopicParticipant>, topicEncryptionKeySize: number): void {
