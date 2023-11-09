@@ -124,7 +124,7 @@ export class Kyber extends DefaultAdapter implements CryptoAdapter {
 
         for (const participant of topicParticipants) {
             if (participant.publicKey.length !== expectedKeyLengthInBase64) {
-                throw new Error(`Participant ${participant.hederaPublicKey} Kyber public key is of wrong size. Topic encryption algorithm key size is ${topicEncryptionKeySize}. (Is the key base64 encoded?)`);
+                throw new Error(`Kyber public key ${participant.publicKey} is of wrong size. Topic encryption algorithm key size is ${topicEncryptionKeySize}. (Is the key base64 encoded?)`);
             }
         }
     }

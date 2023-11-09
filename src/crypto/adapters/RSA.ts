@@ -93,7 +93,7 @@ export class RSA extends DefaultAdapter implements CryptoAdapter {
     public validateParticipantKeys(topicParticipants: Array<TopicParticipant>, topicEncryptionKeySize: number): void {
         for (const participant of topicParticipants) {
             if (participant.publicKey.length !== this.expectedKeyLengthInBase64) {
-                throw new Error(`Participant ${participant.hederaPublicKey} RSA public key is of wrong size. Topic encryption algorithm key size is ${topicEncryptionKeySize}. (Is the key base64 encoded?)`);
+                throw new Error(`RSA public key ${participant.publicKey} is of wrong size. Topic encryption algorithm key size is ${topicEncryptionKeySize}. (Is the key base64 encoded?)`);
             }
         }
     }

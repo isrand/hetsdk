@@ -7,6 +7,7 @@ interface TopicMemoStorageObject {
 }
 interface TopicMemoConfigurationStorageObject {
     u: boolean;
+    p: boolean;
     i?: string;
 }
 interface TopicMemoMessageStorageObject {

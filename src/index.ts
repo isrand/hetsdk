@@ -57,7 +57,7 @@ export class EncryptedTopic {
 
         // Remove doubles from participants array
         const uniqueParticipantsArray = createEncryptedTopicConfiguration.participants.filter((obj, index, self) =>
-            index === self.findIndex(o => (o.hederaPublicKey === obj.hederaPublicKey || o.publicKey === obj.publicKey))
+            index === self.findIndex(o => (o.publicKey === obj.publicKey))
         );
 
         const topicConfigurationObject: TopicConfigurationObject = {
@@ -199,7 +199,7 @@ export class EncryptedTopic {
         }
     }
 
-    public async addParticipants(topicId: string, participants: TopicParticipant[], privateKey: string): Promise<void> {
+    public async addParticipant(topicId: string, participant: TopicParticipant, privateKey: string): Promise<void> {
         // Get topic memo, check if topic configuration message is stored using the File Service
         const topicMemoObject: TopicMemoObject = await this.getMemo(topicId);
 
@@ -208,11 +208,6 @@ export class EncryptedTopic {
             throw new Error('New participants can only be added to topics that use the File Service as storage medium for their configuration. Requested topic uses the Consensus Service.');
         }
 
-        // Remove doubles from participants array
-        const uniqueParticipantsArray = participants.filter((obj, index, self) =>
-            index === self.findIndex(o => (o.hederaPublicKey === obj.hederaPublicKey || o.publicKey === obj.publicKey))
-        );
-
         // Get topic encryption key and init vector
         const topicEncryptionKeyAndInitVector = await this.getEncryptionKeyAndInitVector(topicId, privateKey);
 
@@ -220,7 +215,7 @@ export class EncryptedTopic {
         const newEncryptedTopicEncryptionKeyAndInitVectors = this.crypto.getEncryptedTopicKeysObject(
             Buffer.from(topicEncryptionKeyAndInitVector.encryptionKey, 'base64'),
             Buffer.from(topicEncryptionKeyAndInitVector.initVector, 'base64'),
-            uniqueParticipantsArray
+            [participant]
         );
 
         // Get old encrypted topic keys object containing already encrypted topic encryption keys and init vectors
@@ -405,6 +400,7 @@ export class EncryptedTopic {
                 c: {
                     i: topicConfigurationFileId,
                     u: topicStorageOptions.configuration === StorageOptions.File,
+                    p: topicStorageOptions.storeParticipantsArray
                 },
                 m: {
                     u: topicStorageOptions.messages === StorageOptions.File

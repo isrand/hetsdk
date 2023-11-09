@@ -12,7 +12,7 @@ Encrypted Topics are standard Hedera topics that are configured and behave in sp
 - [API](#api-reference)
   - [create](#create-createencryptedtopicconfiguration)
   - [submitMessage](#submitmessage-topicid-message-privatekey)
-  - [addParticipants](#addparticipants-topicid-participants-privatekey)
+  - [addParticipant](#addparticipant-topicid-participants-privatekey)
   - [getMessage](#getmessage-topicid-messagesequencenumber-privatekey)
   - [getParticipants](#getparticipants-topicid-privatekey)
 - [Storage](#storage)
@@ -55,10 +55,9 @@ const EncryptionAlgorithms = require("hetsdk/lib/crypto/enums/EncryptionAlgorith
 const StorageOptions = require("hetsdk/lib/hedera/enums/StorageOptions").StorageOptions;
 
 // Hedera account data
-// Public / private keys must be DER-encoded
+// Private keys must be DER-encoded
 const hederaAccountId = '0.0.xxx';
 const hederaPrivateKey = '...';
-const hederaPublicKey = '...';
 
 // Encryption data, shown below is Kyber
 // Keys must be base64-encoded
@@ -66,7 +65,6 @@ const kyberPublicKey = '...';
 const kyberPrivateKey = '...';
 
 // Someone else's data
-const otherHederaPublicKey = '...';
 const otherKyberPublicKey = '...';
 
 async function main() {
@@ -80,12 +78,10 @@ async function main() {
   const topicId = await encryptedTopic.create({
     participants: [
       {
-        publicKey: kyberPublicKey,
-        hederaPublicKey: hederaPublicKey
+        publicKey: kyberPublicKey
       },
       {
-        publicKey: otherKyberPublicKey,
-        hederaPublicKey: otherHederaPublicKey
+        publicKey: otherKyberPublicKey
       }
     ],
     algorithm: EncryptionAlgorithms.Kyber512,
@@ -125,7 +121,6 @@ Create a new encrypted topic.
 - `createEncryptedTopicConfiguration (CreateEncryptedTopicConfiguration)`: Object containing the parameters used to configure the encrypted topic. It contains the following keys:
   - `participants (TopicParticipant[])`: Array of participants that will be part of the topic. The `TopicParticipant` object contains the following keys:
     - `publicKey`: base64-encoded public key used for encryption. The key's algorithm must match the chosen topic encryption algorithm.
-    - `hederaPublicKey`: DER-encoded Hedera Network public key associated to the user's account.
   - `algorithm (EncryptionAlgorithms)`:  Enum that specifies the encryption algorithm and key size. Possible options are: `EncryptionAlgorithms.RSA2048`, `EncryptionAlgorithms.Kyber512`, `EncryptionAlgorithms.Kyber768`, `EncryptionAlgorithms.Kyber1024`.
   - `storageOptions (TopicStorageOptions)`: Object containing storage options for the topic artifacts:
     - `configuration (StorageOptions)`: Enum that specifies File Service (`StorageOptions.File`) or Consensus Service (`StorageOptions.Message`).
@@ -142,7 +137,6 @@ const topicId = await encryptedTopic.create({
   participants: [
     {
       publicKey: kyberPublicKey,
-      hederaPublicKey: hederaPublicKey
     }
   ],
   algorithm: EncryptionAlgorithms.Kyber512,
@@ -192,11 +186,11 @@ or
 
 ---
 
-### `addParticipants (topicId, participants, privateKey)`
+### `addParticipant (topicId, participant, privateKey)`
 
 **Description**
 
-Adds new participants to the encrypted topic, only if the storage medium of said topic for the configuration is set to File Service and the user can update the configuration file.
+Adds new participant to the encrypted topic, only if the storage medium of said topic for the configuration is set to File Service and the user can update the configuration file.
 
 > [!NOTE]
 > As of now, new participants have access to all messages, even those before they were addded.
@@ -204,31 +198,27 @@ Adds new participants to the encrypted topic, only if the storage medium of said
 
 **Parameters**
 
-- `topicId (string)`: Id of the encrypted topic where the new participants will be added.
-- `participants (TopicParticipant[])`: Array of new participants to add to the topic. The `TopicParticipant` object contains the following keys:
+- `topicId (string)`: Id of the encrypted topic where the new participant will be added.
+- `participant (TopicParticipant)`: New participant to add to the topic. The `TopicParticipant` object contains the following keys:
   - `publicKey`: base64-encoded public key used for encryption. The key's algorithm must match the chosen topic encryption algorithm.
-  - `hederaPublicKey`: DER-encoded Hedera Network public key associated to the user's account.
 - `privateKey (string)`: String containing the participant's private key. It must be base64-encoded.
 
 **Usage**
 
 ```typescript
 const additionSuccess = await encryptedTopic.addParticipants(topicId,
-        [
-          {
-            publicKey: otherKyberPublicKey,
-            hederaPublicKey: otherHederaPublicKey
-          }
-        ], kyberPrivateKey);
+  {
+    publicKey: otherKyberPublicKey,
+  }, kyberPrivateKey);
 ```
 
 **Return value**
 
-`additionSuccess (boolean)`: boolean determining if the participants were added correctly or not.
+`additionSuccess (boolean)`: boolean determining if the participant was added correctly or not.
 
 or
 
-`ERROR`: if the user doesn't have access to the topic, the participants can't be added or the topic is configured to use the Consensus Servie as the storage medium for the topic configuration message.
+`ERROR`: if the user doesn't have access to the topic, the participant can't be added or the topic is configured to use the Consensus Servie as the storage medium for the topic configuration message.
 
 ---
 
