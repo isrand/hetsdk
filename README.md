@@ -86,7 +86,7 @@ async function main() {
     ],
     algorithm: EncryptionAlgorithms.Kyber512,
     storageOptions: {
-      storeParticipantsArray: false,
+      storeParticipants: false,
       configuration: StorageOptions.Message,
       messages: StorageOptions.Message
     },
@@ -125,7 +125,7 @@ Create a new encrypted topic.
   - `storageOptions (TopicStorageOptions)`: Object containing storage options for the topic artifacts:
     - `configuration (StorageOptions)`: Enum that specifies File Service (`StorageOptions.File`) or Consensus Service (`StorageOptions.Message`).
     - `messages (StorageOptions)`: Enum that specifies File Service (`StorageOptions.File`) or Consensus Service (`StorageOptions.Message`).
-    - `storeParticipantsArray (boolean)`: Boolean that specifies whether to store the participants array in the topic configuration message or not.
+    - `storeParticipants (boolean)`: Boolean that specifies whether to store the participants array in the topic configuration message or not.
   - `metadata (?any)`: Object containing topic metadata
 
 > For more information about artifact storage, check the [storage](#storage) section.
@@ -141,7 +141,7 @@ const topicId = await encryptedTopic.create({
   ],
   algorithm: EncryptionAlgorithms.Kyber512,
   storageOptions: {
-    storeParticipantsArray: false,
+    storeParticipants: false,
     configuration: StorageOptions.Message,
     messages: StorageOptions.Message
   },
@@ -292,7 +292,7 @@ To set the storage medium, simply set the `storageOptions` object when calling t
 
 ```typescript
 storageOptions: {
-    storeParticipantsArray: true | false
+    storeParticipants: true | false
     configuration: StorageOptions.Message | StorageOptions.File // Consensus Service or File Service
     messages: StorageOptions.Message | StorageOptions.File // Consensus Service or File Service
 }
@@ -310,12 +310,12 @@ The cheaper approach, but it's limited to messages of at most 20 chunks in size,
 
 The following table describes the maximum number of participants that can be part of said topic, assuming no topic metadata object is passed. Providing a rich topic metadata object will reduce the remaining available size for extra participants.
 
-| Algorithm  | `storeParticipantsArray: true` | `storeParticipantsArray: false` |
-|------------|--------------------------------|---------------------------------|
-| RSA-2048   | 7                              | 16                              |
-| Kyber-512  | 4                              | 9                               |         
-| Kyber-768  | 3                              | 7                               |
-| Kyber-1024 | 2                              | 5                               |
+| Algorithm  | `storeParticipants: true` | `storeParticipants: false` |
+|------------|---------------------------|----------------------------|
+| RSA-2048   | 7                         | 16                         |
+| Kyber-512  | 4                         | 9                          |         
+| Kyber-768  | 3                         | 7                          |
+| Kyber-1024 | 2                         | 5                          |
 
 #### Limits: topic messages
 
