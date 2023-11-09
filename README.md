@@ -155,7 +155,7 @@ Submit a message on an encrypted topic. The participant must have access to the 
 
 - `topicId (string)`: Id of the encrypted topic where the message will be sent.
 - `message (string)`: String containing the message contents. If you want to transact a JSON payload, make sure to `JSON.stringify()` it first.
-- `privateKey (string)`: String containing the encryted topic admin's private key. It must be base64-encoded.
+- `privateKey (string)`: String containing the participant's private key. It must be base64-encoded.
 
 **Usage**
 
@@ -215,7 +215,7 @@ Get message from an encrypted topic given its sequence number. The participant m
 
 - `topicId (string)`: Object containing the parameters used to configure the encrypted topic.
 - `messageSequenceNumber (number)`: Sequence of the number you want to fetch.
-- `privateKey (string)`: String containing the encryted topic admin's private key. It must be base64-encoded.
+- `privateKey (string)`: String containing the participant's private key. It must be base64-encoded.
 
 **Usage**
 
@@ -242,7 +242,7 @@ Get the participants belonging to an encrypted topic, only if the creator chose 
 **Parameters**
 
 - `topicId (string)`: Object containing the parameters used to configure the encrypted topic.
-- `privateKey (string)`: String containing the encryted topic admin's private key. It must be base64-encoded.
+- `privateKey (string)`: String containing the participant's private key. It must be base64-encoded.
 
 **Usage**
 
