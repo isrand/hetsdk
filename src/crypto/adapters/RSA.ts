@@ -5,7 +5,6 @@ import crypto from "crypto";
 import {TopicConfigurationObject} from "../../hedera/interfaces/TopicConfigurationObject";
 import {TopicEncryptionKeyAndInitVector} from "../../hedera/interfaces/TopicEncryptionKeyAndInitVector";
 import {TopicConfigurationMessage} from "../../hedera/interfaces/TopicConfigurationMessage";
-import {TopicEncryptionConfiguration} from "../../hedera/interfaces/TopicEncryptionConfiguration";
 import {DefaultAdapter} from "./DefaultAdapter";
 
 export class RSA extends DefaultAdapter implements CryptoAdapter {
@@ -31,19 +30,11 @@ export class RSA extends DefaultAdapter implements CryptoAdapter {
     }
 
     public asymmetricEncrypt(data: Buffer, publicKey: string): Buffer {
-        return crypto.publicEncrypt({
-                key: crypto.createPublicKey(Buffer.from(publicKey, 'base64').toString('utf8')),
-            },
-            data
-        );
+        return crypto.publicEncrypt({ key: crypto.createPublicKey(Buffer.from(publicKey, 'base64').toString('utf8')) }, data);
     }
 
     public asymmetricDecrypt(data: Buffer, privateKey: string): Buffer {
-        return crypto.privateDecrypt({
-                key: crypto.createPrivateKey(Buffer.from(privateKey, 'base64').toString('utf8')),
-            },
-            data
-        );
+        return crypto.privateDecrypt({ key: crypto.createPrivateKey(Buffer.from(privateKey, 'base64').toString('utf8')) }, data);
     }
 
     public decryptTopicConfigurationMessage(topicConfigurationMessageInBase64: string, privateKey: string): TopicConfigurationObject {
@@ -58,7 +49,6 @@ export class RSA extends DefaultAdapter implements CryptoAdapter {
                     topicEncryptionKey = this.asymmetricDecrypt(Buffer.from(encryptedTopicKey, 'base64'), privateKey);
                     topicEncryptionInitVector = this.asymmetricDecrypt(Buffer.from(encryptedTopicInitVector, 'base64'), privateKey);
                 } catch (error) {
-                    console.log(error);
                     continue;
                 }
 
@@ -68,7 +58,6 @@ export class RSA extends DefaultAdapter implements CryptoAdapter {
 
                     return JSON.parse(decryptedTopicConfigurationObject) as TopicConfigurationObject;
                 } catch (error) {
-                    continue;
                 }
             }
         }

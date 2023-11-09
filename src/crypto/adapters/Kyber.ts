@@ -2,7 +2,6 @@ import {CryptoAdapter} from "../interfaces/CryptoAdapter";
 import {EncryptedTopicKeysObject} from "../interfaces/EncryptedTopicKeysObject";
 import {TopicParticipant} from "../../hedera/interfaces/TopicParticipant";
 import {TopicConfigurationMessage} from "../../hedera/interfaces/TopicConfigurationMessage";
-import {TopicEncryptionConfiguration} from "../../hedera/interfaces/TopicEncryptionConfiguration";
 import {TopicConfigurationObject} from "../../hedera/interfaces/TopicConfigurationObject";
 import {TopicEncryptionKeyAndInitVector} from "../../hedera/interfaces/TopicEncryptionKeyAndInitVector";
 import {DefaultAdapter} from "./DefaultAdapter";
@@ -17,7 +16,7 @@ export class Kyber extends DefaultAdapter implements CryptoAdapter {
     public getEncryptedTopicKeysObject(topicEncryptionKey: Buffer, topicEncryptionInitVector: Buffer, topicParticipants:Array<TopicParticipant>): EncryptedTopicKeysObject {
         const encryptedTopicKeysObject: EncryptedTopicKeysObject = {
             a: [],
-            b: [],
+            b: []
         }
 
         // Initialize the "c" key in the encrypted topic objects since we are using Kyber
@@ -76,7 +75,6 @@ export class Kyber extends DefaultAdapter implements CryptoAdapter {
 
                         return JSON.parse(decryptedTopicConfigurationObject) as TopicConfigurationObject;
                     } catch (error) {
-                        continue;
                     }
                 }
             }
