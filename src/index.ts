@@ -91,7 +91,7 @@ export class EncryptedTopic {
             if (createEncryptedTopicConfiguration.storageOptions.configuration === StorageOptions.File) {
                 // Create the file containing the topic configuration message
                 const fileCreateTransaction: FileCreateTransaction = new FileCreateTransaction({
-                    keys: [PrivateKey.fromStringED25519(this.hederaConfiguration.hederaPrivateKey).publicKey]
+                    keys: [PrivateKey.fromString(this.hederaConfiguration.hederaPrivateKey).publicKey]
                 });
                 await fileCreateTransaction.freezeWith(this.client);
                 await fileCreateTransaction.sign(PrivateKey.fromString(this.hederaConfiguration.hederaPrivateKey));
@@ -108,7 +108,7 @@ export class EncryptedTopic {
                 const fileUpdateTransaction: FileUpdateTransaction = new FileUpdateTransaction({
                     fileId: fileId,
                     contents: topicConfigurationMessageInBase64,
-                    keys: [PrivateKey.fromStringED25519(this.hederaConfiguration.hederaPrivateKey).publicKey]
+                    keys: [PrivateKey.fromString(this.hederaConfiguration.hederaPrivateKey).publicKey]
                 });
                 await fileUpdateTransaction.freezeWith(this.client);
                 await fileUpdateTransaction.sign(PrivateKey.fromString(this.hederaConfiguration.hederaPrivateKey));
@@ -262,7 +262,7 @@ export class EncryptedTopic {
         const fileUpdateTransaction: FileUpdateTransaction = new FileUpdateTransaction({
             fileId: topicMemoObject.s.c.i,
             contents: Buffer.from(JSON.stringify(newTopicConfigurationMessage)).toString('base64'),
-            keys: [PrivateKey.fromStringED25519(this.hederaConfiguration.hederaPrivateKey).publicKey]
+            keys: [PrivateKey.fromString(this.hederaConfiguration.hederaPrivateKey).publicKey]
         });
 
         await fileUpdateTransaction.freezeWith(this.client);
@@ -299,7 +299,7 @@ export class EncryptedTopic {
         // Topic memo specifies that topic messages should be stored using the File Service
         if (topicMemoObject.s.m.u) {
             const fileCreateTransaction: FileCreateTransaction = new FileCreateTransaction({
-                keys: [PrivateKey.fromStringED25519(this.hederaConfiguration.hederaPrivateKey).publicKey]
+                keys: [PrivateKey.fromString(this.hederaConfiguration.hederaPrivateKey).publicKey]
             });
             await fileCreateTransaction.freezeWith(this.client);
             await fileCreateTransaction.sign(PrivateKey.fromString(this.hederaConfiguration.hederaPrivateKey));
@@ -316,7 +316,7 @@ export class EncryptedTopic {
             const fileUpdateTransaction: FileUpdateTransaction = new FileUpdateTransaction({
                 fileId: fileId,
                 contents: finalMessageInBase64,
-                keys: [PrivateKey.fromStringED25519(this.hederaConfiguration.hederaPrivateKey).publicKey]
+                keys: [PrivateKey.fromString(this.hederaConfiguration.hederaPrivateKey).publicKey]
             });
             await fileUpdateTransaction.freezeWith(this.client);
             await fileUpdateTransaction.sign(PrivateKey.fromString(this.hederaConfiguration.hederaPrivateKey));
