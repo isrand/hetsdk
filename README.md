@@ -192,7 +192,7 @@ Adds new participant to the encrypted topic, only if the storage medium of said 
 **Usage**
 
 ```typescript
-const additionSuccess = await encryptedTopic.addParticipants(topicId, otherKyberPublicKey, kyberPrivateKey);
+const additionSuccess = await encryptedTopic.addParticipant(topicId, otherKyberPublicKey, kyberPrivateKey);
 ```
 
 **Return value**
