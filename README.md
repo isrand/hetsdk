@@ -76,14 +76,7 @@ async function main() {
 
   // Create a new encrypted topic with Kyber-512 as the encryption algorithm
   const topicId = await encryptedTopic.create({
-    participants: [
-      {
-        publicKey: kyberPublicKey
-      },
-      {
-        publicKey: otherKyberPublicKey
-      }
-    ],
+    participants: [kyberPublicKey, otherKyberPublicKey]
     algorithm: EncryptionAlgorithms.Kyber512,
     storageOptions: {
       storeParticipants: false,
@@ -119,8 +112,7 @@ Create a new encrypted topic.
 **Parameters**
 
 - `createEncryptedTopicConfiguration (CreateEncryptedTopicConfiguration)`: Object containing the parameters used to configure the encrypted topic. It contains the following keys:
-  - `participants (TopicParticipant[])`: Array of participants that will be part of the topic. The `TopicParticipant` object contains the following keys:
-    - `publicKey`: base64-encoded public key used for encryption. The key's algorithm must match the chosen topic encryption algorithm.
+  - `participants (string[])`: Array of base64-encoded public keys used for encryption. The key's algorithm must match the chosen topic encryption algorithm.
   - `algorithm (EncryptionAlgorithms)`:  Enum that specifies the encryption algorithm and key size. Possible options are: `EncryptionAlgorithms.RSA2048`, `EncryptionAlgorithms.Kyber512`, `EncryptionAlgorithms.Kyber768`, `EncryptionAlgorithms.Kyber1024`.
   - `storageOptions (TopicStorageOptions)`: Object containing storage options for the topic artifacts:
     - `configuration (StorageOptions)`: Enum that specifies File Service (`StorageOptions.File`) or Consensus Service (`StorageOptions.Message`).
@@ -134,11 +126,7 @@ Create a new encrypted topic.
 
 ```typescript
 const topicId = await encryptedTopic.create({
-  participants: [
-    {
-      publicKey: kyberPublicKey,
-    }
-  ],
+  participants: [kyberPublicKey],
   algorithm: EncryptionAlgorithms.Kyber512,
   storageOptions: {
     storeParticipants: false,
@@ -199,17 +187,13 @@ Adds new participant to the encrypted topic, only if the storage medium of said 
 **Parameters**
 
 - `topicId (string)`: Id of the encrypted topic where the new participant will be added.
-- `participant (TopicParticipant)`: New participant to add to the topic. The `TopicParticipant` object contains the following keys:
-  - `publicKey`: base64-encoded public key used for encryption. The key's algorithm must match the chosen topic encryption algorithm.
+- `participant (string)`: New participant to add to the topic: their base64-encoded public key used for encryption. The key's algorithm must match the chosen topic encryption algorithm.
 - `privateKey (string)`: String containing the participant's private key. It must be base64-encoded.
 
 **Usage**
 
 ```typescript
-const additionSuccess = await encryptedTopic.addParticipants(topicId,
-  {
-    publicKey: otherKyberPublicKey,
-  }, kyberPrivateKey);
+const additionSuccess = await encryptedTopic.addParticipants(topicId, otherKyberPublicKey, kyberPrivateKey);
 ```
 
 **Return value**
@@ -269,7 +253,7 @@ const topicParticipants = await encryptedTopic.getParticipants(topicId, kyberPri
 
 **Return value**
 
-`topicParticipants (TopicParticipant[])`: array of participants belonging to the encrypted topic.
+`topicParticipants (string[])`: array of participant public key belonging to the encrypted topic.
 
 or
 

@@ -1,6 +1,5 @@
-import { TopicParticipant } from "./TopicParticipant";
 export interface TopicConfigurationObject {
     s: string;
-    p?: Array<TopicParticipant>;
+    p?: string[];
     m?: unknown;
 }

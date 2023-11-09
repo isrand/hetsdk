@@ -1,5 +1,4 @@
 import {Kyber} from "./adapters/Kyber";
-import {TopicParticipant} from "../hedera/interfaces/TopicParticipant";
 import {EncryptedTopicKeysObject} from "./interfaces/EncryptedTopicKeysObject";
 import {CryptoAdapter} from "./interfaces/CryptoAdapter";
 import {TopicEncryptionKeyAndInitVector} from "../hedera/interfaces/TopicEncryptionKeyAndInitVector";
@@ -17,7 +16,7 @@ export class Crypto {
         }
     }
 
-    public validateParticipantKeys(topicParticipants: Array<TopicParticipant>, topicEncryptionKeySize: number): void {
+    public validateParticipantKeys(topicParticipants: string[], topicEncryptionKeySize: number): void {
         this.adapter.validateParticipantKeys(topicParticipants, topicEncryptionKeySize);
     }
 
@@ -29,7 +28,7 @@ export class Crypto {
         return this.adapter.symmetricDecrypt(data, symmetricKey, initVector);
     }
 
-    public getEncryptedTopicKeysObject(topicEncryptionKey: Buffer, topicEncryptionInitVector: Buffer, topicParticipants: Array<TopicParticipant>): EncryptedTopicKeysObject {
+    public getEncryptedTopicKeysObject(topicEncryptionKey: Buffer, topicEncryptionInitVector: Buffer, topicParticipants: string[]): EncryptedTopicKeysObject {
         return this.adapter.getEncryptedTopicKeysObject(topicEncryptionKey, topicEncryptionInitVector, topicParticipants);
     }
 

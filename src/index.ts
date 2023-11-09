@@ -9,7 +9,6 @@ import {
     TopicMessageSubmitTransaction
 } from "@hashgraph/sdk";
 import {Crypto} from "./crypto/Crypto";
-import {TopicParticipant} from "./hedera/interfaces/TopicParticipant";
 import {HederaConfiguration} from "./hedera/interfaces/HederaConfiguration";
 import * as crypto from 'crypto';
 import {TopicEncryptionConfiguration} from "./hedera/interfaces/TopicEncryptionConfiguration";
@@ -56,10 +55,7 @@ export class EncryptedTopic {
         const topicEncryptionInitVector: Buffer = Buffer.from(crypto.randomBytes(16));
 
         // Remove doubles from participants array
-        const uniqueParticipantsArray = createEncryptedTopicConfiguration.participants.filter((obj, index, self) =>
-            index === self.findIndex(o => (o.publicKey === obj.publicKey))
-        );
-
+        const uniqueParticipantsArray = Array.from(new Set(createEncryptedTopicConfiguration.participants));
         const topicConfigurationObject: TopicConfigurationObject = {
             s: submitKey,
             m: createEncryptedTopicConfiguration.metadata
@@ -199,7 +195,7 @@ export class EncryptedTopic {
         }
     }
 
-    public async addParticipant(topicId: string, participant: TopicParticipant, privateKey: string): Promise<void> {
+    public async addParticipant(topicId: string, participant: string, privateKey: string): Promise<void> {
         // Get topic memo, check if topic configuration message is stored using the File Service
         const topicMemoObject: TopicMemoObject = await this.getMemo(topicId);
 
@@ -378,7 +374,7 @@ export class EncryptedTopic {
 
     // "getParticipants" returns the participants of a topic (if the user has access, and if the user that created the topic chose to
     // store said list in the topic configuration)
-    public async getParticipants(topicId: string, privateKey: string): Promise<Array<TopicParticipant>> {
+    public async getParticipants(topicId: string, privateKey: string): Promise<string[]> {
         const topicConfigurationObject: TopicConfigurationObject = await this.getTopicConfigurationObject(topicId, privateKey);
         if (topicConfigurationObject.p) {
             return topicConfigurationObject.p;

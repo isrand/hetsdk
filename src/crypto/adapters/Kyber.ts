@@ -1,6 +1,5 @@
 import {CryptoAdapter} from "../interfaces/CryptoAdapter";
 import {EncryptedTopicKeysObject} from "../interfaces/EncryptedTopicKeysObject";
-import {TopicParticipant} from "../../hedera/interfaces/TopicParticipant";
 import {TopicConfigurationMessage} from "../../hedera/interfaces/TopicConfigurationMessage";
 import {TopicConfigurationObject} from "../../hedera/interfaces/TopicConfigurationObject";
 import {TopicEncryptionKeyAndInitVector} from "../../hedera/interfaces/TopicEncryptionKeyAndInitVector";
@@ -13,7 +12,7 @@ export class Kyber extends DefaultAdapter implements CryptoAdapter {
         super();
     }
 
-    public getEncryptedTopicKeysObject(topicEncryptionKey: Buffer, topicEncryptionInitVector: Buffer, topicParticipants:Array<TopicParticipant>): EncryptedTopicKeysObject {
+    public getEncryptedTopicKeysObject(topicEncryptionKey: Buffer, topicEncryptionInitVector: Buffer, publicKeys: string[]): EncryptedTopicKeysObject {
         const encryptedTopicKeysObject: EncryptedTopicKeysObject = {
             a: [],
             b: []
@@ -22,10 +21,8 @@ export class Kyber extends DefaultAdapter implements CryptoAdapter {
         // Initialize the "c" key in the encrypted topic objects since we are using Kyber
         encryptedTopicKeysObject.c = [];
 
-        for (const participant of topicParticipants) {
-            const kyberPublicKey = Buffer.from(participant.publicKey, 'base64');
-
-            let symmetricAndEncapsulatedKey: Array<Array<number>> = this.getSymmetricAndEncapsulatedKey(kyberPublicKey);
+        for (const publicKey of publicKeys) {
+            let symmetricAndEncapsulatedKey: Array<Array<number>> = this.getSymmetricAndEncapsulatedKey(Buffer.from(publicKey, 'base64'));
 
             const encapsulatedSymmetricKey: Array<number> | undefined = symmetricAndEncapsulatedKey[0];
             const symmetricKey: Array<number> | undefined = symmetricAndEncapsulatedKey[1];
@@ -118,13 +115,13 @@ export class Kyber extends DefaultAdapter implements CryptoAdapter {
 
 
 
-    public validateParticipantKeys(topicParticipants: Array<TopicParticipant>, topicEncryptionKeySize: number): void {
+    public validateParticipantKeys(topicParticipants: string[], topicEncryptionKeySize: number): void {
         // base64-encoded Kyber keys are 1068, 1580 or 2092 characters in length
         const expectedKeyLengthInBase64 = (this.keySize * 2) + 44;
 
-        for (const participant of topicParticipants) {
-            if (participant.publicKey.length !== expectedKeyLengthInBase64) {
-                throw new Error(`Kyber public key ${participant.publicKey} is of wrong size. Topic encryption algorithm key size is ${topicEncryptionKeySize}. (Is the key base64 encoded?)`);
+        for (const publicKey of topicParticipants) {
+            if (publicKey.length !== expectedKeyLengthInBase64) {
+                throw new Error(`Kyber public key ${publicKey} is of wrong size. Topic encryption algorithm key size is ${topicEncryptionKeySize}. (Is the key base64 encoded?)`);
             }
         }
     }

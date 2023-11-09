@@ -1,6 +1,5 @@
 import {CryptoAdapter} from "../interfaces/CryptoAdapter";
 import {EncryptedTopicKeysObject} from "../interfaces/EncryptedTopicKeysObject";
-import {TopicParticipant} from "../../hedera/interfaces/TopicParticipant";
 import crypto from "crypto";
 import {TopicConfigurationObject} from "../../hedera/interfaces/TopicConfigurationObject";
 import {TopicEncryptionKeyAndInitVector} from "../../hedera/interfaces/TopicEncryptionKeyAndInitVector";
@@ -12,15 +11,15 @@ export class RSA extends DefaultAdapter implements CryptoAdapter {
     // base64-encoded RSA public keys are 604 bytes in length
     private readonly expectedKeyLengthInBase64: number = 604;
 
-    public getEncryptedTopicKeysObject(topicEncryptionKey: Buffer, topicEncryptionInitVector: Buffer, topicParticipants:Array<TopicParticipant>): EncryptedTopicKeysObject {
+    public getEncryptedTopicKeysObject(topicEncryptionKey: Buffer, topicEncryptionInitVector: Buffer, publicKeys: string[]): EncryptedTopicKeysObject {
         const encryptedTopicKeysObject: EncryptedTopicKeysObject = {
             a: [],
             b: [],
         }
 
-        for (const participant of topicParticipants) {
-            const encryptedTopicEncryptionKey = this.asymmetricEncrypt(topicEncryptionKey, participant.publicKey);
-            const encryptedTopicInitVector = this.asymmetricEncrypt(topicEncryptionInitVector, participant.publicKey);
+        for (const publicKey of publicKeys) {
+            const encryptedTopicEncryptionKey = this.asymmetricEncrypt(topicEncryptionKey, publicKey);
+            const encryptedTopicInitVector = this.asymmetricEncrypt(topicEncryptionInitVector, publicKey);
 
             encryptedTopicKeysObject.a.push(Buffer.from(encryptedTopicEncryptionKey).toString('base64'));
             encryptedTopicKeysObject.b.push(Buffer.from(encryptedTopicInitVector).toString('base64'));
@@ -90,10 +89,10 @@ export class RSA extends DefaultAdapter implements CryptoAdapter {
         throw new Error('Error fetching topic encryption key and init vector. Does user have access?');
     }
 
-    public validateParticipantKeys(topicParticipants: Array<TopicParticipant>, topicEncryptionKeySize: number): void {
-        for (const participant of topicParticipants) {
-            if (participant.publicKey.length !== this.expectedKeyLengthInBase64) {
-                throw new Error(`RSA public key ${participant.publicKey} is of wrong size. Topic encryption algorithm key size is ${topicEncryptionKeySize}. (Is the key base64 encoded?)`);
+    public validateParticipantKeys(topicParticipants: string[], topicEncryptionKeySize: number): void {
+        for (const publicKey of topicParticipants) {
+            if (publicKey.length !== this.expectedKeyLengthInBase64) {
+                throw new Error(`RSA public key ${publicKey} is of wrong size. Topic encryption algorithm key size is ${topicEncryptionKeySize}. (Is the key base64 encoded?)`);
             }
         }
     }
