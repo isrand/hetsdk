@@ -47,9 +47,7 @@ export class RSA extends DefaultAdapter implements CryptoAdapter {
     }
 
     public decryptTopicConfigurationMessage(topicConfigurationMessageInBase64: string, privateKey: string): TopicConfigurationObject {
-        const topicConfigurationMessage = JSON.parse(Buffer.from(topicConfigurationMessageInBase64, 'base64').toString('utf8')) as TopicConfigurationMessage;
-        const topicEncryptionConfigurationObject = JSON.parse(Buffer.from(topicConfigurationMessage.b, 'base64').toString('utf8')) as TopicEncryptionConfiguration;
-        const encryptedTopicKeysObject = topicEncryptionConfigurationObject.e;
+        const encryptedTopicKeysObject = this.getEncryptedTopicKeysObjectFromTopicConfigurationMessage(topicConfigurationMessageInBase64)
 
         for (const encryptedTopicKey of encryptedTopicKeysObject.a) {
             for (const encryptedTopicInitVector of encryptedTopicKeysObject.b) {
@@ -65,7 +63,9 @@ export class RSA extends DefaultAdapter implements CryptoAdapter {
                 }
 
                 try {
+                    const topicConfigurationMessage = JSON.parse(Buffer.from(topicConfigurationMessageInBase64, 'base64').toString('utf8')) as TopicConfigurationMessage;
                     const decryptedTopicConfigurationObject = this.symmetricDecrypt(topicConfigurationMessage.a, topicEncryptionKey, topicEncryptionInitVector);
+
                     return JSON.parse(decryptedTopicConfigurationObject) as TopicConfigurationObject;
                 } catch (error) {
                     continue;
@@ -77,9 +77,7 @@ export class RSA extends DefaultAdapter implements CryptoAdapter {
     }
 
     public getTopicEncryptionKeyAndInitVector(topicConfigurationMessageInBase64: string, privateKey: string): TopicEncryptionKeyAndInitVector {
-        const topicConfigurationMessage = JSON.parse(Buffer.from(topicConfigurationMessageInBase64, 'base64').toString('utf8')) as TopicConfigurationMessage;
-        const topicEncryptionConfigurationObject = JSON.parse(Buffer.from(topicConfigurationMessage.b, 'base64').toString('utf8')) as TopicEncryptionConfiguration;
-        const encryptedTopicKeysObject = topicEncryptionConfigurationObject.e;
+        const encryptedTopicKeysObject = this.getEncryptedTopicKeysObjectFromTopicConfigurationMessage(topicConfigurationMessageInBase64)
 
         for (const encryptedTopicKey of encryptedTopicKeysObject.a) {
             for (const encryptedTopicInitVector of encryptedTopicKeysObject.b) {

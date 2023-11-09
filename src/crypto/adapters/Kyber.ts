@@ -49,9 +49,7 @@ export class Kyber extends DefaultAdapter implements CryptoAdapter {
     }
 
     public decryptTopicConfigurationMessage(topicConfigurationMessageInBase64: string, privateKey: string): TopicConfigurationObject {
-        const topicConfigurationMessage = JSON.parse(Buffer.from(topicConfigurationMessageInBase64, 'base64').toString('utf8')) as TopicConfigurationMessage;
-        const topicEncryptionConfigurationObject = JSON.parse(Buffer.from(topicConfigurationMessage.b, 'base64').toString('utf8')) as TopicEncryptionConfiguration;
-        const encryptedTopicKeysObject = topicEncryptionConfigurationObject.e;
+        const encryptedTopicKeysObject = this.getEncryptedTopicKeysObjectFromTopicConfigurationMessage(topicConfigurationMessageInBase64)
         if (!encryptedTopicKeysObject.c) {
             throw new Error('Encrypted topic keys object does not have encapsulated symmetric keys. (Are you trying to use Kyber on a non-Kyber encrypted topic?)');
         }
@@ -73,6 +71,7 @@ export class Kyber extends DefaultAdapter implements CryptoAdapter {
                     }
 
                     try {
+                        const topicConfigurationMessage = JSON.parse(Buffer.from(topicConfigurationMessageInBase64, 'base64').toString('utf8')) as TopicConfigurationMessage;
                         const decryptedTopicConfigurationObject = this.symmetricDecrypt(topicConfigurationMessage.a, Buffer.from(topicEncryptionKey, 'base64'), Buffer.from(topicEncryptionInitVector, 'base64'));
 
                         return JSON.parse(decryptedTopicConfigurationObject) as TopicConfigurationObject;
@@ -87,9 +86,7 @@ export class Kyber extends DefaultAdapter implements CryptoAdapter {
     }
 
     public getTopicEncryptionKeyAndInitVector(topicConfigurationMessageInBase64: string, privateKey: string): TopicEncryptionKeyAndInitVector {
-        const topicConfigurationMessage = JSON.parse(Buffer.from(topicConfigurationMessageInBase64, 'base64').toString('utf8')) as TopicConfigurationMessage;
-        const topicEncryptionConfigurationObject = JSON.parse(Buffer.from(topicConfigurationMessage.b, 'base64').toString('utf8')) as TopicEncryptionConfiguration;
-        const encryptedTopicKeysObject = topicEncryptionConfigurationObject.e;
+        const encryptedTopicKeysObject = this.getEncryptedTopicKeysObjectFromTopicConfigurationMessage(topicConfigurationMessageInBase64)
         if (!encryptedTopicKeysObject.c) {
             throw new Error('Encrypted topic keys object does not have encapsulated symmetric keys. (Are you trying to use Kyber on a non-Kyber encrypted topic?)');
         }
@@ -120,6 +117,8 @@ export class Kyber extends DefaultAdapter implements CryptoAdapter {
 
         throw new Error('Error fetching topic encryption key and init vector. Does user have access?');
     }
+
+
 
     public validateParticipantKeys(topicParticipants: Array<TopicParticipant>, topicEncryptionKeySize: number): void {
         // base64-encoded Kyber keys are 1068, 1580 or 2092 characters in length
