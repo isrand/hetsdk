@@ -107,7 +107,7 @@ main();
 
 **Description**
 
-Create a new encrypted topic.
+Create a new encrypted topic. The user creating the topic is hereinafter referred to as the "encrypted topic admin", and only they can perform changes on the topic configuration or participants.
 
 **Parameters**
 
@@ -155,7 +155,7 @@ Submit a message on an encrypted topic. The participant must have access to the 
 
 - `topicId (string)`: Id of the encrypted topic where the message will be sent.
 - `message (string)`: String containing the message contents. If you want to transact a JSON payload, make sure to `JSON.stringify()` it first.
-- `privateKey (string)`: String containing the participant's private key. It must be base64-encoded.
+- `privateKey (string)`: String containing the encryted topic admin's private key. It must be base64-encoded.
 
 **Usage**
 
@@ -187,7 +187,7 @@ Adds new participant to the encrypted topic, only if the storage medium of said 
 
 - `topicId (string)`: Id of the encrypted topic where the new participant will be added.
 - `publicKey (string)`: Base64-encoded public key of the new participant used for encryption. The key's algorithm must match the chosen topic encryption algorithm.
-- `privateKey (string)`: String containing the participant's private key. It must be base64-encoded.
+- `privateKey (string)`: String containing the encryted topic admin's private key. It must be base64-encoded.
 
 **Usage**
 
@@ -215,7 +215,7 @@ Get message from an encrypted topic given its sequence number. The participant m
 
 - `topicId (string)`: Object containing the parameters used to configure the encrypted topic.
 - `messageSequenceNumber (number)`: Sequence of the number you want to fetch.
-- `privateKey (string)`: String containing the participant's private key. It must be base64-encoded.
+- `privateKey (string)`: String containing the encryted topic admin's private key. It must be base64-encoded.
 
 **Usage**
 
@@ -242,7 +242,7 @@ Get the participants belonging to an encrypted topic, only if the creator chose 
 **Parameters**
 
 - `topicId (string)`: Object containing the parameters used to configure the encrypted topic.
-- `privateKey (string)`: String containing the participant's private key. It must be base64-encoded.
+- `privateKey (string)`: String containing the encryted topic admin's private key. It must be base64-encoded.
 
 **Usage**
 
