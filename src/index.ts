@@ -65,7 +65,7 @@ export class EncryptedTopic {
             m: createEncryptedTopicConfiguration.metadata
         };
 
-        if (createEncryptedTopicConfiguration.storageOptions.storeParticipantsArray) {
+        if (createEncryptedTopicConfiguration.storageOptions.storeParticipants) {
             topicConfigurationObject.p = uniqueParticipantsArray
         }
 
@@ -400,7 +400,7 @@ export class EncryptedTopic {
                 c: {
                     i: topicConfigurationFileId,
                     u: topicStorageOptions.configuration === StorageOptions.File,
-                    p: topicStorageOptions.storeParticipantsArray
+                    p: topicStorageOptions.storeParticipants
                 },
                 m: {
                     u: topicStorageOptions.messages === StorageOptions.File
