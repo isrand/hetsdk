@@ -76,7 +76,7 @@ async function main() {
 
   // Create a new encrypted topic with Kyber-512 as the encryption algorithm
   const topicId = await encryptedTopic.create({
-    participants: [kyberPublicKey, otherKyberPublicKey]
+    participants: [kyberPublicKey, otherKyberPublicKey],
     algorithm: EncryptionAlgorithms.Kyber512,
     storageOptions: {
       storeParticipants: false,
@@ -171,10 +171,9 @@ or
 
 `ERROR`: if the user doesn't have access to the topic.
 
-
 ---
 
-### `addParticipant (topicId, participant, privateKey)`
+### `addParticipant (topicId, publicKey, privateKey)`
 
 **Description**
 
@@ -187,7 +186,7 @@ Adds new participant to the encrypted topic, only if the storage medium of said 
 **Parameters**
 
 - `topicId (string)`: Id of the encrypted topic where the new participant will be added.
-- `participant (string)`: New participant to add to the topic: their base64-encoded public key used for encryption. The key's algorithm must match the chosen topic encryption algorithm.
+- `publicKey (string)`: Base64-encoded public key of the new participant used for encryption. The key's algorithm must match the chosen topic encryption algorithm.
 - `privateKey (string)`: String containing the participant's private key. It must be base64-encoded.
 
 **Usage**

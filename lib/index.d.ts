@@ -8,7 +8,7 @@ export declare class EncryptedTopic {
     private topicMemoObject;
     constructor(hederaConfiguration: HederaConfiguration);
     create(createEncryptedTopicConfiguration: CreateEncryptedTopicConfiguration): Promise<string>;
-    addParticipant(topicId: string, participant: string, privateKey: string): Promise<void>;
+    addParticipant(topicId: string, publicKey: string, privateKey: string): Promise<void>;
     submitMessage(topicId: string, message: string, privateKey: string): Promise<number>;
     getMessage(topicId: string, sequenceNumber: number, privateKey: string): Promise<string>;
     getParticipants(topicId: string, privateKey: string): Promise<string[]>;

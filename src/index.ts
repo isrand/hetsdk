@@ -195,7 +195,7 @@ export class EncryptedTopic {
         }
     }
 
-    public async addParticipant(topicId: string, participant: string, privateKey: string): Promise<void> {
+    public async addParticipant(topicId: string, publicKey: string, privateKey: string): Promise<void> {
         // Get topic memo, check if topic configuration message is stored using the File Service
         const topicMemoObject: TopicMemoObject = await this.getMemo(topicId);
 
@@ -211,7 +211,7 @@ export class EncryptedTopic {
         const newEncryptedTopicEncryptionKeyAndInitVectors = this.crypto.getEncryptedTopicKeysObject(
             Buffer.from(topicEncryptionKeyAndInitVector.encryptionKey, 'base64'),
             Buffer.from(topicEncryptionKeyAndInitVector.initVector, 'base64'),
-            [participant]
+            [publicKey]
         );
 
         // Get old encrypted topic keys object containing already encrypted topic encryption keys and init vectors
