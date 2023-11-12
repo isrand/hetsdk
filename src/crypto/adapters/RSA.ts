@@ -1,9 +1,9 @@
 import {CryptoAdapter} from "../interfaces/CryptoAdapter";
 import {EncryptedTopicKeysObject} from "../interfaces/EncryptedTopicKeysObject";
 import crypto from "crypto";
-import {TopicConfigurationObject} from "../../hedera/interfaces/TopicConfigurationObject";
+import {TopicData} from "../../hedera/interfaces/TopicData";
 import {TopicEncryptionKeyAndInitVector} from "../../hedera/interfaces/TopicEncryptionKeyAndInitVector";
-import {TopicConfigurationMessage} from "../../hedera/interfaces/TopicConfigurationMessage";
+import {TopicConfigurationObject} from "../../hedera/interfaces/TopicConfigurationObject";
 import {DefaultAdapter} from "./DefaultAdapter";
 
 export class RSA extends DefaultAdapter implements CryptoAdapter {
@@ -36,7 +36,7 @@ export class RSA extends DefaultAdapter implements CryptoAdapter {
         return crypto.privateDecrypt({ key: crypto.createPrivateKey(Buffer.from(privateKey, 'base64').toString('utf8')) }, data);
     }
 
-    public decryptTopicConfigurationMessage(topicConfigurationMessageInBase64: string, privateKey: string): TopicConfigurationObject {
+    public decryptTopicConfigurationMessage(topicConfigurationMessageInBase64: string, privateKey: string): TopicData {
         const encryptedTopicKeysObject = this.getEncryptedTopicKeysObjectFromTopicConfigurationMessage(topicConfigurationMessageInBase64)
 
         for (const encryptedTopicKey of encryptedTopicKeysObject.a) {
@@ -52,10 +52,10 @@ export class RSA extends DefaultAdapter implements CryptoAdapter {
                 }
 
                 try {
-                    const topicConfigurationMessage = JSON.parse(Buffer.from(topicConfigurationMessageInBase64, 'base64').toString('utf8')) as TopicConfigurationMessage;
+                    const topicConfigurationMessage = JSON.parse(Buffer.from(topicConfigurationMessageInBase64, 'base64').toString('utf8')) as TopicConfigurationObject;
                     const decryptedTopicConfigurationObject = this.symmetricDecrypt(topicConfigurationMessage.a, topicEncryptionKey, topicEncryptionInitVector);
 
-                    return JSON.parse(decryptedTopicConfigurationObject) as TopicConfigurationObject;
+                    return JSON.parse(decryptedTopicConfigurationObject) as TopicData;
                 } catch (error) {
                 }
             }

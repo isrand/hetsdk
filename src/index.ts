@@ -11,12 +11,12 @@ import {
 import {Crypto} from "./crypto/Crypto";
 import {HederaConfiguration} from "./hedera/interfaces/HederaConfiguration";
 import * as crypto from 'crypto';
-import {TopicEncryptionConfiguration} from "./hedera/interfaces/TopicEncryptionConfiguration";
-import {TopicConfigurationObject} from "./hedera/interfaces/TopicConfigurationObject";
+import {TopicEncryptionData} from "./hedera/interfaces/TopicEncryptionData";
+import {TopicData} from "./hedera/interfaces/TopicData";
 import {Long} from "@hashgraph/sdk/lib/long";
 import {TopicEncryptionKeyAndInitVector} from "./hedera/interfaces/TopicEncryptionKeyAndInitVector";
 import {TopicEncryptedMessage} from "./hedera/interfaces/TopicEncryptedMessage";
-import {TopicConfigurationMessage} from "./hedera/interfaces/TopicConfigurationMessage";
+import {TopicConfigurationObject} from "./hedera/interfaces/TopicConfigurationObject";
 import {CreateEncryptedTopicConfiguration} from "./hedera/interfaces/CreateEncryptedTopicConfiguration";
 import {TopicMemoObject} from "./hedera/interfaces/TopicMemoObject";
 import {TopicStorageOptions} from "./hedera/interfaces/TopicStorageOptions";
@@ -56,31 +56,27 @@ export class EncryptedTopic {
 
         // Remove doubles from participants array
         const uniqueParticipantsArray = Array.from(new Set(createEncryptedTopicConfiguration.participants));
-        const topicConfigurationObject: TopicConfigurationObject = {
+        const topicData: TopicData = {
             s: submitKey,
             m: createEncryptedTopicConfiguration.metadata
         };
 
-        if (createEncryptedTopicConfiguration.storageOptions.storeParticipants) {
-            topicConfigurationObject.p = uniqueParticipantsArray
-        }
+        const encryptedTopicDataInBase64 = this.crypto.symmetricEncrypt(JSON.stringify(topicData), topicEncryptionKey, topicEncryptionInitVector);
 
-        const encryptedTopicConfigurationObjectInBase64 = this.crypto.symmetricEncrypt(JSON.stringify(topicConfigurationObject), topicEncryptionKey, topicEncryptionInitVector);
-
-        const topicEncryptionConfiguration: TopicEncryptionConfiguration = {
+        const topicEncryptionData: TopicEncryptionData = {
             a: algorithm,
             s: size,
             e: this.crypto.getEncryptedTopicKeysObject(topicEncryptionKey, topicEncryptionInitVector, uniqueParticipantsArray)
         };
 
-        const topicEncryptionConfigurationInBase64 = Buffer.from(JSON.stringify(topicEncryptionConfiguration)).toString('base64');
+        const topicEncryptionDataInBase64 = Buffer.from(JSON.stringify(topicEncryptionData)).toString('base64');
 
-        const topicConfigurationMessage = this.createTopicConfigurationMessage(
-            encryptedTopicConfigurationObjectInBase64,
-            topicEncryptionConfigurationInBase64
+        const topicConfigurationObject = this.createTopicConfigurationMessage(
+            encryptedTopicDataInBase64,
+            topicEncryptionDataInBase64
         );
 
-        const topicConfigurationMessageInBase64: string = Buffer.from(JSON.stringify(topicConfigurationMessage)).toString('base64');
+        const topicConfigurationObjectInBase64: string = Buffer.from(JSON.stringify(topicConfigurationObject)).toString('base64');
 
         try {
             // Use the File Service to store the topic configuration message
@@ -89,6 +85,7 @@ export class EncryptedTopic {
                 const fileCreateTransaction: FileCreateTransaction = new FileCreateTransaction({
                     keys: [PrivateKey.fromString(this.hederaConfiguration.hederaPrivateKey).publicKey]
                 });
+
                 await fileCreateTransaction.freezeWith(this.client);
                 await fileCreateTransaction.sign(PrivateKey.fromString(this.hederaConfiguration.hederaPrivateKey));
 
@@ -103,9 +100,10 @@ export class EncryptedTopic {
 
                 const fileUpdateTransaction: FileUpdateTransaction = new FileUpdateTransaction({
                     fileId: fileId,
-                    contents: topicConfigurationMessageInBase64,
+                    contents: topicConfigurationObjectInBase64,
                     keys: [PrivateKey.fromString(this.hederaConfiguration.hederaPrivateKey).publicKey]
                 });
+
                 await fileUpdateTransaction.freezeWith(this.client);
                 await fileUpdateTransaction.sign(PrivateKey.fromString(this.hederaConfiguration.hederaPrivateKey));
 
@@ -119,7 +117,10 @@ export class EncryptedTopic {
 
                 topicCreateTransaction.setSubmitKey(PrivateKey.fromString(submitKey));
 
-                const topicMemoObject = this.createMemoObject(createEncryptedTopicConfiguration.storageOptions, fileId);
+                // Store the participants in a separate topic if specified by the createEncryptedTopicConfiguration object
+                const participantsStorageTopicId: string | undefined = await this.createParticipantsTopic(createEncryptedTopicConfiguration, submitKey);
+
+                const topicMemoObject = this.createMemoObject(createEncryptedTopicConfiguration.storageOptions, fileId, participantsStorageTopicId);
 
                 // Set the topic memo to point at the file containing the topic configuration message
                 topicCreateTransaction.setTopicMemo(JSON.stringify(topicMemoObject));
@@ -140,7 +141,7 @@ export class EncryptedTopic {
                 this.topicMemoObject = topicMemoObject;
 
                 // Cache the topic configuration message in base64 for future use
-                this.topicConfigurationMessageInBase64 = Buffer.from(JSON.stringify(topicConfigurationMessage)).toString('base64');
+                this.topicConfigurationMessageInBase64 = Buffer.from(JSON.stringify(topicConfigurationObject)).toString('base64');
 
                 return topicId;
             }
@@ -153,7 +154,10 @@ export class EncryptedTopic {
 
             topicCreateTransaction.setSubmitKey(PrivateKey.fromString(submitKey));
 
-            const topicMemoObject = this.createMemoObject(createEncryptedTopicConfiguration.storageOptions);
+            // Store the participants in a separate topic if specified by the createEncryptedTopicConfiguration object
+            const participantsStorageTopicId: string | undefined = await this.createParticipantsTopic(createEncryptedTopicConfiguration, submitKey);
+
+            const topicMemoObject = this.createMemoObject(createEncryptedTopicConfiguration.storageOptions, undefined, participantsStorageTopicId);
 
             topicCreateTransaction.setTopicMemo(JSON.stringify(topicMemoObject));
 
@@ -172,7 +176,7 @@ export class EncryptedTopic {
             // Submit topic configuration message to topic
             const topicSubmitMessageTransaction: TopicMessageSubmitTransaction = new TopicMessageSubmitTransaction({
                 topicId: topicId,
-                message: Buffer.from(JSON.stringify(topicConfigurationMessage)).toString('base64'),
+                message: Buffer.from(JSON.stringify(topicConfigurationObject)).toString('base64'),
             });
 
             await topicSubmitMessageTransaction.freezeWith(this.client);
@@ -185,7 +189,7 @@ export class EncryptedTopic {
             this.topicMemoObject = topicMemoObject;
 
             // Cache the topic configuration message in base64 for future use
-            this.topicConfigurationMessageInBase64 = Buffer.from(JSON.stringify(topicConfigurationMessage)).toString('base64');
+            this.topicConfigurationMessageInBase64 = Buffer.from(JSON.stringify(topicConfigurationObject)).toString('base64');
 
             return topicId;
         } catch (error: unknown) {
@@ -195,12 +199,14 @@ export class EncryptedTopic {
         }
     }
 
+    // "addParticipant" adds a new participant to the encrypted topic, and stores it in the participants topic if the
+    // topic memo specifies it
     public async addParticipant(topicId: string, publicKey: string, privateKey: string): Promise<void> {
         // Get topic memo, check if topic configuration message is stored using the File Service
         const topicMemoObject: TopicMemoObject = await this.getMemo(topicId);
 
         // Throw error if topic doesn't allow for new participants (configuration is stored using Consensus Service)
-        if (!topicMemoObject.s.c.u) {
+        if (!topicMemoObject.s.c.f) {
             throw new Error('New participants can only be added to topics that use the File Service as storage medium for their configuration. Requested topic uses the Consensus Service.');
         }
 
@@ -235,7 +241,7 @@ export class EncryptedTopic {
         const topicEncryptionSize = await this.getTopicEncryptionSizeFromTopicConfigurationMessage(topicId);
 
         // Create topic encryption configuration
-        const topicEncryptionConfiguration: TopicEncryptionConfiguration = {
+        const topicEncryptionConfiguration: TopicEncryptionData = {
             a: topicAlgorithm,
             s: topicEncryptionSize,
             e: newEncryptedTopicKeysObject
@@ -244,7 +250,7 @@ export class EncryptedTopic {
         const topicEncryptionConfigurationInBase64 = Buffer.from(JSON.stringify(topicEncryptionConfiguration)).toString('base64');
 
         // Use old topic configuration object from topic configuration message
-        const topicConfigurationMessage = JSON.parse(Buffer.from(this.topicConfigurationMessageInBase64, 'base64').toString('utf8')) as TopicConfigurationMessage;
+        const topicConfigurationMessage = JSON.parse(Buffer.from(this.topicConfigurationMessageInBase64, 'base64').toString('utf8')) as TopicConfigurationObject;
 
         // Create new topic configuration message
         const newTopicConfigurationMessage = this.createTopicConfigurationMessage(topicConfigurationMessage.a, topicEncryptionConfigurationInBase64)
@@ -260,6 +266,22 @@ export class EncryptedTopic {
         await fileUpdateTransaction.sign(PrivateKey.fromString(this.hederaConfiguration.hederaPrivateKey));
 
         await fileUpdateTransaction.execute(this.client);
+
+        // Store participant in the participants topic
+        if (topicMemoObject.s.p.p) {
+            const submitKey = await this.getSubmitKey(topicId, privateKey);
+
+            const topicSubmitMessageTransaction: TopicMessageSubmitTransaction = new TopicMessageSubmitTransaction({
+                topicId: topicMemoObject.s.p.i,
+                message: publicKey,
+            });
+
+            await topicSubmitMessageTransaction.freezeWith(this.client);
+            await topicSubmitMessageTransaction.sign(PrivateKey.fromString(submitKey));
+            await topicSubmitMessageTransaction.sign(PrivateKey.fromString(this.hederaConfiguration.hederaPrivateKey));
+
+            await topicSubmitMessageTransaction.execute(this.client);
+        }
 
         // Update cached topic configuration message in base 64
         this.topicConfigurationMessageInBase64 = Buffer.from(JSON.stringify(newTopicConfigurationMessage)).toString('base64');
@@ -288,7 +310,7 @@ export class EncryptedTopic {
         const submitKey = await this.getSubmitKey(topicId, privateKey);
 
         // Topic memo specifies that topic messages should be stored using the File Service
-        if (topicMemoObject.s.m.u) {
+        if (topicMemoObject.s.m.f) {
             const fileCreateTransaction: FileCreateTransaction = new FileCreateTransaction({
                 keys: [PrivateKey.fromString(this.hederaConfiguration.hederaPrivateKey).publicKey]
             });
@@ -350,7 +372,7 @@ export class EncryptedTopic {
         const topicEncryptionKeyAndInitVector = await this.getEncryptionKeyAndInitVector(topicId, privateKey);
 
         // Topic memo specifies that topic messages should be stored using the File Service
-        if (topicMemoObject.s.m.u) {
+        if (topicMemoObject.s.m.f) {
             const messageFileIdInBase64 = await this.getMessageFromTopicInBase64(topicId, sequenceNumber);
             let fileId = Buffer.from(messageFileIdInBase64, 'base64').toString('utf8');
             const encryptedMessageInBase64: string = await this.getFileContentsInBase64(Buffer.from(fileId, 'base64').toString('utf8'));
@@ -372,37 +394,71 @@ export class EncryptedTopic {
         return this.crypto.symmetricDecrypt(encryptedMessage.m, decryptedMessageEncryptionKey, decryptedMessageInitVector);
     }
 
-    // "getParticipants" returns the participants of a topic (if the user has access, and if the user that created the topic chose to
-    // store said list in the topic configuration)
-    public async getParticipants(topicId: string, privateKey: string): Promise<string[]> {
-        const topicConfigurationObject: TopicConfigurationObject = await this.getTopicConfigurationObject(topicId, privateKey);
-        if (topicConfigurationObject.p) {
-            return topicConfigurationObject.p;
-        }
-
-        throw new Error('Topic configuration object did not store participants on creation.');
-    }
-
-    private createTopicConfigurationMessage(topicConfigurationObjectInBase64: string, topicEncryptionConfigurationInBase64: string): TopicConfigurationMessage {
+    private createTopicConfigurationMessage(topicConfigurationObjectInBase64: string, topicEncryptionConfigurationInBase64: string): TopicConfigurationObject {
         return {
             a: topicConfigurationObjectInBase64,
             b: topicEncryptionConfigurationInBase64
         };
     }
 
-    private createMemoObject(topicStorageOptions: TopicStorageOptions, topicConfigurationFileId?: string): TopicMemoObject {
+    private createMemoObject(topicStorageOptions: TopicStorageOptions, topicConfigurationFileId?: string, participantsTopicId?: string): TopicMemoObject {
         return {
             s: {
                 c: {
-                    i: topicConfigurationFileId,
-                    u: topicStorageOptions.configuration === StorageOptions.File,
-                    p: topicStorageOptions.storeParticipants
+                    i: topicConfigurationFileId || undefined,
+                    f: topicStorageOptions.configuration === StorageOptions.File,
                 },
                 m: {
-                    u: topicStorageOptions.messages === StorageOptions.File
+                    f: topicStorageOptions.messages === StorageOptions.File
+                },
+                p: {
+                    p: topicStorageOptions.storeParticipants,
+                    i: participantsTopicId || undefined
                 }
             }
         }
+    }
+
+    private async createParticipantsTopic(createEncryptedTopicConfiguration: CreateEncryptedTopicConfiguration, submitKey: string): Promise<string | undefined> {
+        if (!createEncryptedTopicConfiguration.storageOptions.storeParticipants) {
+            return undefined;
+        }
+
+        const topicCreateTransaction: TopicCreateTransaction = new TopicCreateTransaction({
+            adminKey: PrivateKey.fromString(this.hederaConfiguration.hederaPrivateKey),
+            autoRenewAccountId: this.hederaConfiguration.hederaAccountId
+        });
+
+        topicCreateTransaction.setSubmitKey(PrivateKey.fromString(submitKey));
+
+        // Store the participants in a separate topic if specified by the createEncryptedTopicConfiguration object
+
+        await topicCreateTransaction.freezeWith(this.client);
+        await topicCreateTransaction.sign(PrivateKey.fromString(this.hederaConfiguration.hederaPrivateKey));
+
+        const encryptedTopicCreationResponse = await topicCreateTransaction.execute(this.client);
+        const encryptedTopicCreationReceipt = await encryptedTopicCreationResponse.getReceipt(this.client);
+
+        if (!encryptedTopicCreationReceipt.topicId) {
+            throw new Error('Topic Id not found in encrypted topic creation transaction receipt.');
+        }
+
+        const topicId = encryptedTopicCreationReceipt.topicId.toString() || '';
+
+        for (const publicKey of createEncryptedTopicConfiguration.participants) {
+            const topicSubmitMessageTransaction: TopicMessageSubmitTransaction = new TopicMessageSubmitTransaction({
+                topicId: topicId,
+                message: publicKey,
+            });
+
+            await topicSubmitMessageTransaction.freezeWith(this.client);
+            await topicSubmitMessageTransaction.sign(PrivateKey.fromString(submitKey));
+            await topicSubmitMessageTransaction.sign(PrivateKey.fromString(this.hederaConfiguration.hederaPrivateKey));
+
+            await topicSubmitMessageTransaction.execute(this.client);
+        }
+
+        return topicId;
     }
 
     private async getEncryptedTopicKeysObjectFromTopicConfigurationMessage(topicId: string): Promise<EncryptedTopicKeysObject> {
@@ -410,13 +466,13 @@ export class EncryptedTopic {
             await this.setConfigurationMessageInBase64(topicId);
         }
 
-        const topicConfigurationMessage = JSON.parse(Buffer.from(this.topicConfigurationMessageInBase64, 'base64').toString('utf8')) as TopicConfigurationMessage;
-        const topicEncryptionConfigurationObject = JSON.parse(Buffer.from(topicConfigurationMessage.b, 'base64').toString('utf8')) as TopicEncryptionConfiguration;
+        const topicConfigurationMessage = JSON.parse(Buffer.from(this.topicConfigurationMessageInBase64, 'base64').toString('utf8')) as TopicConfigurationObject;
+        const topicEncryptionConfigurationObject = JSON.parse(Buffer.from(topicConfigurationMessage.b, 'base64').toString('utf8')) as TopicEncryptionData;
 
         return topicEncryptionConfigurationObject.e;
     }
 
-    private async getTopicConfigurationObject(topicId: string, privateKey: string): Promise<TopicConfigurationObject> {
+    private async getTopicConfigurationObject(topicId: string, privateKey: string): Promise<TopicData> {
         if (!this.topicConfigurationMessageInBase64) {
             await this.setConfigurationMessageInBase64(topicId);
         }
@@ -433,8 +489,8 @@ export class EncryptedTopic {
             await this.setConfigurationMessageInBase64(topicId);
         }
 
-        const topicConfigurationMessage = JSON.parse(Buffer.from(this.topicConfigurationMessageInBase64, 'base64').toString('utf8')) as TopicConfigurationMessage;
-        const topicEncryptionConfigurationObject = JSON.parse(Buffer.from(topicConfigurationMessage.b, 'base64').toString('utf8')) as TopicEncryptionConfiguration;
+        const topicConfigurationMessage = JSON.parse(Buffer.from(this.topicConfigurationMessageInBase64, 'base64').toString('utf8')) as TopicConfigurationObject;
+        const topicEncryptionConfigurationObject = JSON.parse(Buffer.from(topicConfigurationMessage.b, 'base64').toString('utf8')) as TopicEncryptionData;
 
         return topicEncryptionConfigurationObject.a;
     }
@@ -444,8 +500,8 @@ export class EncryptedTopic {
             await this.setConfigurationMessageInBase64(topicId);
         }
 
-        const topicConfigurationMessage = JSON.parse(Buffer.from(this.topicConfigurationMessageInBase64, 'base64').toString('utf8')) as TopicConfigurationMessage;
-        const topicEncryptionConfigurationObject = JSON.parse(Buffer.from(topicConfigurationMessage.b, 'base64').toString('utf8')) as TopicEncryptionConfiguration;
+        const topicConfigurationMessage = JSON.parse(Buffer.from(this.topicConfigurationMessageInBase64, 'base64').toString('utf8')) as TopicConfigurationObject;
+        const topicEncryptionConfigurationObject = JSON.parse(Buffer.from(topicConfigurationMessage.b, 'base64').toString('utf8')) as TopicEncryptionData;
 
         return topicEncryptionConfigurationObject.s;
     }
@@ -481,7 +537,7 @@ export class EncryptedTopic {
         let topicConfigurationMessageInBase64: string;
 
         // Topic memo specifies that topic configuration message is stored using the File Service
-        if (topicMemoObject.s.c.u) {
+        if (topicMemoObject.s.c.f) {
             if (!topicMemoObject.s.c.i) {
                 throw new Error('Topic memo object does not specify file Id');
             }
@@ -499,8 +555,8 @@ export class EncryptedTopic {
     }
 
     private async initializeCrypto(topicConfigurationMessageInBase64: string): Promise<void> {
-        const topicConfigurationMessage: TopicConfigurationMessage = JSON.parse(Buffer.from(topicConfigurationMessageInBase64, 'base64').toString('utf8'));
-        const topicEncryptionConfiguration: TopicEncryptionConfiguration = JSON.parse(Buffer.from(topicConfigurationMessage.b, 'base64').toString('utf8'));
+        const topicConfigurationMessage: TopicConfigurationObject = JSON.parse(Buffer.from(topicConfigurationMessageInBase64, 'base64').toString('utf8'));
+        const topicEncryptionConfiguration: TopicEncryptionData = JSON.parse(Buffer.from(topicConfigurationMessage.b, 'base64').toString('utf8'));
 
         this.crypto = new Crypto(topicEncryptionConfiguration.a, topicEncryptionConfiguration.s);
     }

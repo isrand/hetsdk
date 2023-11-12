@@ -1,6 +1,6 @@
 import {EncryptedTopicKeysObject} from "../../crypto/interfaces/EncryptedTopicKeysObject";
 
-export interface TopicEncryptionConfiguration {
+export interface TopicEncryptionData {
     // "a" is the name of the algorithm (kyber | RSA)
     a: string;
 

@@ -1,5 +1,5 @@
 import { EncryptedTopicKeysObject } from "../../crypto/interfaces/EncryptedTopicKeysObject";
-export interface TopicEncryptionConfiguration {
+export interface TopicEncryptionData {
     a: string;
     s: number;
     e: EncryptedTopicKeysObject;

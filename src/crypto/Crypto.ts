@@ -2,7 +2,7 @@ import {Kyber} from "./adapters/Kyber";
 import {EncryptedTopicKeysObject} from "./interfaces/EncryptedTopicKeysObject";
 import {CryptoAdapter} from "./interfaces/CryptoAdapter";
 import {TopicEncryptionKeyAndInitVector} from "../hedera/interfaces/TopicEncryptionKeyAndInitVector";
-import {TopicConfigurationObject} from "../hedera/interfaces/TopicConfigurationObject";
+import {TopicData} from "../hedera/interfaces/TopicData";
 import {RSA} from "./adapters/RSA";
 
 export class Crypto {
@@ -32,7 +32,7 @@ export class Crypto {
         return this.adapter.getEncryptedTopicKeysObject(topicEncryptionKey, topicEncryptionInitVector, topicParticipants);
     }
 
-    public decryptTopicConfigurationMessage(topicConfigurationMessageInBase64: string, privateKey: string): TopicConfigurationObject {
+    public decryptTopicConfigurationMessage(topicConfigurationMessageInBase64: string, privateKey: string): TopicData {
         return this.adapter.decryptTopicConfigurationMessage(topicConfigurationMessageInBase64, privateKey);
     }
 

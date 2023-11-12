@@ -1,13 +1,13 @@
 import crypto from "crypto";
 import {EncryptedTopicKeysObject} from "../interfaces/EncryptedTopicKeysObject";
-import {TopicConfigurationMessage} from "../../hedera/interfaces/TopicConfigurationMessage";
-import {TopicEncryptionConfiguration} from "../../hedera/interfaces/TopicEncryptionConfiguration";
+import {TopicConfigurationObject} from "../../hedera/interfaces/TopicConfigurationObject";
+import {TopicEncryptionData} from "../../hedera/interfaces/TopicEncryptionData";
 
 export class DefaultAdapter {
 
     public getEncryptedTopicKeysObjectFromTopicConfigurationMessage(topicConfigurationMessageInBase64: string): EncryptedTopicKeysObject {
-        const topicConfigurationMessage = JSON.parse(Buffer.from(topicConfigurationMessageInBase64, 'base64').toString('utf8')) as TopicConfigurationMessage;
-        const topicEncryptionConfigurationObject = JSON.parse(Buffer.from(topicConfigurationMessage.b, 'base64').toString('utf8')) as TopicEncryptionConfiguration;
+        const topicConfigurationMessage = JSON.parse(Buffer.from(topicConfigurationMessageInBase64, 'base64').toString('utf8')) as TopicConfigurationObject;
+        const topicEncryptionConfigurationObject = JSON.parse(Buffer.from(topicConfigurationMessage.b, 'base64').toString('utf8')) as TopicEncryptionData;
 
         return topicEncryptionConfigurationObject.e;
     }

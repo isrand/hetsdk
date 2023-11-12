@@ -4,13 +4,17 @@ export interface TopicMemoObject {
 interface TopicMemoStorageObject {
     c: TopicMemoConfigurationStorageObject;
     m: TopicMemoMessageStorageObject;
+    p: TopicMemoParticipantsStorageObject;
 }
 interface TopicMemoConfigurationStorageObject {
-    u: boolean;
-    p: boolean;
+    f: boolean;
     i?: string;
 }
 interface TopicMemoMessageStorageObject {
-    u: boolean;
+    f: boolean;
+}
+interface TopicMemoParticipantsStorageObject {
+    p: boolean;
+    i?: string;
 }
 export {};

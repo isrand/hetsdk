@@ -1,5 +1,4 @@
 export interface TopicConfigurationObject {
-    s: string;
-    p?: string[];
-    m?: unknown;
+    a: string;
+    b: string;
 }
