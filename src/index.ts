@@ -35,6 +35,12 @@ export class EncryptedTopic {
     // so we don't have to get it from the Hedera network every single time.
     private topicMemoObject!: TopicMemoObject;
 
+    /*
+
+    --- SDK PUBLIC METHODS ---
+
+    */
+
     public constructor(private readonly hederaConfiguration: HederaConfiguration) {
         this.client = Client.forTestnet().setOperator(
             hederaConfiguration.hederaAccountId,
@@ -393,6 +399,12 @@ export class EncryptedTopic {
 
         return this.crypto.symmetricDecrypt(encryptedMessage.m, decryptedMessageEncryptionKey, decryptedMessageInitVector);
     }
+
+    /*
+
+    --- SDK INTERNAL METHODS ---
+
+    */
 
     private createTopicConfigurationMessage(topicConfigurationObjectInBase64: string, topicEncryptionConfigurationInBase64: string): TopicConfigurationObject {
         return {
