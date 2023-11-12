@@ -431,19 +431,17 @@ export class EncryptedTopic {
 
         topicCreateTransaction.setSubmitKey(PrivateKey.fromString(submitKey));
 
-        // Store the participants in a separate topic if specified by the createEncryptedTopicConfiguration object
-
         await topicCreateTransaction.freezeWith(this.client);
         await topicCreateTransaction.sign(PrivateKey.fromString(this.hederaConfiguration.hederaPrivateKey));
 
-        const encryptedTopicCreationResponse = await topicCreateTransaction.execute(this.client);
-        const encryptedTopicCreationReceipt = await encryptedTopicCreationResponse.getReceipt(this.client);
+        const participantsTopicCreationResponse = await topicCreateTransaction.execute(this.client);
+        const participantsTopicCreationReceipt = await participantsTopicCreationResponse.getReceipt(this.client);
 
-        if (!encryptedTopicCreationReceipt.topicId) {
+        if (!participantsTopicCreationReceipt.topicId) {
             throw new Error('Topic Id not found in encrypted topic creation transaction receipt.');
         }
 
-        const topicId = encryptedTopicCreationReceipt.topicId.toString() || '';
+        const topicId = participantsTopicCreationReceipt.topicId.toString() || '';
 
         for (const publicKey of createEncryptedTopicConfiguration.participants) {
             const topicSubmitMessageTransaction: TopicMessageSubmitTransaction = new TopicMessageSubmitTransaction({
