@@ -284,7 +284,7 @@ The following table describes the maximum number of participants that can be par
 
 #### Limits: topic messages
 
-The maximum size of a base64-encoded JSON payload is `20480B (20.48KB) (20 chunks per message x 1024B per chunk)`.
+The maximum size for a string message or stringified JSON payload is ~ `11350 B (11.35 kB`
 
 ## Encryption process
 
