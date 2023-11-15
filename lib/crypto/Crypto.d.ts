@@ -1,7 +1,7 @@
 /// <reference types="node" />
 import { EncryptedTopicKeysObject } from "./interfaces/EncryptedTopicKeysObject";
 import { TopicEncryptionKeyAndInitVector } from "../hedera/interfaces/TopicEncryptionKeyAndInitVector";
-import { TopicConfigurationObject } from "../hedera/interfaces/TopicConfigurationObject";
+import { TopicData } from "../hedera/interfaces/TopicData";
 export declare class Crypto {
     private readonly algorithm;
     private readonly size;
@@ -11,6 +11,6 @@ export declare class Crypto {
     symmetricEncrypt(data: string, symmetricKey: Buffer, initVector: Buffer): string;
     symmetricDecrypt(data: string, symmetricKey: Buffer, initVector: Buffer): string;
     getEncryptedTopicKeysObject(topicEncryptionKey: Buffer, topicEncryptionInitVector: Buffer, topicParticipants: string[]): EncryptedTopicKeysObject;
-    decryptTopicConfigurationMessage(topicConfigurationMessageInBase64: string, privateKey: string): TopicConfigurationObject;
+    decryptTopicConfigurationMessage(topicConfigurationMessageInBase64: string, privateKey: string): TopicData;
     getTopicEncryptionKeyAndInitVector(topicConfigurationMessageInBase64: string, privateKey: string): TopicEncryptionKeyAndInitVector;
 }

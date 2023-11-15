@@ -1,7 +1,7 @@
 import {CryptoAdapter} from "../interfaces/CryptoAdapter";
 import {EncryptedTopicKeysObject} from "../interfaces/EncryptedTopicKeysObject";
-import {TopicConfigurationMessage} from "../../hedera/interfaces/TopicConfigurationMessage";
 import {TopicConfigurationObject} from "../../hedera/interfaces/TopicConfigurationObject";
+import {TopicData} from "../../hedera/interfaces/TopicData";
 import {TopicEncryptionKeyAndInitVector} from "../../hedera/interfaces/TopicEncryptionKeyAndInitVector";
 import {DefaultAdapter} from "./DefaultAdapter";
 
@@ -44,7 +44,7 @@ export class Kyber extends DefaultAdapter implements CryptoAdapter {
         return encryptedTopicKeysObject;
     }
 
-    public decryptTopicConfigurationMessage(topicConfigurationMessageInBase64: string, privateKey: string): TopicConfigurationObject {
+    public decryptTopicConfigurationMessage(topicConfigurationMessageInBase64: string, privateKey: string): TopicData {
         const encryptedTopicKeysObject = this.getEncryptedTopicKeysObjectFromTopicConfigurationMessage(topicConfigurationMessageInBase64)
         if (!encryptedTopicKeysObject.c) {
             throw new Error('Encrypted topic keys object does not have encapsulated symmetric keys. (Are you trying to use Kyber on a non-Kyber encrypted topic?)');
@@ -67,10 +67,10 @@ export class Kyber extends DefaultAdapter implements CryptoAdapter {
                     }
 
                     try {
-                        const topicConfigurationMessage = JSON.parse(Buffer.from(topicConfigurationMessageInBase64, 'base64').toString('utf8')) as TopicConfigurationMessage;
+                        const topicConfigurationMessage = JSON.parse(Buffer.from(topicConfigurationMessageInBase64, 'base64').toString('utf8')) as TopicConfigurationObject;
                         const decryptedTopicConfigurationObject = this.symmetricDecrypt(topicConfigurationMessage.a, Buffer.from(topicEncryptionKey, 'base64'), Buffer.from(topicEncryptionInitVector, 'base64'));
 
-                        return JSON.parse(decryptedTopicConfigurationObject) as TopicConfigurationObject;
+                        return JSON.parse(decryptedTopicConfigurationObject) as TopicData;
                     } catch (error) {
                     }
                 }

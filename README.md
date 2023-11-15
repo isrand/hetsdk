@@ -12,13 +12,11 @@ Encrypted Topics are standard Hedera topics that are configured and behave in sp
 - [API](#api-reference)
   - [create](#create-createencryptedtopicconfiguration)
   - [submitMessage](#submitmessage-topicid-message-privatekey)
-  - [addParticipant](#addparticipant-topicid-participants-privatekey)
+  - [addParticipant](#addparticipant-topicid-publickey-privatekey)
   - [getMessage](#getmessage-topicid-messagesequencenumber-privatekey)
   - [getParticipants](#getparticipants-topicid-privatekey)
 - [Storage](#storage)
-  - [Consensus Service Limitations](#consensus-service-limitations)
-    - [Topic configuration message](#topic-configuration-message)
-    - [Topic messages](#topic-messages)
+  - [Consensus Service](#consensus-service)
 - [Encryption process](#encryption-process)
 - [In the works](#in-the-works)
 
@@ -27,6 +25,10 @@ Encrypted Topics are standard Hedera topics that are configured and behave in sp
 The Hedera Hashgraph Encrypted Topic SDK is an NPM package that provides a layer of abstraction above the `@hashgraph/sdk` package when dealing with Consensus Service topics. It adds an extra layer of privacy for users that want to implement multi-party private message exchanges using the Hedera Network.
 
 It has been developed as the backbone for enterprise applications that want to leverage the low costs and efficient consensus algorithm that the Hedera Network provides.
+
+The SDK provides a great deal of flexibility in terms of the amount of data that's stored. Take a look at each method's input parameters to fine-tune the use of the SDK to your particular case.
+
+A feature is in development to provide recommendations on storage options given sample use cases.
 
 > [!WARNING]
 > The Hedera Network will keep every transaction you create in its ledgers, forever. Be mindful of the information you choose to share and the encryption algorithm that you will use.
@@ -99,6 +101,10 @@ async function main() {
 main();
 ```
 
+This code will create a topic with two participants from the onset. The configuration message will be stored in the Consensus Service itself, so new participants can't be added later down the line.
+
+Messages are also stored in the Consensus Service. This is a good use case for processes that transact small JSON payloads.
+
 > The above piece of code may fail due to issues when connecting to the Hedera Network, or due to consensus delays. Ensure that enough time has passed between topic creation, message submission and subsequent fetching of the message.
 
 ## API Reference
@@ -109,6 +115,9 @@ main();
 
 Create a new encrypted topic. The user creating the topic is hereinafter referred to as the "encrypted topic admin", and only they can perform changes on the topic configuration or participants.
 
+Choosing to store the participants will create a separate topic and store their public keys there. This is useful to know exactly which participants are part of which topic and, in the future, to implement perfect forward secrecy and be able to rotate the topic encryption key.
+Please note that storing participants will incur in higher costs as **two** topics will be created at the end of this operation.
+
 **Parameters**
 
 - `createEncryptedTopicConfiguration (CreateEncryptedTopicConfiguration)`: Object containing the parameters used to configure the encrypted topic. It contains the following keys:
@@ -117,7 +126,7 @@ Create a new encrypted topic. The user creating the topic is hereinafter referre
   - `storageOptions (TopicStorageOptions)`: Object containing storage options for the topic artifacts:
     - `configuration (StorageOptions)`: Enum that specifies File Service (`StorageOptions.File`) or Consensus Service (`StorageOptions.Message`).
     - `messages (StorageOptions)`: Enum that specifies File Service (`StorageOptions.File`) or Consensus Service (`StorageOptions.Message`).
-    - `storeParticipants (boolean)`: Boolean that specifies whether to store the participants array in the topic configuration message or not.
+    - `storeParticipants (boolean)`: Boolean that specifies whether to store the participants array in a separate topic or not.
   - `metadata (?any)`: Object containing topic metadata
 
 > For more information about artifact storage, check the [storage](#storage) section.
@@ -233,33 +242,6 @@ or
 
 ---
 
-### `getParticipants (topicId, privateKey)`
-
-**Description**
-
-Get the participants belonging to an encrypted topic, only if the creator chose to store them in the topic configuration message, and if the user has access to the topic.
-
-**Parameters**
-
-- `topicId (string)`: Object containing the parameters used to configure the encrypted topic.
-- `privateKey (string)`: String containing the participant's private key. It must be base64-encoded.
-
-**Usage**
-
-```typescript
-const topicParticipants = await encryptedTopic.getParticipants(topicId, kyberPrivateKey);
-```
-
-**Return value**
-
-`topicParticipants (string[])`: array of participant public key belonging to the encrypted topic.
-
-or
-
-`ERROR`: if the creator of the topic didn't choose to store them in the topic configuration message, or the user doesn't have access to the topic.
-
----
-
 ## Storage
 
 The SDK can be configured to store the two main artifacts (topic configuration message and encrypted messages) either in the Consensus Service as standard messages, or in the File Service as files (which are then referenced in a Consensus Service message).
@@ -293,16 +275,16 @@ The cheaper approach, but it's limited to messages of at most 20 chunks in size,
 
 The following table describes the maximum number of participants that can be part of said topic, assuming no topic metadata object is passed. Providing a rich topic metadata object will reduce the remaining available size for extra participants.
 
-| Algorithm  | `storeParticipants: true` | `storeParticipants: false` |
-|------------|---------------------------|----------------------------|
-| RSA-2048   | 7                         | 16                         |
-| Kyber-512  | 4                         | 9                          |         
-| Kyber-768  | 3                         | 7                          |
-| Kyber-1024 | 2                         | 5                          |
+| Algorithm  | Number of participants |
+|------------|------------------------|
+| RSA-2048   | 16                     |
+| Kyber-512  | 9                      |         
+| Kyber-768  | 7                      |
+| Kyber-1024 | 5                      |
 
 #### Limits: topic messages
 
-The maximum size of a base64-encoded JSON payload is `20480B (20.48KB) (20 chunks per message x 1024B per chunk)`.
+The maximum size for a string message or stringified JSON payload is ~ `11350 B (11.35 kB`
 
 ## Encryption process
 

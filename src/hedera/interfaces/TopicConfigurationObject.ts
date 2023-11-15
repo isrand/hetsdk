@@ -1,10 +1,7 @@
 export interface TopicConfigurationObject {
-    // "s" is the topic's submit key
-    s: string;
+    // "a" is the topic configuration object
+    a: string;
 
-    // "p" is an array of topic participants
-    p?: string[];
-
-    // "m" is the topic metadata object
-    m?: unknown;
+    // "b" is the topic encryption configuration object
+    b: string;
 }
