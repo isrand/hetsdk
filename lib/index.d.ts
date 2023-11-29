@@ -7,11 +7,12 @@ export declare class EncryptedTopic {
     private readonly privateKey;
     private topicConfigurationMessageInBase64;
     private topicMemoObject;
+    private topicId?;
     constructor(encryptedTopicConfiguration: EncryptedTopicConfiguration);
     create(createEncryptedTopicConfiguration: CreateEncryptedTopicConfiguration): Promise<string>;
-    addParticipant(topicId: string, publicKey: string): Promise<void>;
-    submitMessage(topicId: string, message: string): Promise<number>;
-    getMessage(topicId: string, sequenceNumber: number): Promise<string>;
+    addParticipant(publicKey: string): Promise<void>;
+    submitMessage(message: string): Promise<number>;
+    getMessage(sequenceNumber: number): Promise<string>;
     private createTopicConfigurationMessage;
     private createMemoObject;
     private createParticipantsTopic;

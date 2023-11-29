@@ -11,10 +11,9 @@ Encrypted Topics are standard Hedera topics that are configured and behave in sp
 - [Example](#example)
 - [API](#api-reference)
   - [create](#create-createencryptedtopicconfiguration)
-  - [submitMessage](#submitmessage-topicid-message-privatekey)
-  - [addParticipant](#addparticipant-topicid-publickey-privatekey)
-  - [getMessage](#getmessage-topicid-messagesequencenumber-privatekey)
-  - [getParticipants](#getparticipants-topicid-privatekey)
+  - [submitMessage](#submitmessage-message)
+  - [addParticipant](#addparticipant-publickey)
+  - [getMessage](#getmessage-messagesequencenumber)
 - [Storage](#storage)
   - [Consensus Service](#consensus-service)
 - [Encryption process](#encryption-process)
@@ -51,6 +50,8 @@ Here is a simple piece of code in JavaScript that you can use to get started qui
 > [!NOTE]
 > The SDK also provides type definitions for TypeScript.
 
+### Creating a new topic
+
 ```javascript
 const EncryptedTopic = require('hetsdk').EncryptedTopic;
 const EncryptionAlgorithms = require('hetsdk/lib/crypto/enums/EncryptionAlgorithms').EncryptionAlgorithms;
@@ -58,7 +59,7 @@ const StorageOptions = require('hetsdk/lib/hedera/enums/StorageOptions').Storage
 
 // Hedera account data
 // Private keys must be DER-encoded
-const hederaAccountId = '0.0.xxx';
+const hederaAccountId = '0.0.abc';
 const hederaPrivateKey = '...';
 
 // Encryption data, shown below is Kyber
@@ -90,12 +91,14 @@ async function main() {
       name: "Supply Chain Logistics"
     }
   });
+  
+  console.log('Topic created. Topic ID: ', topicId);
 
   // Submit a message to the encrypted topic
-  const messageSequenceNumber = await encryptedTopic.submitMessage(topicId, 'Hey there!');
+  const messageSequenceNumber = await encryptedTopic.submitMessage('Hey there!');
 
   // Get a message from the encrypted topic
-  const message = await encryptedTopic.getMessage(topicId, messageSequenceNumber);
+  const message = await encryptedTopic.getMessage(messageSequenceNumber);
   console.log(message); // "Hey there!"
 }
 
@@ -106,7 +109,47 @@ This code will create a topic with two participants from the get go. The configu
 
 Messages are also stored in the Consensus Service. This is a good use case for processes that transact small JSON payloads.
 
-> The above piece of code may fail due to issues when connecting to the Hedera Network, or due to consensus delays. Ensure that enough time has passed between topic creation, message submission and subsequent fetching of the message.
+### Targeting an existing encrypted topic
+
+If you are interacting with an encrypted topic that was already created, you need to specify the topic ID in the constructor of the `EncryptedTopic` object.
+
+```javascript
+const EncryptedTopic = require('hetsdk').EncryptedTopic;
+const EncryptionAlgorithms = require('hetsdk/lib/crypto/enums/EncryptionAlgorithms').EncryptionAlgorithms;
+const StorageOptions = require('hetsdk/lib/hedera/enums/StorageOptions').StorageOptions;
+
+// Hedera account data
+// Private keys must be DER-encoded
+const hederaAccountId = '0.0.abc';
+const hederaPrivateKey = '...';
+
+// Encryption data, shown below is Kyber
+// Keys must be base64-encoded
+const kyberPrivateKey = '...';
+
+const topicId = '0.0.xyz';
+
+async function main() {
+  // Initialize the encryptedTopic object
+  const encryptedTopic = new EncryptedTopic({
+    hederaAccountId: hederaAccountId,
+    hederaPrivateKey: hederaPrivateKey,
+    privateKey: kyberPrivateKey,
+    topicId: topicId
+  });
+
+  // Submit a message to the encrypted topic
+  const messageSequenceNumber = await encryptedTopic.submitMessage('Hey there!');
+
+  // Get a message from the encrypted topic
+  const message = await encryptedTopic.getMessage(messageSequenceNumber);
+  console.log(message); // "Hey there!"
+}
+
+main();
+```
+
+> The above pieces of code may fail due to issues when connecting to the Hedera Network, or due to consensus delays. Ensure that enough time has passed between topic creation, message submission and subsequent fetching of the message.
 
 ## API Reference
 
@@ -155,7 +198,7 @@ const topicId = await encryptedTopic.create({
 
 ---
 
-### `submitMessage (topicId, message)`
+### `submitMessage (message)`
 
 **Description**
 
@@ -163,13 +206,12 @@ Submit a message on an encrypted topic. The participant must have access to the 
 
 **Parameters**
 
-- `topicId (string)`: Id of the encrypted topic where the message will be sent.
 - `message (string)`: String containing the message contents. If you want to transact a JSON payload, make sure to `JSON.stringify()` it first.
 
 **Usage**
 
 ```typescript
-const messageSequenceNumber = await encryptedTopic.submitMessage(topicId, 'Hey there!');
+const messageSequenceNumber = await encryptedTopic.submitMessage('Hey there!');
 ```
 
 **Return value**
@@ -182,7 +224,7 @@ or
 
 ---
 
-### `addParticipant (topicId, publicKey)`
+### `addParticipant (publicKey)`
 
 **Description**
 
@@ -194,13 +236,12 @@ Adds new participant to the encrypted topic, only if the storage medium of said 
 
 **Parameters**
 
-- `topicId (string)`: Id of the encrypted topic where the new participant will be added.
 - `publicKey (string)`: Base64-encoded public key of the new participant used for encryption. The key's algorithm must match the chosen topic encryption algorithm.
 
 **Usage**
 
 ```typescript
-const additionSuccess = await encryptedTopic.addParticipant(topicId, otherKyberPublicKey);
+const additionSuccess = await encryptedTopic.addParticipant(otherKyberPublicKey);
 ```
 
 **Return value**
@@ -213,7 +254,7 @@ or
 
 ---
 
-### `getMessage (topicId, messageSequenceNumber)`
+### `getMessage (messageSequenceNumber)`
 
 **Description**
 
@@ -221,13 +262,12 @@ Get message from an encrypted topic given its sequence number. The participant m
 
 **Parameters**
 
-- `topicId (string)`: Object containing the parameters used to configure the encrypted topic.
 - `messageSequenceNumber (number)`: Sequence of the number you want to fetch.
 
 **Usage**
 
 ```typescript
-const message = await encryptedTopic.getMessage(topicId, messageSequenceNumber);
+const message = await encryptedTopic.getMessage(messageSequenceNumber);
 ```
 
 **Return value**
