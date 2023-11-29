@@ -316,9 +316,9 @@ The following table describes the maximum number of participants that can be par
 | Algorithm  | Number of participants |
 |------------|------------------------|
 | RSA-2048   | 16                     |
-| Kyber-512  | 9                      |         
-| Kyber-768  | 7                      |
-| Kyber-1024 | 5                      |
+| Kyber-512  | 13                     |         
+| Kyber-768  | 9                      |
+| Kyber-1024 | 6                      |
 
 #### Limits: topic messages
 

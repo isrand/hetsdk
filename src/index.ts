@@ -216,6 +216,8 @@ export class EncryptedTopic {
             // Cache the topic configuration message in base64 for future use
             this.topicConfigurationMessage = topicConfigurationMessage;
 
+            this.topicId = topicId;
+
             return topicId;
         } catch (error: unknown) {
             console.error(error);
