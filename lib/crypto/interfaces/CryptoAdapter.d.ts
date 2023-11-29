@@ -7,6 +7,6 @@ export interface CryptoAdapter {
     symmetricEncrypt(data: string, symmetricKey: Buffer, initVector: Buffer): string;
     symmetricDecrypt(data: string, symmetricKey: Buffer, initVector: Buffer): string;
     validateParticipantKeys(topicParticipants: string[], topicEncryptionKeySize: number): void;
-    decryptTopicConfigurationMessage(topicConfigurationMessageInBase64: string, privateKey: string): TopicData;
-    getTopicEncryptionKeyAndInitVector(topicConfigurationMessageInBase64: string, privateKey: string): TopicEncryptionKeyAndInitVector;
+    decryptTopicData(encryptedTopicKeysObject: EncryptedTopicKeysObject, encryptedTopicDataInBase64: string, privateKey: string): TopicData;
+    getTopicEncryptionKeyAndInitVector(encryptedTopicKeysObject: EncryptedTopicKeysObject, privateKey: string): TopicEncryptionKeyAndInitVector;
 }

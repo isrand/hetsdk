@@ -11,6 +11,6 @@ export declare class Crypto {
     symmetricEncrypt(data: string, symmetricKey: Buffer, initVector: Buffer): string;
     symmetricDecrypt(data: string, symmetricKey: Buffer, initVector: Buffer): string;
     getEncryptedTopicKeysObject(topicEncryptionKey: Buffer, topicEncryptionInitVector: Buffer, topicParticipants: string[]): EncryptedTopicKeysObject;
-    decryptTopicConfigurationMessage(topicConfigurationMessageInBase64: string, privateKey: string): TopicData;
-    getTopicEncryptionKeyAndInitVector(topicConfigurationMessageInBase64: string, privateKey: string): TopicEncryptionKeyAndInitVector;
+    decryptTopicData(encryptedTopicKeysObject: EncryptedTopicKeysObject, encryptedTopicData: string, privateKey: string): TopicData;
+    getTopicEncryptionKeyAndInitVector(encryptedTopicKeysObject: EncryptedTopicKeysObject, privateKey: string): TopicEncryptionKeyAndInitVector;
 }

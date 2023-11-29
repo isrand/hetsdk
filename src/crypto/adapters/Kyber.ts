@@ -44,8 +44,7 @@ export class Kyber extends DefaultAdapter implements CryptoAdapter {
         return encryptedTopicKeysObject;
     }
 
-    public decryptTopicConfigurationMessage(topicConfigurationMessageInBase64: string, privateKey: string): TopicData {
-        const encryptedTopicKeysObject = this.getEncryptedTopicKeysObjectFromTopicConfigurationMessage(topicConfigurationMessageInBase64)
+    public decryptTopicData(encryptedTopicKeysObject: EncryptedTopicKeysObject, encryptedTopicDataInBase64: string, privateKey: string): TopicData {
         if (!encryptedTopicKeysObject.c) {
             throw new Error('Encrypted topic keys object does not have encapsulated symmetric keys. (Are you trying to use Kyber on a non-Kyber encrypted topic?)');
         }
@@ -67,8 +66,7 @@ export class Kyber extends DefaultAdapter implements CryptoAdapter {
                     }
 
                     try {
-                        const topicConfigurationMessage = JSON.parse(Buffer.from(topicConfigurationMessageInBase64, 'base64').toString('utf8')) as TopicConfigurationObject;
-                        const decryptedTopicConfigurationObject = this.symmetricDecrypt(topicConfigurationMessage.a, Buffer.from(topicEncryptionKey, 'base64'), Buffer.from(topicEncryptionInitVector, 'base64'));
+                        const decryptedTopicConfigurationObject = this.symmetricDecrypt(encryptedTopicDataInBase64, Buffer.from(topicEncryptionKey, 'base64'), Buffer.from(topicEncryptionInitVector, 'base64'));
 
                         return JSON.parse(decryptedTopicConfigurationObject) as TopicData;
                     } catch (error) {
@@ -80,8 +78,7 @@ export class Kyber extends DefaultAdapter implements CryptoAdapter {
         throw new Error('Error fetching topic configuration object. Does user have access?');
     }
 
-    public getTopicEncryptionKeyAndInitVector(topicConfigurationMessageInBase64: string, privateKey: string): TopicEncryptionKeyAndInitVector {
-        const encryptedTopicKeysObject = this.getEncryptedTopicKeysObjectFromTopicConfigurationMessage(topicConfigurationMessageInBase64)
+    public getTopicEncryptionKeyAndInitVector(encryptedTopicKeysObject: EncryptedTopicKeysObject, privateKey: string): TopicEncryptionKeyAndInitVector {
         if (!encryptedTopicKeysObject.c) {
             throw new Error('Encrypted topic keys object does not have encapsulated symmetric keys. (Are you trying to use Kyber on a non-Kyber encrypted topic?)');
         }

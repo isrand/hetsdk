@@ -32,11 +32,11 @@ export class Crypto {
         return this.adapter.getEncryptedTopicKeysObject(topicEncryptionKey, topicEncryptionInitVector, topicParticipants);
     }
 
-    public decryptTopicConfigurationMessage(topicConfigurationMessageInBase64: string, privateKey: string): TopicData {
-        return this.adapter.decryptTopicConfigurationMessage(topicConfigurationMessageInBase64, privateKey);
+    public decryptTopicData(encryptedTopicKeysObject: EncryptedTopicKeysObject, encryptedTopicData: string, privateKey: string): TopicData {
+        return this.adapter.decryptTopicData(encryptedTopicKeysObject, encryptedTopicData, privateKey);
     }
 
-    public getTopicEncryptionKeyAndInitVector(topicConfigurationMessageInBase64: string, privateKey: string): TopicEncryptionKeyAndInitVector {
-        return this.adapter.getTopicEncryptionKeyAndInitVector(topicConfigurationMessageInBase64, privateKey);
+    public getTopicEncryptionKeyAndInitVector(encryptedTopicKeysObject: EncryptedTopicKeysObject, privateKey: string): TopicEncryptionKeyAndInitVector {
+        return this.adapter.getTopicEncryptionKeyAndInitVector(encryptedTopicKeysObject, privateKey);
     }
 }
