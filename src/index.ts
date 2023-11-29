@@ -27,7 +27,7 @@ export class EncryptedTopic {
     private readonly client: Client;
     private crypto!: Crypto;
 
-    private readonly privateKey: string = '';
+    private readonly privateKey: string;
 
     // Hold a copy of the topic configuration message in base64 for further use,
     // so we don't have to get it from the Hedera network every single time.
