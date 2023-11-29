@@ -53,8 +53,8 @@ Here is a simple piece of code in JavaScript that you can use to get started qui
 
 ```javascript
 const EncryptedTopic = require('hetsdk').EncryptedTopic;
-const EncryptionAlgorithms = require("hetsdk/lib/crypto/enums/EncryptionAlgorithms").EncryptionAlgorithms;
-const StorageOptions = require("hetsdk/lib/hedera/enums/StorageOptions").StorageOptions;
+const EncryptionAlgorithms = require('hetsdk/lib/crypto/enums/EncryptionAlgorithms').EncryptionAlgorithms;
+const StorageOptions = require('hetsdk/lib/hedera/enums/StorageOptions').StorageOptions;
 
 // Hedera account data
 // Private keys must be DER-encoded
@@ -73,7 +73,8 @@ async function main() {
   // Initialize the encryptedTopic object
   const encryptedTopic = new EncryptedTopic({
     hederaAccountId: hederaAccountId,
-    hederaPrivateKey: hederaPrivateKey
+    hederaPrivateKey: hederaPrivateKey,
+    privateKey: kyberPrivateKey
   });
 
   // Create a new encrypted topic with Kyber-512 as the encryption algorithm
@@ -91,17 +92,17 @@ async function main() {
   });
 
   // Submit a message to the encrypted topic
-  const messageSequenceNumber = await encryptedTopic.submitMessage(topicId, 'Hey there!', kyberPrivateKey);
+  const messageSequenceNumber = await encryptedTopic.submitMessage(topicId, 'Hey there!');
 
   // Get a message from the encrypted topic
-  const message = await encryptedTopic.getMessage(topicId, messageSequenceNumber, kyberPrivateKey);
+  const message = await encryptedTopic.getMessage(topicId, messageSequenceNumber);
   console.log(message); // "Hey there!"
 }
 
 main();
 ```
 
-This code will create a topic with two participants from the onset. The configuration message will be stored in the Consensus Service itself, so new participants can't be added later down the line.
+This code will create a topic with two participants from the get go. The configuration message will be stored in the Consensus Service itself, so new participants can't be added later down the line.
 
 Messages are also stored in the Consensus Service. This is a good use case for processes that transact small JSON payloads.
 
@@ -154,7 +155,7 @@ const topicId = await encryptedTopic.create({
 
 ---
 
-### `submitMessage (topicId, message, privateKey)`
+### `submitMessage (topicId, message)`
 
 **Description**
 
@@ -164,12 +165,11 @@ Submit a message on an encrypted topic. The participant must have access to the 
 
 - `topicId (string)`: Id of the encrypted topic where the message will be sent.
 - `message (string)`: String containing the message contents. If you want to transact a JSON payload, make sure to `JSON.stringify()` it first.
-- `privateKey (string)`: String containing the participant's private key. It must be base64-encoded.
 
 **Usage**
 
 ```typescript
-const messageSequenceNumber = await encryptedTopic.submitMessage(topicId, 'Hey there!', kyberPrivateKey);
+const messageSequenceNumber = await encryptedTopic.submitMessage(topicId, 'Hey there!');
 ```
 
 **Return value**
@@ -182,7 +182,7 @@ or
 
 ---
 
-### `addParticipant (topicId, publicKey, privateKey)`
+### `addParticipant (topicId, publicKey)`
 
 **Description**
 
@@ -196,12 +196,11 @@ Adds new participant to the encrypted topic, only if the storage medium of said 
 
 - `topicId (string)`: Id of the encrypted topic where the new participant will be added.
 - `publicKey (string)`: Base64-encoded public key of the new participant used for encryption. The key's algorithm must match the chosen topic encryption algorithm.
-- `privateKey (string)`: String containing the encryted topic admin's private key. It must be base64-encoded.
 
 **Usage**
 
 ```typescript
-const additionSuccess = await encryptedTopic.addParticipant(topicId, otherKyberPublicKey, kyberPrivateKey);
+const additionSuccess = await encryptedTopic.addParticipant(topicId, otherKyberPublicKey);
 ```
 
 **Return value**
@@ -214,7 +213,7 @@ or
 
 ---
 
-### `getMessage (topicId, messageSequenceNUmber, privateKey)`
+### `getMessage (topicId, messageSequenceNumber)`
 
 **Description**
 
@@ -224,12 +223,11 @@ Get message from an encrypted topic given its sequence number. The participant m
 
 - `topicId (string)`: Object containing the parameters used to configure the encrypted topic.
 - `messageSequenceNumber (number)`: Sequence of the number you want to fetch.
-- `privateKey (string)`: String containing the participant's private key. It must be base64-encoded.
 
 **Usage**
 
 ```typescript
-const message = await encryptedTopic.getMessage(topicId, messageSequenceNumber, kyberPrivateKey);
+const message = await encryptedTopic.getMessage(topicId, messageSequenceNumber);
 ```
 
 **Return value**
@@ -284,7 +282,7 @@ The following table describes the maximum number of participants that can be par
 
 #### Limits: topic messages
 
-The maximum size for a string message or stringified JSON payload is ~ `11350 B (11.35 kB`
+The maximum size for a string message or stringified JSON payload is ~ `11350 B (11.35 kB)`
 
 ## Encryption process
 
