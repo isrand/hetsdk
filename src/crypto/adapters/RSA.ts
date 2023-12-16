@@ -3,7 +3,6 @@ import {EncryptedTopicKeysObject} from "../interfaces/EncryptedTopicKeysObject";
 import crypto from "crypto";
 import {TopicData} from "../../hedera/interfaces/TopicData";
 import {TopicEncryptionKeyAndInitVector} from "../../hedera/interfaces/TopicEncryptionKeyAndInitVector";
-import {TopicConfigurationObject} from "../../hedera/interfaces/TopicConfigurationObject";
 import {DefaultAdapter} from "./DefaultAdapter";
 
 export class RSA extends DefaultAdapter implements CryptoAdapter {
@@ -36,9 +35,7 @@ export class RSA extends DefaultAdapter implements CryptoAdapter {
         return crypto.privateDecrypt({ key: crypto.createPrivateKey(Buffer.from(privateKey, 'base64').toString('utf8')) }, data);
     }
 
-    public decryptTopicConfigurationMessage(topicConfigurationMessageInBase64: string, privateKey: string): TopicData {
-        const encryptedTopicKeysObject = this.getEncryptedTopicKeysObjectFromTopicConfigurationMessage(topicConfigurationMessageInBase64)
-
+    public decryptTopicData(encryptedTopicKeysObject: EncryptedTopicKeysObject, encryptedTopicDataInBase64: string, privateKey: string): TopicData {
         for (const encryptedTopicKey of encryptedTopicKeysObject.a) {
             for (const encryptedTopicInitVector of encryptedTopicKeysObject.b) {
                 let topicEncryptionKey;
@@ -52,8 +49,7 @@ export class RSA extends DefaultAdapter implements CryptoAdapter {
                 }
 
                 try {
-                    const topicConfigurationMessage = JSON.parse(Buffer.from(topicConfigurationMessageInBase64, 'base64').toString('utf8')) as TopicConfigurationObject;
-                    const decryptedTopicConfigurationObject = this.symmetricDecrypt(topicConfigurationMessage.a, topicEncryptionKey, topicEncryptionInitVector);
+                    const decryptedTopicConfigurationObject = this.symmetricDecrypt(encryptedTopicDataInBase64, topicEncryptionKey, topicEncryptionInitVector);
 
                     return JSON.parse(decryptedTopicConfigurationObject) as TopicData;
                 } catch (error) {
@@ -64,9 +60,7 @@ export class RSA extends DefaultAdapter implements CryptoAdapter {
         throw new Error('Error fetching topic configuration object. Does user have access?');
     }
 
-    public getTopicEncryptionKeyAndInitVector(topicConfigurationMessageInBase64: string, privateKey: string): TopicEncryptionKeyAndInitVector {
-        const encryptedTopicKeysObject = this.getEncryptedTopicKeysObjectFromTopicConfigurationMessage(topicConfigurationMessageInBase64)
-
+    public getTopicEncryptionKeyAndInitVector(encryptedTopicKeysObject: EncryptedTopicKeysObject, privateKey: string): TopicEncryptionKeyAndInitVector {
         for (const encryptedTopicKey of encryptedTopicKeysObject.a) {
             for (const encryptedTopicInitVector of encryptedTopicKeysObject.b) {
                 let topicEncryptionKey;
