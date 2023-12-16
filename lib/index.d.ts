@@ -27,6 +27,6 @@ export declare class EncryptedTopic {
     private setConfigurationMessage;
     private initializeCrypto;
     private getSubmitKey;
-    private getFileContentsInBase64;
+    private getFileContents;
     private getMessageFromTopicInBase64;
 }

@@ -1,6 +1,6 @@
 import {
-    Client, FileAppendTransaction, FileContentsQuery, FileCreateTransaction, FileUpdateTransaction,
-    PrivateKey,
+    Client, FileAppendTransaction, FileContentsQuery, FileCreateTransaction, FileUpdateTransaction, Hbar,
+    PrivateKey, PublicKey,
     TopicCreateTransaction,
     TopicInfo,
     TopicInfoQuery,
@@ -121,16 +121,15 @@ export class EncryptedTopic {
 
                 const fileId: string = fileCreateTransactionReceipt.fileId.toString();
 
-                const fileUpdateTransaction: FileUpdateTransaction = new FileUpdateTransaction({
+                const fileAppendTransaction: FileAppendTransaction = new FileAppendTransaction({
                     fileId: fileId,
-                    contents: topicConfigurationMessageInBase64,
-                    keys: [PrivateKey.fromString(this.encryptedTopicConfiguration.hederaPrivateKey).publicKey]
+                    contents: topicConfigurationMessage,
                 });
 
-                await fileUpdateTransaction.freezeWith(this.client);
-                await fileUpdateTransaction.sign(PrivateKey.fromString(this.encryptedTopicConfiguration.hederaPrivateKey));
+                await fileAppendTransaction.freezeWith(this.client);
+                await fileAppendTransaction.sign(PrivateKey.fromString(this.encryptedTopicConfiguration.hederaPrivateKey));
 
-                await fileUpdateTransaction.execute(this.client);
+                await fileAppendTransaction.execute(this.client);
 
                 // Create topic
                 const topicCreateTransaction: TopicCreateTransaction = new TopicCreateTransaction({
@@ -160,13 +159,13 @@ export class EncryptedTopic {
 
                 const topicId = encryptedTopicCreationReceipt.topicId.toString();
 
+                this.topicId = topicId;
+
                 // Cache the topic memo object for future use
                 this.topicMemoObject = topicMemoObject;
 
                 // Cache the topic configuration message in base64 for future use
                 this.topicConfigurationMessage = topicConfigurationMessage;
-
-                this.topicId = topicId;
 
                 return this.topicId;
             }
@@ -230,14 +229,14 @@ export class EncryptedTopic {
     // topic memo specifies it
     public async addParticipant(publicKey: string): Promise<void> {
         // Get topic memo, check if topic configuration message is stored using the File Service
-        const topicMemoObject: TopicMemoObject = await this.getMemo();
+        await this.getMemo();
 
         // Throw error if topic doesn't allow for new participants (configuration is stored using Consensus Service)
-        if (!topicMemoObject.s.c.f) {
+        if (!this.topicMemoObject.s.c.f) {
             throw new Error('New participants can only be added to topics that use the File Service as storage medium for their configuration. Requested topic uses the Consensus Service.');
         }
 
-        if (!topicMemoObject.s.c.i) {
+        if (!this.topicMemoObject.s.c.i) {
             throw new Error('Topic memo object does not specify configuration file Id');
         }
 
@@ -258,15 +257,16 @@ export class EncryptedTopic {
 
         let newEncryptedTopicEncryptionKeyAndInitVectorsString = `${newEncryptedTopicEncryptionKeyAndInitVectors.a[0]}_${newEncryptedTopicEncryptionKeyAndInitVectors.b[0]}`;
 
-
         if (algorithm === 'kyber' && newEncryptedTopicEncryptionKeyAndInitVectors.c) {
             newEncryptedTopicEncryptionKeyAndInitVectorsString += `_${newEncryptedTopicEncryptionKeyAndInitVectors.c[0]}#`;
         }
 
+        const fileId = this.topicMemoObject.s.c.i;
+
         // Update file
         const fileAppendTransaction: FileAppendTransaction = new FileAppendTransaction({
-            fileId: topicMemoObject.s.c.i,
-            contents: Buffer.from(newEncryptedTopicEncryptionKeyAndInitVectorsString).toString('base64')
+            fileId: fileId,
+            contents: newEncryptedTopicEncryptionKeyAndInitVectorsString,
         });
 
         await fileAppendTransaction.freezeWith(this.client);
@@ -275,11 +275,11 @@ export class EncryptedTopic {
         await fileAppendTransaction.execute(this.client);
 
         // Store participant in the participants topic
-        if (topicMemoObject.s.p.p) {
+        if (this.topicMemoObject.s.p.p) {
             const submitKey = await this.getSubmitKey();
 
             const topicSubmitMessageTransaction: TopicMessageSubmitTransaction = new TopicMessageSubmitTransaction({
-                topicId: topicMemoObject.s.p.i,
+                topicId: this.topicMemoObject.s.p.i,
                 message: publicKey,
             });
 
@@ -299,7 +299,7 @@ export class EncryptedTopic {
     // "submitMessage" submits a message on an encrypted topic (if the user has access)
     // and returns the sequence number of the message
     public async submitMessage(message: string): Promise<number> {
-        const topicMemoObject: TopicMemoObject = await this.getMemo();
+        await this.getMemo();
         const topicEncryptionKeyAndInitVector = await this.getEncryptionKeyAndInitVector();
 
         const messageEncryptionKey: Buffer = Buffer.from(crypto.randomBytes(32));
@@ -317,7 +317,7 @@ export class EncryptedTopic {
         const submitKey = await this.getSubmitKey();
 
         // Topic memo specifies that topic messages should be stored using the File Service
-        if (topicMemoObject.s.m.f) {
+        if (this.topicMemoObject.s.m.f) {
             const fileCreateTransaction: FileCreateTransaction = new FileCreateTransaction({
                 keys: [PrivateKey.fromString(this.encryptedTopicConfiguration.hederaPrivateKey).publicKey]
             });
@@ -375,14 +375,14 @@ export class EncryptedTopic {
 
     // "getMessage" gets a message from an encrypted topic (if the user has access)
     public async getMessage(sequenceNumber: number): Promise<string> {
-        const topicMemoObject: TopicMemoObject = await this.getMemo();
+        await this.getMemo();
         const topicEncryptionKeyAndInitVector = await this.getEncryptionKeyAndInitVector();
 
         // Topic memo specifies that topic messages should be stored using the File Service
-        if (topicMemoObject.s.m.f) {
+        if (this.topicMemoObject.s.m.f) {
             const messageFileIdInBase64 = await this.getMessageFromTopicInBase64(sequenceNumber);
             let fileId = Buffer.from(messageFileIdInBase64, 'base64').toString('utf8');
-            const encryptedMessageInBase64: string = await this.getFileContentsInBase64(Buffer.from(fileId, 'base64').toString('utf8'));
+            const encryptedMessageInBase64: string = await this.getFileContents(Buffer.from(fileId, 'base64').toString('utf8'));
 
             const encryptedMessage: TopicEncryptedMessage = JSON.parse(Buffer.from(encryptedMessageInBase64, 'base64').toString('utf8'));
             const decryptedMessageEncryptionKey = Buffer.from(this.crypto.symmetricDecrypt(encryptedMessage.k, Buffer.from(topicEncryptionKeyAndInitVector.encryptionKey, 'base64'),  Buffer.from(topicEncryptionKeyAndInitVector.initVector, 'base64')), 'base64');
@@ -517,23 +517,21 @@ export class EncryptedTopic {
         return Number(this.topicConfigurationMessage.split('#')[this.TOPIC_ENCRYPTION_SIZE_INDEX]);
     }
 
-    private async getMemo(): Promise<TopicMemoObject> {
+    private async getMemo(): Promise<void> {
         // Make sure the topicId variable is set before starting...
         if (!this.topicId) {
             throw new Error('Topic ID not set in constructor. Please provide a topic for the SDK to target.');
         }
 
-        if (!this.topicMemoObject) {
-            const topicInfo = new TopicInfoQuery({
-                topicId: this.topicId
-            });
+        // if (!this.topicMemoObject) {
+        const topicInfo = new TopicInfoQuery({
+            topicId: this.topicId
+        });
 
-            const topicInfoResponse: TopicInfo = await topicInfo.execute(this.client);
+        const topicInfoResponse: TopicInfo = await topicInfo.execute(this.client);
 
-            this.topicMemoObject = JSON.parse(topicInfoResponse.topicMemo) as TopicMemoObject;
-        }
-
-        return this.topicMemoObject;
+        this.topicMemoObject = JSON.parse(topicInfoResponse.topicMemo) as TopicMemoObject;
+        // }
     }
 
     private async getEncryptionKeyAndInitVector(): Promise<TopicEncryptionKeyAndInitVector> {
@@ -551,22 +549,21 @@ export class EncryptedTopic {
     }
 
     private async setConfigurationMessage(): Promise<void> {
-        const topicMemoObject: TopicMemoObject = await this.getMemo();
+        await this.getMemo();
         let topicConfigurationMessage: string;
 
         // Topic memo specifies that topic configuration message is stored using the File Service
-        if (topicMemoObject.s.c.f) {
-            if (!topicMemoObject.s.c.i) {
+        if (this.topicMemoObject.s.c.f) {
+            if (!this.topicMemoObject.s.c.i) {
                 throw new Error('Topic memo object does not specify file Id');
             }
 
-            topicConfigurationMessage = await this.getFileContentsInBase64(topicMemoObject.s.c.i);
+            this.topicConfigurationMessage = await this.getFileContents(this.topicMemoObject.s.c.i);
         // Topic memo specifies that topic configuration message is stored using the Consensus Service
         } else {
             topicConfigurationMessage = await this.getMessageFromTopicInBase64(1);
+            this.topicConfigurationMessage = Buffer.from(topicConfigurationMessage, 'base64').toString('utf8');
         }
-
-        this.topicConfigurationMessage = Buffer.from(topicConfigurationMessage, 'base64').toString('utf8');
     }
 
     private async initializeCrypto(): Promise<void> {
@@ -589,7 +586,7 @@ export class EncryptedTopic {
         return topicConfigurationObject.s;
     }
 
-    private async getFileContentsInBase64(fileId: string): Promise<string> {
+    private async getFileContents(fileId: string): Promise<string> {
         const fileGetContentsQuery: FileContentsQuery = new FileContentsQuery({
             fileId: fileId
         });
