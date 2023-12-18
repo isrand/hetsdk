@@ -96,7 +96,11 @@ export class EncryptedTopic {
 
     // "addParticipant" adds a new participant to the encrypted topic, and stores it in the participants topic if the
     // topic memo specifies it
-    public async addParticipant(publicKey: string): Promise<void> {
+    public async addParticipant(publicKey: string, forwardSecrecy?: boolean): Promise<void> {
+        if (forwardSecrecy) {
+            await this.rotateEncryptionKey();
+        }
+
         await this.setMemo();
 
         if (!this.topicMemoObject.s.c.f) {
@@ -223,7 +227,7 @@ export class EncryptedTopic {
         return Array.from(new Set(participants));
     }
 
-    // "rotateEncryptionKey" allows the encrypted topic administrator to rotate the key and re-encrypt it with
+    // "rotateEncryptionKey" allows the topic administrator to rotate its encryption key and re-encrypt it with
     // every participant's public key, appending the new configuration message to the old one
     public async rotateEncryptionKey(): Promise<void> {
         await this.setMemo();
@@ -260,14 +264,9 @@ export class EncryptedTopic {
             algorithm: algorithm
         });
 
-
         const newTopicConfigurationString = `,${newTopicConfigurationMessage}`;
 
         await this.hederaStub.appendToFile(this.topicMemoObject.s.c.i, newTopicConfigurationString);
-
-        const fileContents = await this.hederaStub.getFileContents(this.topicMemoObject.s.c.i);
-
-        console.log(fileContents.split(','));
     }
 
     /*

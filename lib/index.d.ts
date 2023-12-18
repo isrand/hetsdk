@@ -14,12 +14,12 @@ export declare class EncryptedTopic {
     constructor(encryptedTopicConfiguration: EncryptedTopicConfiguration);
     static generateKeyPair(algorithm: EncryptionAlgorithms): KeyPair;
     create(createEncryptedTopicConfiguration: CreateEncryptedTopicConfiguration): Promise<string>;
-    addParticipant(publicKey: string): Promise<void>;
+    addParticipant(publicKey: string, forwardSecrecy?: boolean): Promise<void>;
     submitMessage(message: string): Promise<number>;
     getMessage(sequenceNumber: number): Promise<string>;
     getMemo(): Promise<TopicMemoObject>;
     getParticipants(): Promise<string[]>;
-    rotateTopicEncryptionKey(): Promise<void>;
+    rotateEncryptionKey(): Promise<void>;
     private createTopicMessage;
     private createTopicConfigurationMessage;
     private createMemoObject;
