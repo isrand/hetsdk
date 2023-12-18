@@ -5,14 +5,9 @@ import { EncryptionAlgorithms } from "./crypto/enums/EncryptionAlgorithms";
 import { KeyPair } from "./crypto/interfaces/KeyPair";
 export declare class EncryptedTopic {
     private readonly encryptedTopicConfiguration;
-    private hederaStub;
-    private readonly client;
-    private crypto;
-    private readonly TOPIC_DATA_INDEX;
-    private readonly TOPIC_ENCRYPTION_ALGORITHM_INDEX;
-    private readonly TOPIC_ENCRYPTION_SIZE_INDEX;
-    private readonly TOPIC_ENCRYPTED_KEYS_INDEX;
     private readonly privateKey;
+    private hederaStub;
+    private crypto;
     private topicConfigurationMessage;
     private topicMemoObject;
     private topicId?;
@@ -27,7 +22,6 @@ export declare class EncryptedTopic {
     private createTopicConfigurationMessage;
     private createMemoObject;
     private createParticipantsTopic;
-    private getEncryptedTopicKeysObjectFromTopicConfigurationMessage;
     private getEncryptionAlgorithmFromConfigurationMessage;
     private getEncryptionSizeFromConfigurationMessage;
     private setMemo;
@@ -35,5 +29,6 @@ export declare class EncryptedTopic {
     private setConfigurationMessage;
     private initializeCrypto;
     private getSubmitKey;
-    private getMessageFromTopicInBase64;
+    private getEncryptedTopicKeysObjectFromTopicConfigurationMessage;
+    private getMessageFromTopic;
 }
