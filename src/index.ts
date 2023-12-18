@@ -153,7 +153,7 @@ export class EncryptedTopic {
         const topicEncryptionKeyAndInitVector = await this.getEncryptionKeyAndInitVector();
 
         if (this.topicMemoObject.s.m.f) {
-            const messageFileIdInBase64 = await this.getMessageFromTopicInBase64(sequenceNumber);
+            const messageFileIdInBase64 = await this.getMessageFromTopic(sequenceNumber);
             let fileId = Buffer.from(messageFileIdInBase64, 'base64').toString('utf8');
             const encryptedMessageInBase64 = await this.hederaStub.getFileContents(Buffer.from(fileId, 'base64').toString('utf8'));
 
@@ -164,7 +164,7 @@ export class EncryptedTopic {
             return this.crypto.symmetricDecrypt(encryptedMessage.m, decryptedMessageEncryptionKey, decryptedMessageInitVector);
         }
 
-        let encryptedMessageInBase64 = await this.getMessageFromTopicInBase64(sequenceNumber);
+        let encryptedMessageInBase64 = await this.getMessageFromTopic(sequenceNumber);
         encryptedMessageInBase64 = Buffer.from(encryptedMessageInBase64, 'base64').toString('utf8');
 
         const encryptedMessage: TopicEncryptedMessage = JSON.parse(Buffer.from(encryptedMessageInBase64, 'base64').toString('utf8'));
@@ -315,7 +315,7 @@ export class EncryptedTopic {
             this.topicConfigurationMessage = await this.hederaStub.getFileContents(this.topicMemoObject.s.c.i);
         // Topic memo specifies that topic configuration message is stored using the Consensus Service
         } else {
-            topicConfigurationMessage = await this.getMessageFromTopicInBase64(1);
+            topicConfigurationMessage = await this.getMessageFromTopic(1);
             this.topicConfigurationMessage = Buffer.from(topicConfigurationMessage, 'base64').toString('utf8');
         }
     }
@@ -375,7 +375,7 @@ export class EncryptedTopic {
         return encryptedTopicKeysObject;
     }
 
-    private async getMessageFromTopicInBase64(sequenceNumber: number): Promise<string> {
+    private async getMessageFromTopic(sequenceNumber: number): Promise<string> {
         // Make sure the topicId variable is set before starting...
         if (!this.topicId) {
             throw new Error('Topic ID not set in constructor. Please provide a topic for the SDK to target.');
