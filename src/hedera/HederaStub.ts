@@ -4,9 +4,10 @@ import {
     FileContentsQuery,
     FileCreateTransaction,
     PrivateKey,
-    TopicCreateTransaction, TopicMessageSubmitTransaction
+    TopicCreateTransaction, TopicInfo, TopicInfoQuery, TopicMessage, TopicMessageQuery, TopicMessageSubmitTransaction
 } from "@hashgraph/sdk";
 import {TopicMemoObject} from "./interfaces/TopicMemoObject";
+import {Long} from "@hashgraph/sdk/lib/long";
 
 export class HederaStub {
     public constructor(
@@ -55,6 +56,48 @@ export class HederaStub {
         const receipt = await response.getReceipt(this.client);
 
         return receipt.topicSequenceNumber.toNumber();
+    }
+
+    public async getMessageFromTopic(topicId: string, sequenceNumber: number): Promise<string> {
+        const topicMessageQuery = new TopicMessageQuery({
+            topicId: topicId
+        }).setStartTime(0);
+
+        const message: string = await new Promise((resolve, reject) => {
+            topicMessageQuery.subscribe(
+                this.client,
+                (error: unknown) => {
+                    reject(error);
+                },
+                (topicMessage: TopicMessage) => {
+                    // Check if the original message was split among different chunks
+                    if (topicMessage.chunks.length > 0) {
+                        for (const chunk of topicMessage.chunks) {
+                            if ((chunk.sequenceNumber as Long).toNumber() === Number(sequenceNumber)) {
+                                resolve(Buffer.from(topicMessage.contents).toString('base64'));
+                            }
+                        }
+                    }
+
+                    // Check if the original message is kept within just one message (no chunks)
+                    if ((topicMessage.sequenceNumber as Long).toNumber() === Number(sequenceNumber)) {
+                        resolve(Buffer.from(topicMessage.contents).toString('base64'));
+                    }
+                }
+            );
+        });
+
+        return message;
+    }
+
+    public async getTopicInfo(topicId: string): Promise<TopicInfo> {
+        const topicInfo = new TopicInfoQuery({
+            topicId: topicId
+        });
+
+        const topicInfoResponse: TopicInfo = await topicInfo.execute(this.client);
+
+        return topicInfoResponse;
     }
 
     public async createFile(contents?: string): Promise<string> {

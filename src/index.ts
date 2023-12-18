@@ -1,15 +1,6 @@
-import {
-    Client,
-    PrivateKey,
-    TopicInfo,
-    TopicInfoQuery,
-    TopicMessage,
-    TopicMessageQuery,
-} from "@hashgraph/sdk";
+import {Client,PrivateKey} from "@hashgraph/sdk";
 import {Crypto} from "./crypto/Crypto";
 import {EncryptedTopicConfiguration} from "./hedera/interfaces/EncryptedTopicConfiguration";
-import * as crypto from 'crypto';
-import {TopicData} from "./hedera/interfaces/TopicData";
 import {Long} from "@hashgraph/sdk/lib/long";
 import {TopicEncryptionKeyAndInitVector} from "./hedera/interfaces/TopicEncryptionKeyAndInitVector";
 import {TopicEncryptedMessage} from "./hedera/interfaces/TopicEncryptedMessage";
@@ -21,18 +12,14 @@ import {EncryptedTopicKeysObject} from "./crypto/interfaces/EncryptedTopicKeysOb
 import {HederaStub} from "./hedera/HederaStub";
 import {EncryptionAlgorithms} from "./crypto/enums/EncryptionAlgorithms";
 import {KeyPair} from "./crypto/interfaces/KeyPair";
+import * as crypto from 'crypto';
+import {TopicConfigurationMessageIndexes} from "./hedera/enums/TopicConfigurationMessageIndexes";
 
 export class EncryptedTopic {
-    private hederaStub: HederaStub;
-    private readonly client: Client;
-    private crypto!: Crypto;
-
-    private readonly TOPIC_DATA_INDEX = 0;
-    private readonly TOPIC_ENCRYPTION_ALGORITHM_INDEX = 1;
-    private readonly TOPIC_ENCRYPTION_SIZE_INDEX = 2;
-    private readonly TOPIC_ENCRYPTED_KEYS_INDEX = 3;
-
     private readonly privateKey: string;
+
+    private hederaStub: HederaStub;
+    private crypto!: Crypto;
 
     // Hold a copy of the topic configuration message for further use,
     // so we don't have to get it from the Hedera network every single time.
@@ -53,11 +40,6 @@ export class EncryptedTopic {
     */
 
     public constructor(private readonly encryptedTopicConfiguration: EncryptedTopicConfiguration) {
-        this.client = Client.forTestnet().setOperator(
-            encryptedTopicConfiguration.hederaAccountId,
-            PrivateKey.fromString(encryptedTopicConfiguration.hederaPrivateKey)
-        );
-
         this.hederaStub = new HederaStub(
                 Client.forTestnet().setOperator(
                 encryptedTopicConfiguration.hederaAccountId,
@@ -156,7 +138,7 @@ export class EncryptedTopic {
         const submitKey = await this.getSubmitKey();
 
         if (this.topicMemoObject.s.m.f) {
-            const fileId: string = await this.hederaStub.createFile();
+            const fileId = await this.hederaStub.createFile();
             await this.hederaStub.appendToFile(fileId, finalMessageInBase64);
 
             return await this.hederaStub.submitMessageToTopic(submitKey, this.topicId, Buffer.from(fileId).toString('base64'));
@@ -173,7 +155,7 @@ export class EncryptedTopic {
         if (this.topicMemoObject.s.m.f) {
             const messageFileIdInBase64 = await this.getMessageFromTopicInBase64(sequenceNumber);
             let fileId = Buffer.from(messageFileIdInBase64, 'base64').toString('utf8');
-            const encryptedMessageInBase64: string = await this.hederaStub.getFileContents(Buffer.from(fileId, 'base64').toString('utf8'));
+            const encryptedMessageInBase64 = await this.hederaStub.getFileContents(Buffer.from(fileId, 'base64').toString('utf8'));
 
             const encryptedMessage: TopicEncryptedMessage = JSON.parse(Buffer.from(encryptedMessageInBase64, 'base64').toString('utf8'));
             const decryptedMessageEncryptionKey = Buffer.from(this.crypto.symmetricDecrypt(encryptedMessage.k, Buffer.from(topicEncryptionKeyAndInitVector.encryptionKey, 'base64'),  Buffer.from(topicEncryptionKeyAndInitVector.initVector, 'base64')), 'base64');
@@ -278,47 +260,12 @@ export class EncryptedTopic {
         return topicId;
     }
 
-    private async getEncryptedTopicKeysObjectFromTopicConfigurationMessage(): Promise<EncryptedTopicKeysObject> {
-        if (!this.topicConfigurationMessage) {
-            await this.setConfigurationMessage();
-        }
-
-        let encryptedTopicKeysObjectArray = this.topicConfigurationMessage.split('#').slice(this.TOPIC_ENCRYPTED_KEYS_INDEX);
-        const encryptedTopicKeysObject: EncryptedTopicKeysObject = {
-            a: [],
-            b: [],
-        };
-
-        const algorithm = await this.getEncryptionAlgorithmFromConfigurationMessage();
-
-        if (algorithm === 'kyber') {
-            encryptedTopicKeysObject.c = [];
-        }
-
-        for (const participant of encryptedTopicKeysObjectArray) {
-            const participantEncryptionData = participant.split('_');
-            if (participantEncryptionData[0]) {
-                encryptedTopicKeysObject.a.push(participantEncryptionData[0]);
-            }
-
-            if (participantEncryptionData[1]) {
-                encryptedTopicKeysObject.b.push(participantEncryptionData[1]);
-            }
-
-            if (encryptedTopicKeysObject.c && participantEncryptionData[2]) {
-                encryptedTopicKeysObject.c.push(participantEncryptionData[2]);
-            }
-        }
-
-        return encryptedTopicKeysObject;
-    }
-
     private async getEncryptionAlgorithmFromConfigurationMessage(): Promise<string> {
         if (!this.topicConfigurationMessage) {
             await this.setConfigurationMessage();
         }
 
-        return this.topicConfigurationMessage.split('#')[this.TOPIC_ENCRYPTION_ALGORITHM_INDEX];
+        return this.topicConfigurationMessage.split('#')[TopicConfigurationMessageIndexes.TOPIC_ENCRYPTION_ALGORITHM_INDEX];
     }
 
     private async getEncryptionSizeFromConfigurationMessage(): Promise<number> {
@@ -326,7 +273,7 @@ export class EncryptedTopic {
             await this.setConfigurationMessage();
         }
 
-        return Number(this.topicConfigurationMessage.split('#')[this.TOPIC_ENCRYPTION_SIZE_INDEX]);
+        return Number(this.topicConfigurationMessage.split('#')[TopicConfigurationMessageIndexes.TOPIC_ENCRYPTION_SIZE_INDEX]);
     }
 
     private async setMemo(): Promise<void> {
@@ -335,13 +282,9 @@ export class EncryptedTopic {
         }
 
         if (!this.topicMemoObject) {
-            const topicInfo = new TopicInfoQuery({
-                topicId: this.topicId
-            });
+            const topicInfo = await this.hederaStub.getTopicInfo(this.topicId);
 
-            const topicInfoResponse: TopicInfo = await topicInfo.execute(this.client);
-
-            this.topicMemoObject = JSON.parse(topicInfoResponse.topicMemo) as TopicMemoObject;
+            this.topicMemoObject = JSON.parse(topicInfo.topicMemo) as TopicMemoObject;
         }
     }
 
@@ -390,11 +333,46 @@ export class EncryptedTopic {
             await this.initializeCrypto();
         }
 
-        const encryptedTopicDataInBase64 = this.topicConfigurationMessage.split('#')[this.TOPIC_DATA_INDEX];
+        const encryptedTopicDataInBase64 = this.topicConfigurationMessage.split('#')[TopicConfigurationMessageIndexes.TOPIC_DATA_INDEX];
         const encryptedTopicKeysObject = await this.getEncryptedTopicKeysObjectFromTopicConfigurationMessage();
         const topicConfigurationObject = this.crypto.decryptTopicData(encryptedTopicKeysObject, encryptedTopicDataInBase64, this.privateKey);
 
         return topicConfigurationObject.s;
+    }
+
+    private async getEncryptedTopicKeysObjectFromTopicConfigurationMessage(): Promise<EncryptedTopicKeysObject> {
+        if (!this.topicConfigurationMessage) {
+            await this.setConfigurationMessage();
+        }
+
+        let encryptedTopicKeysObjectArray = this.topicConfigurationMessage.split('#').slice(TopicConfigurationMessageIndexes.TOPIC_ENCRYPTED_KEYS_INDEX);
+        const encryptedTopicKeysObject: EncryptedTopicKeysObject = {
+            a: [],
+            b: [],
+        };
+
+        const algorithm = await this.getEncryptionAlgorithmFromConfigurationMessage();
+
+        if (algorithm === 'kyber') {
+            encryptedTopicKeysObject.c = [];
+        }
+
+        for (const participant of encryptedTopicKeysObjectArray) {
+            const participantEncryptionData = participant.split('_');
+            if (participantEncryptionData[0]) {
+                encryptedTopicKeysObject.a.push(participantEncryptionData[0]);
+            }
+
+            if (participantEncryptionData[1]) {
+                encryptedTopicKeysObject.b.push(participantEncryptionData[1]);
+            }
+
+            if (encryptedTopicKeysObject.c && participantEncryptionData[2]) {
+                encryptedTopicKeysObject.c.push(participantEncryptionData[2]);
+            }
+        }
+
+        return encryptedTopicKeysObject;
     }
 
     private async getMessageFromTopicInBase64(sequenceNumber: number): Promise<string> {
@@ -404,44 +382,12 @@ export class EncryptedTopic {
         }
 
         // First, check if topic has messages up to "sequenceNumber"
-        const topicInfo = new TopicInfoQuery({
-            topicId: this.topicId
-        });
+        const topicInfo = await this.hederaStub.getTopicInfo(this.topicId);
 
-        const topicInfoResponse: TopicInfo = await topicInfo.execute(this.client);
-
-        if (Number(sequenceNumber) > (topicInfoResponse.sequenceNumber as Long).toNumber()) {
+        if (Number(sequenceNumber) > (topicInfo.sequenceNumber as Long).toNumber()) {
             throw new Error('Topic sequence number is less than the one provided.');
         }
 
-        const topicMessageQuery = new TopicMessageQuery({
-            topicId: this.topicId
-        }).setStartTime(0);
-
-        const message: string = await new Promise((resolve, reject) => {
-            topicMessageQuery.subscribe(
-                this.client,
-                (error: unknown) => {
-                    reject(error);
-                },
-                (topicMessage: TopicMessage) => {
-                    // Check if the original message was split among different chunks
-                    if (topicMessage.chunks.length > 0) {
-                        for (const chunk of topicMessage.chunks) {
-                            if ((chunk.sequenceNumber as Long).toNumber() === Number(sequenceNumber)) {
-                                resolve(Buffer.from(topicMessage.contents).toString('base64'));
-                            }
-                        }
-                    }
-
-                    // Check if the original message is kept within just one message (no chunks)
-                    if ((topicMessage.sequenceNumber as Long).toNumber() === Number(sequenceNumber)) {
-                        resolve(Buffer.from(topicMessage.contents).toString('base64'));
-                    }
-                }
-            );
-        });
-
-        return message;
+        return await this.hederaStub.getMessageFromTopic(this.topicId, sequenceNumber);
     }
 }
