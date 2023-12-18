@@ -10,6 +10,7 @@ Encrypted Topics are standard Hedera topics that are configured and behave in sp
 - [Installation](#installation)
 - [Example](#example)
 - [API](#api-reference)
+  - [generateKeyPair](#generatekeypair-algorithm)
   - [create](#create-createencryptedtopicconfiguration)
   - [submitMessage](#submitmessage-message)
   - [addParticipant](#addparticipant-publickey)
