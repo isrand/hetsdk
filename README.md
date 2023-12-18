@@ -164,8 +164,6 @@ Static method that returns a public / private key pair given the algorithm. It d
 
 - `algorithm (EncryptionAlgorithms)`:  Enum that specifies the encryption algorithm and key size. Possible options are: `EncryptionAlgorithms.RSA2048`, `EncryptionAlgorithms.Kyber512`, `EncryptionAlgorithms.Kyber768`, `EncryptionAlgorithms.Kyber1024`.
 
-> For more information about artifact storage, check the [storage](#storage) section.
-
 **Usage**
 
 ```typescript
