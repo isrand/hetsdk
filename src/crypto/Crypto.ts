@@ -4,6 +4,7 @@ import {CryptoAdapter} from "./interfaces/CryptoAdapter";
 import {TopicEncryptionKeyAndInitVector} from "../hedera/interfaces/TopicEncryptionKeyAndInitVector";
 import {TopicData} from "../hedera/interfaces/TopicData";
 import {RSA} from "./adapters/RSA";
+import {KeyPair} from "./interfaces/KeyPair";
 
 export class Crypto {
     private adapter: CryptoAdapter;
@@ -14,6 +15,10 @@ export class Crypto {
         } else {
             this.adapter = new RSA();
         }
+    }
+
+    public generateKeyPair(): KeyPair {
+        return this.adapter.generateKeyPair();
     }
 
     public validateParticipantKeys(topicParticipants: string[], topicEncryptionKeySize: number): void {

@@ -4,11 +4,31 @@ import crypto from "crypto";
 import {TopicData} from "../../hedera/interfaces/TopicData";
 import {TopicEncryptionKeyAndInitVector} from "../../hedera/interfaces/TopicEncryptionKeyAndInitVector";
 import {DefaultAdapter} from "./DefaultAdapter";
+import {KeyPair} from "../interfaces/KeyPair";
 
 export class RSA extends DefaultAdapter implements CryptoAdapter {
 
     // base64-encoded RSA public keys are 604 bytes in length
     private readonly expectedKeyLengthInBase64: number = 604;
+
+    public generateKeyPair(): KeyPair {
+        const keys = crypto.generateKeyPairSync('rsa', {
+            modulusLength: 2048,
+            publicKeyEncoding: {
+                type: 'pkcs1',
+                format: 'pem'
+            },
+            privateKeyEncoding: {
+                type: 'pkcs1',
+                format: 'pem'
+            }
+        });
+
+        return {
+            publicKey: Buffer.from(keys.publicKey).toString('base64'),
+            privateKey: Buffer.from(keys.privateKey).toString('base64')
+        }
+    }
 
     public getEncryptedTopicKeysObject(topicEncryptionKey: Buffer, topicEncryptionInitVector: Buffer, publicKeys: string[]): EncryptedTopicKeysObject {
         const encryptedTopicKeysObject: EncryptedTopicKeysObject = {

@@ -1,15 +1,46 @@
 import {CryptoAdapter} from "../interfaces/CryptoAdapter";
 import {EncryptedTopicKeysObject} from "../interfaces/EncryptedTopicKeysObject";
-import {TopicConfigurationObject} from "../../hedera/interfaces/TopicConfigurationObject";
 import {TopicData} from "../../hedera/interfaces/TopicData";
 import {TopicEncryptionKeyAndInitVector} from "../../hedera/interfaces/TopicEncryptionKeyAndInitVector";
 import {DefaultAdapter} from "./DefaultAdapter";
+import {KeyPair} from "../interfaces/KeyPair";
 
 const kyber = require('crystals-kyber');
 
 export class Kyber extends DefaultAdapter implements CryptoAdapter {
     public constructor(private readonly keySize: number) {
         super();
+    }
+
+    public generateKeyPair(): KeyPair {
+        switch (this.keySize) {
+            case 512:
+                const keys_512 = kyber.KeyGen512();
+
+                return {
+                    publicKey: Buffer.from(keys_512[0]).toString('base64'),
+                    privateKey: Buffer.from(keys_512[1]).toString('base64')
+                };
+            case 768:
+                const keys_768 = kyber.KeyGen768();
+
+                return {
+                    publicKey: Buffer.from(keys_768[0]).toString('base64'),
+                    privateKey: Buffer.from(keys_768[1]).toString('base64')
+                };
+            case 1024:
+                const keys_1024 = kyber.KeyGen1024();
+
+                return {
+                    publicKey: Buffer.from(keys_1024[0]).toString('base64'),
+                    privateKey: Buffer.from(keys_1024[1]).toString('base64')
+                };
+            default:
+                return {
+                    publicKey: '',
+                    privateKey: ''
+                };
+        }
     }
 
     public getEncryptedTopicKeysObject(topicEncryptionKey: Buffer, topicEncryptionInitVector: Buffer, publicKeys: string[]): EncryptedTopicKeysObject {

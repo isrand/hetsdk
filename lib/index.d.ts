@@ -1,7 +1,11 @@
 import { EncryptedTopicConfiguration } from "./hedera/interfaces/EncryptedTopicConfiguration";
 import { CreateEncryptedTopicConfiguration } from "./hedera/interfaces/CreateEncryptedTopicConfiguration";
+import { TopicMemoObject } from "./hedera/interfaces/TopicMemoObject";
+import { EncryptionAlgorithms } from "./crypto/enums/EncryptionAlgorithms";
+import { KeyPair } from "./crypto/interfaces/KeyPair";
 export declare class EncryptedTopic {
     private readonly encryptedTopicConfiguration;
+    private hederaStub;
     private readonly client;
     private crypto;
     private readonly TOPIC_DATA_INDEX;
@@ -13,20 +17,23 @@ export declare class EncryptedTopic {
     private topicMemoObject;
     private topicId?;
     constructor(encryptedTopicConfiguration: EncryptedTopicConfiguration);
+    static generateKeyPair(algorithm: EncryptionAlgorithms): KeyPair;
     create(createEncryptedTopicConfiguration: CreateEncryptedTopicConfiguration): Promise<string>;
     addParticipant(publicKey: string): Promise<void>;
     submitMessage(message: string): Promise<number>;
     getMessage(sequenceNumber: number): Promise<string>;
+    getMemo(): Promise<TopicMemoObject>;
+    private createTopicMessage;
+    private createTopicConfigurationMessage;
     private createMemoObject;
     private createParticipantsTopic;
     private getEncryptedTopicKeysObjectFromTopicConfigurationMessage;
-    private getTopicEncryptionAlgorithmFromTopicConfigurationMessage;
-    private getTopicEncryptionSizeFromTopicConfigurationMessage;
-    private getMemo;
+    private getEncryptionAlgorithmFromConfigurationMessage;
+    private getEncryptionSizeFromConfigurationMessage;
+    private setMemo;
     private getEncryptionKeyAndInitVector;
     private setConfigurationMessage;
     private initializeCrypto;
     private getSubmitKey;
-    private getFileContents;
     private getMessageFromTopicInBase64;
 }
