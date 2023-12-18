@@ -13,14 +13,14 @@ export class RSA extends DefaultAdapter implements CryptoAdapter {
 
     public generateKeyPair(): KeyPair {
         const keys = crypto.generateKeyPairSync('rsa', {
-            modulusLength: 2048, // bits - standard for RSA keys
+            modulusLength: 2048,
             publicKeyEncoding: {
-                type: 'pkcs1', // "Public Key Cryptography Standards 1"
-                format: 'pem' // Most common formatting choice
+                type: 'pkcs1',
+                format: 'pem'
             },
             privateKeyEncoding: {
-                type: 'pkcs1', // "Public Key Cryptography Standards 1"
-                format: 'pem' // Most common formatting choice
+                type: 'pkcs1',
+                format: 'pem'
             }
         });
 
