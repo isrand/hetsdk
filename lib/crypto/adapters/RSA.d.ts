@@ -1,17 +1,17 @@
 /// <reference types="node" />
-import { CryptoAdapter } from "../interfaces/CryptoAdapter";
-import { EncryptedTopicKeysObject } from "../interfaces/EncryptedTopicKeysObject";
-import { TopicData } from "../../hedera/interfaces/TopicData";
-import { TopicEncryptionKeyAndInitVector } from "../../hedera/interfaces/TopicEncryptionKeyAndInitVector";
+import { ICryptoAdapter } from "../interfaces/ICryptoAdapter";
+import { IEncryptedTopicKeysObject } from "../interfaces/IEncryptedTopicKeysObject";
+import { ITopicData } from "../../hedera/interfaces/ITopicData";
+import { ITopicEncryptionKeyAndInitVector } from "../../hedera/interfaces/ITopicEncryptionKeyAndInitVector";
 import { DefaultAdapter } from "./DefaultAdapter";
-import { KeyPair } from "../interfaces/KeyPair";
-export declare class RSA extends DefaultAdapter implements CryptoAdapter {
+import { IKeyPair } from "../interfaces/IKeyPair";
+export declare class RSA extends DefaultAdapter implements ICryptoAdapter {
     private readonly expectedKeyLengthInBase64;
-    generateKeyPair(): KeyPair;
-    getEncryptedTopicKeysObject(topicEncryptionKey: Buffer, topicEncryptionInitVector: Buffer, publicKeys: string[]): EncryptedTopicKeysObject;
+    generateKeyPair(): IKeyPair;
+    getEncryptedTopicKeysObject(topicEncryptionKey: Buffer, topicEncryptionInitVector: Buffer, publicKeys: string[]): IEncryptedTopicKeysObject;
     asymmetricEncrypt(data: Buffer, publicKey: string): Buffer;
     asymmetricDecrypt(data: Buffer, privateKey: string): Buffer;
-    decryptTopicData(encryptedTopicKeysObject: EncryptedTopicKeysObject, encryptedTopicDataInBase64: string, privateKey: string): TopicData;
-    getTopicEncryptionKeyAndInitVector(encryptedTopicKeysObject: EncryptedTopicKeysObject, privateKey: string): TopicEncryptionKeyAndInitVector;
+    decryptTopicData(encryptedTopicKeysObject: IEncryptedTopicKeysObject, encryptedTopicDataInBase64: string, privateKey: string): ITopicData;
+    getTopicEncryptionKeyAndInitVector(encryptedTopicKeysObject: IEncryptedTopicKeysObject, privateKey: string): ITopicEncryptionKeyAndInitVector;
     validateParticipantKeys(topicParticipants: string[], topicEncryptionKeySize: number): void;
 }

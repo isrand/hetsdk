@@ -2,14 +2,20 @@ import {
     Client,
     FileAppendTransaction,
     FileContentsQuery,
-    FileCreateTransaction,
+    FileCreateTransaction, Hbar,
     PrivateKey,
-    TopicCreateTransaction, TopicInfo, TopicInfoQuery, TopicMessage, TopicMessageQuery, TopicMessageSubmitTransaction
+    TopicCreateTransaction,
+    TopicInfo,
+    TopicInfoQuery,
+    TopicMessage,
+    TopicMessageQuery,
+    TopicMessageSubmitTransaction
 } from "@hashgraph/sdk";
-import {TopicMemoObject} from "./interfaces/TopicMemoObject";
+import {ITopicMemoObject} from "./interfaces/ITopicMemoObject";
 import {Long} from "@hashgraph/sdk/lib/long";
+import {IHederaStub} from "./interfaces/IHederaStub";
 
-export class HederaStub {
+export class HederaStub implements IHederaStub {
     public constructor(
         private readonly client: Client,
         private readonly hederaPrivateKey: string,
@@ -17,7 +23,7 @@ export class HederaStub {
     ) {
     }
 
-    public async createTopic(submitKey: string, topicMemoObject?: TopicMemoObject): Promise<string> {
+    public async createTopic(submitKey: string, topicMemoObject?: ITopicMemoObject): Promise<string> {
         const topicCreateTransaction: TopicCreateTransaction = new TopicCreateTransaction({
             adminKey: PrivateKey.fromString(this.hederaPrivateKey),
             autoRenewAccountId: this.hederaAccountId
@@ -42,7 +48,7 @@ export class HederaStub {
         return encryptedTopicCreationReceipt.topicId.toString();
     }
 
-    public async submitMessageToTopic(submitKey: string, topicId?: string, contents?: string): Promise<number> {
+    public async submitMessageToTopic(submitKey: string, topicId: string, contents: string): Promise<number> {
         const topicSubmitMessageTransaction: TopicMessageSubmitTransaction = new TopicMessageSubmitTransaction({
             topicId: topicId,
             message: contents
@@ -63,7 +69,7 @@ export class HederaStub {
             topicId: topicId
         }).setStartTime(0);
 
-        const message: string = await new Promise((resolve, reject) => {
+        return await new Promise((resolve, reject) => {
             topicMessageQuery.subscribe(
                 this.client,
                 (error: unknown) => {
@@ -86,8 +92,6 @@ export class HederaStub {
                 }
             );
         });
-
-        return message;
     }
 
     public async getTopicInfo(topicId: string): Promise<TopicInfo> {
@@ -95,16 +99,14 @@ export class HederaStub {
             topicId: topicId
         });
 
-        const topicInfoResponse: TopicInfo = await topicInfo.execute(this.client);
-
-        return topicInfoResponse;
+        return await topicInfo.execute(this.client);
     }
 
     public async createFile(contents?: string): Promise<string> {
         const fileCreateTransaction: FileCreateTransaction = new FileCreateTransaction({
             keys: [PrivateKey.fromString(this.hederaPrivateKey).publicKey],
             contents: contents
-        });
+        }).setMaxTransactionFee(new Hbar(5));
 
         await fileCreateTransaction.freezeWith(this.client);
         await fileCreateTransaction.sign(PrivateKey.fromString(this.hederaPrivateKey));
@@ -123,7 +125,7 @@ export class HederaStub {
         const fileAppendTransaction: FileAppendTransaction = new FileAppendTransaction({
             fileId: fileId,
             contents: contents,
-        });
+        }).setMaxTransactionFee(new Hbar(5));
 
         await fileAppendTransaction.freezeWith(this.client);
         await fileAppendTransaction.sign(PrivateKey.fromString(this.hederaPrivateKey));
@@ -137,8 +139,7 @@ export class HederaStub {
         });
 
         const fileContentsUint8Array: Uint8Array = await fileGetContentsQuery.execute(this.client);
-        let fileContentsString: string = fileContentsUint8Array.toString();
 
-        return fileContentsString;
+        return fileContentsUint8Array.toString();
     }
 }

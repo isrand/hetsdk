@@ -1,17 +1,17 @@
-import {CryptoAdapter} from "../interfaces/CryptoAdapter";
-import {EncryptedTopicKeysObject} from "../interfaces/EncryptedTopicKeysObject";
+import {ICryptoAdapter} from "../interfaces/ICryptoAdapter";
+import {IEncryptedTopicKeysObject} from "../interfaces/IEncryptedTopicKeysObject";
 import crypto from "crypto";
-import {TopicData} from "../../hedera/interfaces/TopicData";
-import {TopicEncryptionKeyAndInitVector} from "../../hedera/interfaces/TopicEncryptionKeyAndInitVector";
+import {ITopicData} from "../../hedera/interfaces/ITopicData";
+import {ITopicEncryptionKeyAndInitVector} from "../../hedera/interfaces/ITopicEncryptionKeyAndInitVector";
 import {DefaultAdapter} from "./DefaultAdapter";
-import {KeyPair} from "../interfaces/KeyPair";
+import {IKeyPair} from "../interfaces/IKeyPair";
 
-export class RSA extends DefaultAdapter implements CryptoAdapter {
+export class RSA extends DefaultAdapter implements ICryptoAdapter {
 
     // base64-encoded RSA public keys are 604 bytes in length
     private readonly expectedKeyLengthInBase64: number = 604;
 
-    public generateKeyPair(): KeyPair {
+    public generateKeyPair(): IKeyPair {
         const keys = crypto.generateKeyPairSync('rsa', {
             modulusLength: 2048,
             publicKeyEncoding: {
@@ -30,8 +30,8 @@ export class RSA extends DefaultAdapter implements CryptoAdapter {
         }
     }
 
-    public getEncryptedTopicKeysObject(topicEncryptionKey: Buffer, topicEncryptionInitVector: Buffer, publicKeys: string[]): EncryptedTopicKeysObject {
-        const encryptedTopicKeysObject: EncryptedTopicKeysObject = {
+    public getEncryptedTopicKeysObject(topicEncryptionKey: Buffer, topicEncryptionInitVector: Buffer, publicKeys: string[]): IEncryptedTopicKeysObject {
+        const encryptedTopicKeysObject: IEncryptedTopicKeysObject = {
             a: [],
             b: [],
         }
@@ -55,7 +55,7 @@ export class RSA extends DefaultAdapter implements CryptoAdapter {
         return crypto.privateDecrypt({ key: crypto.createPrivateKey(Buffer.from(privateKey, 'base64').toString('utf8')) }, data);
     }
 
-    public decryptTopicData(encryptedTopicKeysObject: EncryptedTopicKeysObject, encryptedTopicDataInBase64: string, privateKey: string): TopicData {
+    public decryptTopicData(encryptedTopicKeysObject: IEncryptedTopicKeysObject, encryptedTopicDataInBase64: string, privateKey: string): ITopicData {
         for (const encryptedTopicKey of encryptedTopicKeysObject.a) {
             for (const encryptedTopicInitVector of encryptedTopicKeysObject.b) {
                 let topicEncryptionKey;
@@ -71,7 +71,7 @@ export class RSA extends DefaultAdapter implements CryptoAdapter {
                 try {
                     const decryptedTopicConfigurationObject = this.symmetricDecrypt(encryptedTopicDataInBase64, topicEncryptionKey, topicEncryptionInitVector);
 
-                    return JSON.parse(decryptedTopicConfigurationObject) as TopicData;
+                    return JSON.parse(decryptedTopicConfigurationObject) as ITopicData;
                 } catch (error) {
                 }
             }
@@ -80,7 +80,7 @@ export class RSA extends DefaultAdapter implements CryptoAdapter {
         throw new Error('Error fetching topic configuration object. Does user have access?');
     }
 
-    public getTopicEncryptionKeyAndInitVector(encryptedTopicKeysObject: EncryptedTopicKeysObject, privateKey: string): TopicEncryptionKeyAndInitVector {
+    public getTopicEncryptionKeyAndInitVector(encryptedTopicKeysObject: IEncryptedTopicKeysObject, privateKey: string): ITopicEncryptionKeyAndInitVector {
         for (const encryptedTopicKey of encryptedTopicKeysObject.a) {
             for (const encryptedTopicInitVector of encryptedTopicKeysObject.b) {
                 let topicEncryptionKey;
