@@ -5,8 +5,8 @@
   "main": "lib/index.js",
   "scripts": {
     "build": "rm -rf lib && tsc -p tsconfig.build.json",
-    "test:unit": "jest --verbose --config './jest.config.json' --rootDir ./tests/unit --coverage",
-    "test:integration": "jest --verbose --config './jest.config.json' --rootDir ./tests/integration --coverage"
+    "test:unit": "jest --verbose --config './jest.config.json' --rootDir ./tests/unit --coverage --coverageReporters text",
+    "test:integration": "jest --verbose --config './jest.config.json' --rootDir ./tests/integration --forceExit"
   },
   "repository": {
     "type": "git",
@@ -26,6 +26,7 @@
   },
   "devDependencies": {
     "@types/jest": "29.5.11",
+    "dotenv": "^16.3.1",
     "jest": "29.7.0",
     "supertest": "6.3.3",
     "ts-jest": "29.1.1"
