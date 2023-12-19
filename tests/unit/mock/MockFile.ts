@@ -12,7 +12,6 @@ export class MockFile {
             this.contents = '';
         }
         this.fileId = String(Math.random() * 500);
-
     }
 
     public getId() {

@@ -215,6 +215,5 @@ describe("The MockHederaStub", () => {
 
             expect(topicInfo).toBeDefined();
         });
-
     });
 });
