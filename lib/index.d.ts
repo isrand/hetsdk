@@ -2,15 +2,17 @@ import { EncryptedTopicConfiguration } from "./hedera/interfaces/EncryptedTopicC
 import { CreateEncryptedTopicConfiguration } from "./hedera/interfaces/CreateEncryptedTopicConfiguration";
 import { EncryptionAlgorithms } from "./crypto/enums/EncryptionAlgorithms";
 import { KeyPair } from "./crypto/interfaces/KeyPair";
+import { IHederaStub } from "./hedera/interfaces/IHederaStub";
 export declare class EncryptedTopic {
     private readonly encryptedTopicConfiguration;
+    private stub?;
+    private readonly hederaStub;
     private readonly privateKey;
-    private hederaStub;
     private crypto;
     private topicConfigurationMessage;
     private topicMemoObject;
     private topicId?;
-    constructor(encryptedTopicConfiguration: EncryptedTopicConfiguration);
+    constructor(encryptedTopicConfiguration: EncryptedTopicConfiguration, stub?: IHederaStub | undefined);
     static generateKeyPair(algorithm: EncryptionAlgorithms): KeyPair;
     create(createEncryptedTopicConfiguration: CreateEncryptedTopicConfiguration): Promise<string>;
     addParticipant(publicKey: string, forwardSecrecy?: boolean): Promise<boolean>;

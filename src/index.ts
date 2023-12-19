@@ -16,11 +16,13 @@ import * as crypto from 'crypto';
 import {TopicConfigurationMessageIndexes} from "./hedera/enums/TopicConfigurationMessageIndexes";
 import {TopicData} from "./hedera/interfaces/TopicData";
 import {TopicConfigurationMessageParameters} from "./hedera/interfaces/TopicConfigurationMessageParameters";
+import {IHederaStub} from "./hedera/interfaces/IHederaStub";
 
 export class EncryptedTopic {
+
+    private readonly hederaStub: IHederaStub;
     private readonly privateKey: string;
 
-    private hederaStub: HederaStub;
     private crypto!: Crypto;
 
     // Hold a copy of the topic configuration message for further use,
@@ -41,16 +43,22 @@ export class EncryptedTopic {
 
     */
 
-    public constructor(private readonly encryptedTopicConfiguration: EncryptedTopicConfiguration) {
-        this.hederaStub = new HederaStub(
+    public constructor(
+        private readonly encryptedTopicConfiguration: EncryptedTopicConfiguration,
+        // Allow to pass an IHederaStub-compliant class from outside for test purposes
+        private stub?: IHederaStub) {
+        if (stub) {
+            this.hederaStub = stub;
+        } else {
+            this.hederaStub = new HederaStub(
                 Client.forTestnet().setOperator(
-                encryptedTopicConfiguration.hederaAccountId,
-                PrivateKey.fromString(encryptedTopicConfiguration.hederaPrivateKey)
-            ),
-            this.encryptedTopicConfiguration.hederaPrivateKey,
-            this.encryptedTopicConfiguration.hederaAccountId
-        );
-
+                    encryptedTopicConfiguration.hederaAccountId,
+                    PrivateKey.fromString(encryptedTopicConfiguration.hederaPrivateKey)
+                ),
+                this.encryptedTopicConfiguration.hederaPrivateKey,
+                this.encryptedTopicConfiguration.hederaAccountId
+            );
+        }
         this.privateKey = encryptedTopicConfiguration.privateKey;
         this.topicId = encryptedTopicConfiguration.topicId;
     }

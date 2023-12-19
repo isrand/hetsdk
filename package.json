@@ -4,7 +4,9 @@
   "description": "",
   "main": "lib/index.js",
   "scripts": {
-    "build": "rm -rf lib && tsc -p tsconfig.json"
+    "build": "rm -rf lib && tsc -p tsconfig.build.json",
+    "test:unit": "jest --verbose --config './jest.config.json' --rootDir ./tests/unit --coverage",
+    "test:integration": "jest --verbose --config './jest.config.json' --rootDir ./tests/integration --coverage"
   },
   "repository": {
     "type": "git",
@@ -21,5 +23,11 @@
     "@hashgraph/sdk": "2.36.0",
     "crystals-kyber": "5.1.0",
     "typescript": "5.2.2"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.11",
+    "jest": "29.7.0",
+    "supertest": "6.3.3",
+    "ts-jest": "29.1.1"
   }
 }

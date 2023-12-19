@@ -8,8 +8,9 @@ import {
 } from "@hashgraph/sdk";
 import {TopicMemoObject} from "./interfaces/TopicMemoObject";
 import {Long} from "@hashgraph/sdk/lib/long";
+import {IHederaStub} from "./interfaces/IHederaStub";
 
-export class HederaStub {
+export class HederaStub implements IHederaStub {
     public constructor(
         private readonly client: Client,
         private readonly hederaPrivateKey: string,
@@ -42,7 +43,7 @@ export class HederaStub {
         return encryptedTopicCreationReceipt.topicId.toString();
     }
 
-    public async submitMessageToTopic(submitKey: string, topicId?: string, contents?: string): Promise<number> {
+    public async submitMessageToTopic(submitKey: string, topicId: string, contents: string): Promise<number> {
         const topicSubmitMessageTransaction: TopicMessageSubmitTransaction = new TopicMessageSubmitTransaction({
             topicId: topicId,
             message: contents
