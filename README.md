@@ -15,6 +15,8 @@ Encrypted Topics are standard Hedera topics that are configured and behave in sp
   - [submitMessage](#submitmessage-message)
   - [addParticipant](#addparticipant-publickey)
   - [getMessage](#getmessage-messagesequencenumber)
+  - [getParticipants](#getparticipants-)
+  - [rotateEncryptionKey](#rotateencryptionkey-)
 - [Storage](#storage)
   - [Consensus Service](#consensus-service)
 - [Encryption process](#encryption-process)
@@ -247,24 +249,21 @@ or
 
 ---
 
-### `addParticipant (publicKey)`
+### `addParticipant (publicKey, forwardSecrecy)`
 
 **Description**
 
 Adds new participant to the encrypted topic, only if the storage medium of said topic for the configuration is set to File Service and the user can update the configuration file.
 
-> [!NOTE]
-> As of now, new participants have access to all messages, even those before they were addded.
-> An SDK-wide change is in development to allow for perfect forward secrecy, if needed, when adding new participants to the topic. It will be implemented in later versions.
-
 **Parameters**
 
 - `publicKey (string)`: Base64-encoded public key of the new participant used for encryption. The key's algorithm must match the chosen topic encryption algorithm.
+- `forwardSecrecy (?boolean)`: Whether to rotate the topic encryption key before the new participant is added. If set to `true`, the new participant will **not** be able to decrypt the messages from the topic before they were added.
 
 **Usage**
 
 ```typescript
-const additionSuccess = await encryptedTopic.addParticipant(otherKyberPublicKey);
+const additionSuccess = await encryptedTopic.addParticipant(otherKyberPublicKey, false);
 ```
 
 **Return value**
@@ -300,6 +299,38 @@ const message = await encryptedTopic.getMessage(messageSequenceNumber);
 or
 
 `ERROR`: if the sequence number provided is greater than the current sequence number of the topic, or the user doesn't have access to the topic.
+
+---
+
+### `getParticipants ()`
+
+**Description**
+
+Get the participants belonging to a topic, only if the encrypted topic admin chose to store them upon topic creation.
+
+**Usage**
+
+```typescript
+const participants = await encryptedTopic.getParticipants();
+```
+
+**Return value**
+
+`participants (string[])`: array of strings representing the public keys of the participants of the topic.
+
+---
+
+### `rotateEncryptionKey ()`
+
+**Description**
+
+Rotate the topic encryption key. This method requires the storage of the topic participants to work.
+
+**Usage**
+
+```typescript
+await encryptedTopic.rotateEncryptionKey();
+```
 
 ---
 
@@ -364,4 +395,3 @@ Furthermore, messages can be decrypted and shared by distributing their `mek`, w
 - Calculate maximum possible JSON payload size with File Service as storage medium for messages.
 - Calculate maximum number of participants possible with File Service as storage medium for topic configuration message given an empty topic metadata object.
 - Provide a method to calculate storage costs and provide the user with recommendations on which storage medium to use.
-- Implement perfect forward secrecy for topics that can add new participants down the line.

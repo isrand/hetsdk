@@ -63,7 +63,7 @@ export class EncryptedTopic {
 
     // "create" creates a new encrypted topic in the Hedera network
     public async create(createEncryptedTopicConfiguration: CreateEncryptedTopicConfiguration): Promise<string> {
-        const submitKey: string = PrivateKey.generateED25519().toStringRaw();
+        const submitKey = PrivateKey.generateED25519().toStringRaw();
         this.topicConfigurationMessage = this.createTopicConfigurationMessage({
             submitKey: submitKey,
             algorithm: createEncryptedTopicConfiguration.algorithm.split('-')[0],
@@ -167,37 +167,23 @@ export class EncryptedTopic {
     // "getMessage" gets a message from an encrypted topic (if the user has access)
     public async getMessage(sequenceNumber: number): Promise<string> {
         await this.setMemo();
-        let topicEncryptionKeyAndInitVector;
+        let encryptedMessageInBase64;
 
         if (this.topicMemoObject.s.m.f) {
             const messageFileIdInBase64 = await this.getMessageFromTopic(sequenceNumber);
             let fileId = Buffer.from(messageFileIdInBase64, 'base64').toString('utf8');
-            const encryptedMessageInBase64 = await this.hederaStub.getFileContents(Buffer.from(fileId, 'base64').toString('utf8'));
-
-            const encryptedMessage: TopicEncryptedMessage = JSON.parse(Buffer.from(encryptedMessageInBase64, 'base64').toString('utf8'));
-            topicEncryptionKeyAndInitVector = await this.getEncryptionKeyAndInitVector(encryptedMessage.v);
-            const decryptedMessageEncryptionKey = Buffer.from(this.crypto.symmetricDecrypt(encryptedMessage.k, Buffer.from(topicEncryptionKeyAndInitVector.encryptionKey, 'base64'),  Buffer.from(topicEncryptionKeyAndInitVector.initVector, 'base64')), 'base64');
-            const decryptedMessageInitVector = Buffer.from(this.crypto.symmetricDecrypt(encryptedMessage.i, Buffer.from(topicEncryptionKeyAndInitVector.encryptionKey, 'base64'),  Buffer.from(topicEncryptionKeyAndInitVector.initVector, 'base64')), 'base64');
-
-            return this.crypto.symmetricDecrypt(encryptedMessage.m, decryptedMessageEncryptionKey, decryptedMessageInitVector);
+            encryptedMessageInBase64 = await this.hederaStub.getFileContents(Buffer.from(fileId, 'base64').toString('utf8'));
+        } else {
+            encryptedMessageInBase64 = await this.getMessageFromTopic(sequenceNumber);
+            encryptedMessageInBase64 = Buffer.from(encryptedMessageInBase64, 'base64').toString('utf8');
         }
 
-        let encryptedMessageInBase64 = await this.getMessageFromTopic(sequenceNumber);
-        encryptedMessageInBase64 = Buffer.from(encryptedMessageInBase64, 'base64').toString('utf8');
-
         const encryptedMessage: TopicEncryptedMessage = JSON.parse(Buffer.from(encryptedMessageInBase64, 'base64').toString('utf8'));
-        topicEncryptionKeyAndInitVector = await this.getEncryptionKeyAndInitVector(encryptedMessage.v);
+        const topicEncryptionKeyAndInitVector = await this.getEncryptionKeyAndInitVector(encryptedMessage.v);
         const decryptedMessageEncryptionKey = Buffer.from(this.crypto.symmetricDecrypt(encryptedMessage.k, Buffer.from(topicEncryptionKeyAndInitVector.encryptionKey, 'base64'),  Buffer.from(topicEncryptionKeyAndInitVector.initVector, 'base64')), 'base64');
         const decryptedMessageInitVector = Buffer.from(this.crypto.symmetricDecrypt(encryptedMessage.i, Buffer.from(topicEncryptionKeyAndInitVector.encryptionKey, 'base64'),  Buffer.from(topicEncryptionKeyAndInitVector.initVector, 'base64')), 'base64');
 
         return this.crypto.symmetricDecrypt(encryptedMessage.m, decryptedMessageEncryptionKey, decryptedMessageInitVector);
-    }
-
-    // "getMemo" returns the topic memo object to provide that information to the user
-    public async getMemo(): Promise<TopicMemoObject> {
-        await this.setMemo();
-
-        return this.topicMemoObject;
     }
 
     // "getParticipants" returns the list of participants that are part of the topic, if the encrypted
