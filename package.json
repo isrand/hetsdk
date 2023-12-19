@@ -5,7 +5,7 @@
   "main": "lib/index.js",
   "scripts": {
     "build": "rm -rf lib && tsc -p tsconfig.build.json",
-    "test:unit": "jest --verbose --config './jest.config.json' --testMatch '**/tests/unit/**/*.spec.ts' --coverage --coverageDirectory ./tests/unit/coverage --collectCoverageFrom \"src/**/*.{js,jsx,ts,tsx}\" --coverageReporters text",
+    "test:unit": "jest --verbose --config './jest.config.json' --testMatch '**/tests/unit/**/*.spec.ts' --coverage --collectCoverageFrom \"src/**/*.{js,jsx,ts,tsx}\" --coverageReporters text",
     "test:integration": "jest --verbose --config './jest.config.json' --rootDir ./tests/integration --forceExit"
   },
   "repository": {
