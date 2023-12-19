@@ -2,7 +2,7 @@ import {
     Client,
     FileAppendTransaction,
     FileContentsQuery,
-    FileCreateTransaction,
+    FileCreateTransaction, Hbar,
     PrivateKey,
     TopicCreateTransaction,
     TopicInfo,
@@ -106,7 +106,7 @@ export class HederaStub implements IHederaStub {
         const fileCreateTransaction: FileCreateTransaction = new FileCreateTransaction({
             keys: [PrivateKey.fromString(this.hederaPrivateKey).publicKey],
             contents: contents
-        });
+        }).setMaxTransactionFee(new Hbar(5));
 
         await fileCreateTransaction.freezeWith(this.client);
         await fileCreateTransaction.sign(PrivateKey.fromString(this.hederaPrivateKey));
@@ -125,7 +125,7 @@ export class HederaStub implements IHederaStub {
         const fileAppendTransaction: FileAppendTransaction = new FileAppendTransaction({
             fileId: fileId,
             contents: contents,
-        });
+        }).setMaxTransactionFee(new Hbar(5));
 
         await fileAppendTransaction.freezeWith(this.client);
         await fileAppendTransaction.sign(PrivateKey.fromString(this.hederaPrivateKey));
