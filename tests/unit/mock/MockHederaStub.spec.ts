@@ -1,5 +1,5 @@
 import {MockHederaStub} from "./MockHederaStub";
-import {TopicMemoObject} from "../../../lib/hedera/interfaces/TopicMemoObject";
+import {ITopicMemoObject} from "../../../lib/hedera/interfaces/ITopicMemoObject";
 
 describe("The MockHederaStub", () => {
     describe("constructor", () => {
@@ -92,7 +92,7 @@ describe("The MockHederaStub", () => {
         test("should create a valid topic in its internal map, and return its Id", async () => {
             const mockHederaStub = new MockHederaStub();
             const submitKey = 'submitKey';
-            const topicMemo: TopicMemoObject = {
+            const topicMemo: ITopicMemoObject = {
                 s: {
                     c: {
                         f: false

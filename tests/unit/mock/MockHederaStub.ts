@@ -1,5 +1,5 @@
 import {IHederaStub} from "../../../src/hedera/interfaces/IHederaStub";
-import {TopicMemoObject} from "../../../src/hedera/interfaces/TopicMemoObject";
+import {ITopicMemoObject} from "../../../src/hedera/interfaces/ITopicMemoObject";
 import {TopicInfo} from "@hashgraph/sdk";
 import {MockTopic} from "./MockTopic";
 import {MockFile} from "./MockFile";
@@ -42,7 +42,7 @@ export class MockHederaStub implements IHederaStub {
         return file.getContents();
     }
 
-    public async createTopic(submitKey: string, topicMemoObject?: TopicMemoObject): Promise<string> {
+    public async createTopic(submitKey: string, topicMemoObject?: ITopicMemoObject): Promise<string> {
         const topic = new MockTopic(submitKey, topicMemoObject);
         const topicId = topic.getId();
 

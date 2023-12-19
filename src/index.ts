@@ -1,21 +1,21 @@
 import {Client,PrivateKey} from "@hashgraph/sdk";
 import {Crypto} from "./crypto/Crypto";
-import {EncryptedTopicConfiguration} from "./hedera/interfaces/EncryptedTopicConfiguration";
+import {IEncryptedTopicConfiguration} from "./hedera/interfaces/IEncryptedTopicConfiguration";
 import {Long} from "@hashgraph/sdk/lib/long";
-import {TopicEncryptionKeyAndInitVector} from "./hedera/interfaces/TopicEncryptionKeyAndInitVector";
-import {TopicEncryptedMessage} from "./hedera/interfaces/TopicEncryptedMessage";
-import {CreateEncryptedTopicConfiguration} from "./hedera/interfaces/CreateEncryptedTopicConfiguration";
-import {TopicMemoObject} from "./hedera/interfaces/TopicMemoObject";
-import {TopicStorageOptions} from "./hedera/interfaces/TopicStorageOptions";
+import {ITopicEncryptionKeyAndInitVector} from "./hedera/interfaces/ITopicEncryptionKeyAndInitVector";
+import {ITopicEncryptedMessage} from "./hedera/interfaces/ITopicEncryptedMessage";
+import {ICreateEncryptedTopicConfiguration} from "./hedera/interfaces/ICreateEncryptedTopicConfiguration";
+import {ITopicMemoObject} from "./hedera/interfaces/ITopicMemoObject";
+import {ITopicStorageOptions} from "./hedera/interfaces/ITopicStorageOptions";
 import {StorageOptions} from "./hedera/enums/StorageOptions";
-import {EncryptedTopicKeysObject} from "./crypto/interfaces/EncryptedTopicKeysObject";
+import {IEncryptedTopicKeysObject} from "./crypto/interfaces/IEncryptedTopicKeysObject";
 import {HederaStub} from "./hedera/HederaStub";
 import {EncryptionAlgorithms} from "./crypto/enums/EncryptionAlgorithms";
-import {KeyPair} from "./crypto/interfaces/KeyPair";
+import {IKeyPair} from "./crypto/interfaces/IKeyPair";
 import * as crypto from 'crypto';
 import {TopicConfigurationMessageIndexes} from "./hedera/enums/TopicConfigurationMessageIndexes";
-import {TopicData} from "./hedera/interfaces/TopicData";
-import {TopicConfigurationMessageParameters} from "./hedera/interfaces/TopicConfigurationMessageParameters";
+import {ITopicData} from "./hedera/interfaces/ITopicData";
+import {ITopicConfigurationMessageParameters} from "./hedera/interfaces/ITopicConfigurationMessageParameters";
 import {IHederaStub} from "./hedera/interfaces/IHederaStub";
 
 export class EncryptedTopic {
@@ -31,7 +31,7 @@ export class EncryptedTopic {
 
     // Hold a copy of the topic memo object for further use,
     // so we don't have to get it from the Hedera network every single time.
-    private topicMemoObject!: TopicMemoObject;
+    private topicMemoObject!: ITopicMemoObject;
 
     // Set the topicId variable either on constructor (targeting already existing topic)
     // or upon topic creation for simplicity purposes
@@ -44,7 +44,7 @@ export class EncryptedTopic {
     */
 
     public constructor(
-        private readonly encryptedTopicConfiguration: EncryptedTopicConfiguration,
+        private readonly encryptedTopicConfiguration: IEncryptedTopicConfiguration,
         // Allow to pass an IHederaStub-compliant class from outside for test purposes
         private stub?: IHederaStub) {
         if (stub) {
@@ -65,12 +65,12 @@ export class EncryptedTopic {
 
     // "generateKeyPair" allows the user to create a public / private key pair should they not have one already,
     // with the algorithm and key size of their choosing, without the need to initialize the EncryptedTopic object
-    public static generateKeyPair(algorithm: EncryptionAlgorithms): KeyPair {
+    public static generateKeyPair(algorithm: EncryptionAlgorithms): IKeyPair {
         return new Crypto(algorithm.split('-')[0], parseInt(algorithm.split('-')[1])).generateKeyPair();
     }
 
     // "create" creates a new encrypted topic in the Hedera network
-    public async create(createEncryptedTopicConfiguration: CreateEncryptedTopicConfiguration): Promise<string> {
+    public async create(createEncryptedTopicConfiguration: ICreateEncryptedTopicConfiguration): Promise<string> {
         const submitKey = PrivateKey.generateED25519().toStringRaw();
         this.topicConfigurationMessage = this.createTopicConfigurationMessage({
             submitKey: submitKey,
@@ -188,7 +188,7 @@ export class EncryptedTopic {
             encryptedMessageInBase64 = Buffer.from(encryptedMessageInBase64, 'base64').toString('utf8');
         }
 
-        const encryptedMessage: TopicEncryptedMessage = JSON.parse(Buffer.from(encryptedMessageInBase64, 'base64').toString('utf8'));
+        const encryptedMessage: ITopicEncryptedMessage = JSON.parse(Buffer.from(encryptedMessageInBase64, 'base64').toString('utf8'));
         const topicEncryptionKeyAndInitVector = await this.getEncryptionKeyAndInitVector(encryptedMessage.v);
         const decryptedMessageEncryptionKey = Buffer.from(this.crypto.symmetricDecrypt(encryptedMessage.k, Buffer.from(topicEncryptionKeyAndInitVector.encryptionKey, 'base64'),  Buffer.from(topicEncryptionKeyAndInitVector.initVector, 'base64')), 'base64');
         const decryptedMessageInitVector = Buffer.from(this.crypto.symmetricDecrypt(encryptedMessage.i, Buffer.from(topicEncryptionKeyAndInitVector.encryptionKey, 'base64'),  Buffer.from(topicEncryptionKeyAndInitVector.initVector, 'base64')), 'base64');
@@ -280,7 +280,7 @@ export class EncryptedTopic {
         return Buffer.from(JSON.stringify(finalMessage)).toString('base64');
     }
 
-    private createTopicConfigurationMessage(topicConfigurationMessageParameters: TopicConfigurationMessageParameters): string {
+    private createTopicConfigurationMessage(topicConfigurationMessageParameters: ITopicConfigurationMessageParameters): string {
         const algorithm = topicConfigurationMessageParameters.algorithm;
         const size = topicConfigurationMessageParameters.size;
         const participants = topicConfigurationMessageParameters.participants;
@@ -309,7 +309,7 @@ export class EncryptedTopic {
         return topicConfigurationMessage;
     }
 
-    private createMemoObject(topicStorageOptions: TopicStorageOptions, topicConfigurationFileId?: string, participantsTopicId?: string): TopicMemoObject {
+    private createMemoObject(topicStorageOptions: ITopicStorageOptions, topicConfigurationFileId?: string, participantsTopicId?: string): ITopicMemoObject {
         return {
             s: {
                 c: {
@@ -337,7 +337,7 @@ export class EncryptedTopic {
         return currentTopicConfigurationMessage.length - 1;
     }
 
-    private async createParticipantsTopic(submitKey: string, createEncryptedTopicConfiguration: CreateEncryptedTopicConfiguration): Promise<string> {
+    private async createParticipantsTopic(submitKey: string, createEncryptedTopicConfiguration: ICreateEncryptedTopicConfiguration): Promise<string> {
         const topicId = await this.hederaStub.createTopic(submitKey);
         const participants = Array.from(new Set(createEncryptedTopicConfiguration.participants));
 
@@ -377,11 +377,11 @@ export class EncryptedTopic {
         if (!this.topicMemoObject) {
             const topicInfo = await this.hederaStub.getTopicInfo(this.topicId);
 
-            this.topicMemoObject = JSON.parse(topicInfo.topicMemo) as TopicMemoObject;
+            this.topicMemoObject = JSON.parse(topicInfo.topicMemo) as ITopicMemoObject;
         }
     }
 
-    private async getEncryptionKeyAndInitVector(version: number): Promise<TopicEncryptionKeyAndInitVector> {
+    private async getEncryptionKeyAndInitVector(version: number): Promise<ITopicEncryptionKeyAndInitVector> {
         await this.setConfigurationMessage();
         await this.initializeCrypto();
 
@@ -412,7 +412,7 @@ export class EncryptedTopic {
         this.crypto = new Crypto(await this.getEncryptionAlgorithmFromConfigurationMessage(), await this.getEncryptionSizeFromConfigurationMessage());
     }
 
-    private async getTopicData(version: number): Promise<TopicData> {
+    private async getTopicData(version: number): Promise<ITopicData> {
         await this.setConfigurationMessage();
         await this.initializeCrypto();
 
@@ -433,7 +433,7 @@ export class EncryptedTopic {
         return topicData.s;
     }
 
-    private async getEncryptedTopicKeysObjectFromTopicConfigurationMessage(version: number): Promise<EncryptedTopicKeysObject> {
+    private async getEncryptedTopicKeysObjectFromTopicConfigurationMessage(version: number): Promise<IEncryptedTopicKeysObject> {
         await this.setConfigurationMessage();
 
         const currentTopicConfigurationMessage = this.topicConfigurationMessage.split(',').filter((elem) => {
@@ -441,7 +441,7 @@ export class EncryptedTopic {
         });
 
         let encryptedTopicKeysObjectArray = currentTopicConfigurationMessage[version].split('#').slice(TopicConfigurationMessageIndexes.TOPIC_ENCRYPTED_KEYS_INDEX);
-        const encryptedTopicKeysObject: EncryptedTopicKeysObject = {
+        const encryptedTopicKeysObject: IEncryptedTopicKeysObject = {
             a: [],
             b: [],
         };

@@ -4,9 +4,14 @@ import {
     FileContentsQuery,
     FileCreateTransaction,
     PrivateKey,
-    TopicCreateTransaction, TopicInfo, TopicInfoQuery, TopicMessage, TopicMessageQuery, TopicMessageSubmitTransaction
+    TopicCreateTransaction,
+    TopicInfo,
+    TopicInfoQuery,
+    TopicMessage,
+    TopicMessageQuery,
+    TopicMessageSubmitTransaction
 } from "@hashgraph/sdk";
-import {TopicMemoObject} from "./interfaces/TopicMemoObject";
+import {ITopicMemoObject} from "./interfaces/ITopicMemoObject";
 import {Long} from "@hashgraph/sdk/lib/long";
 import {IHederaStub} from "./interfaces/IHederaStub";
 
@@ -18,7 +23,7 @@ export class HederaStub implements IHederaStub {
     ) {
     }
 
-    public async createTopic(submitKey: string, topicMemoObject?: TopicMemoObject): Promise<string> {
+    public async createTopic(submitKey: string, topicMemoObject?: ITopicMemoObject): Promise<string> {
         const topicCreateTransaction: TopicCreateTransaction = new TopicCreateTransaction({
             adminKey: PrivateKey.fromString(this.hederaPrivateKey),
             autoRenewAccountId: this.hederaAccountId
@@ -64,7 +69,7 @@ export class HederaStub implements IHederaStub {
             topicId: topicId
         }).setStartTime(0);
 
-        const message: string = await new Promise((resolve, reject) => {
+        return await new Promise((resolve, reject) => {
             topicMessageQuery.subscribe(
                 this.client,
                 (error: unknown) => {
@@ -87,8 +92,6 @@ export class HederaStub implements IHederaStub {
                 }
             );
         });
-
-        return message;
     }
 
     public async getTopicInfo(topicId: string): Promise<TopicInfo> {
@@ -96,9 +99,7 @@ export class HederaStub implements IHederaStub {
             topicId: topicId
         });
 
-        const topicInfoResponse: TopicInfo = await topicInfo.execute(this.client);
-
-        return topicInfoResponse;
+        return await topicInfo.execute(this.client);
     }
 
     public async createFile(contents?: string): Promise<string> {
@@ -138,8 +139,7 @@ export class HederaStub implements IHederaStub {
         });
 
         const fileContentsUint8Array: Uint8Array = await fileGetContentsQuery.execute(this.client);
-        let fileContentsString: string = fileContentsUint8Array.toString();
 
-        return fileContentsString;
+        return fileContentsUint8Array.toString();
     }
 }

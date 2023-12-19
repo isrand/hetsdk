@@ -1,5 +1,5 @@
 import {MockTopic} from "./MockTopic";
-import {TopicMemoObject} from "../../../lib/hedera/interfaces/TopicMemoObject";
+import {ITopicMemoObject} from "../../../lib/hedera/interfaces/ITopicMemoObject";
 
 describe("The MockTopic", () => {
     describe("constructor", () => {
@@ -70,7 +70,7 @@ describe("The MockTopic", () => {
 
     describe("getMemo function", () => {
         test("should return the topic memo", () => {
-            const topicMemo: TopicMemoObject = {
+            const topicMemo: ITopicMemoObject = {
                 s: {
                     c: {
                         f: false

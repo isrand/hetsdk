@@ -1,17 +1,17 @@
 /// <reference types="node" />
-import { CryptoAdapter } from "../interfaces/CryptoAdapter";
-import { EncryptedTopicKeysObject } from "../interfaces/EncryptedTopicKeysObject";
-import { TopicData } from "../../hedera/interfaces/TopicData";
-import { TopicEncryptionKeyAndInitVector } from "../../hedera/interfaces/TopicEncryptionKeyAndInitVector";
+import { ICryptoAdapter } from "../interfaces/ICryptoAdapter";
+import { IEncryptedTopicKeysObject } from "../interfaces/IEncryptedTopicKeysObject";
+import { ITopicData } from "../../hedera/interfaces/ITopicData";
+import { ITopicEncryptionKeyAndInitVector } from "../../hedera/interfaces/ITopicEncryptionKeyAndInitVector";
 import { DefaultAdapter } from "./DefaultAdapter";
-import { KeyPair } from "../interfaces/KeyPair";
-export declare class Kyber extends DefaultAdapter implements CryptoAdapter {
+import { IKeyPair } from "../interfaces/IKeyPair";
+export declare class Kyber extends DefaultAdapter implements ICryptoAdapter {
     private readonly keySize;
     constructor(keySize: number);
-    generateKeyPair(): KeyPair;
-    getEncryptedTopicKeysObject(topicEncryptionKey: Buffer, topicEncryptionInitVector: Buffer, publicKeys: string[]): EncryptedTopicKeysObject;
-    decryptTopicData(encryptedTopicKeysObject: EncryptedTopicKeysObject, encryptedTopicDataInBase64: string, privateKey: string): TopicData;
-    getTopicEncryptionKeyAndInitVector(encryptedTopicKeysObject: EncryptedTopicKeysObject, privateKey: string): TopicEncryptionKeyAndInitVector;
+    generateKeyPair(): IKeyPair;
+    getEncryptedTopicKeysObject(topicEncryptionKey: Buffer, topicEncryptionInitVector: Buffer, publicKeys: string[]): IEncryptedTopicKeysObject;
+    decryptTopicData(encryptedTopicKeysObject: IEncryptedTopicKeysObject, encryptedTopicDataInBase64: string, privateKey: string): ITopicData;
+    getTopicEncryptionKeyAndInitVector(encryptedTopicKeysObject: IEncryptedTopicKeysObject, privateKey: string): ITopicEncryptionKeyAndInitVector;
     validateParticipantKeys(topicParticipants: string[], topicEncryptionKeySize: number): void;
     private decryptEncapsulatedSymmetricKey;
     private getSymmetricAndEncapsulatedKey;

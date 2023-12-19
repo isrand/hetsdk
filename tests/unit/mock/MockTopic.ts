@@ -1,4 +1,4 @@
-import {TopicMemoObject} from "../../../src/hedera/interfaces/TopicMemoObject";
+import {ITopicMemoObject} from "../../../src/hedera/interfaces/ITopicMemoObject";
 import {TopicInfo} from "@hashgraph/sdk";
 import {Long} from "@hashgraph/sdk/lib/long";
 
@@ -12,7 +12,7 @@ export class MockTopic {
 
     public constructor(
         submitKey: string,
-        memo?: TopicMemoObject) {
+        memo?: ITopicMemoObject) {
         // Topic sequence number starts at 1, so first message must be null
         this.messages = [''];
         this.topicIdAsNumber = Math.floor(Math.random() * 500);

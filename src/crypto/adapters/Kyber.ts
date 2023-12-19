@@ -1,18 +1,18 @@
-import {CryptoAdapter} from "../interfaces/CryptoAdapter";
-import {EncryptedTopicKeysObject} from "../interfaces/EncryptedTopicKeysObject";
-import {TopicData} from "../../hedera/interfaces/TopicData";
-import {TopicEncryptionKeyAndInitVector} from "../../hedera/interfaces/TopicEncryptionKeyAndInitVector";
+import {ICryptoAdapter} from "../interfaces/ICryptoAdapter";
+import {IEncryptedTopicKeysObject} from "../interfaces/IEncryptedTopicKeysObject";
+import {ITopicData} from "../../hedera/interfaces/ITopicData";
+import {ITopicEncryptionKeyAndInitVector} from "../../hedera/interfaces/ITopicEncryptionKeyAndInitVector";
 import {DefaultAdapter} from "./DefaultAdapter";
-import {KeyPair} from "../interfaces/KeyPair";
+import {IKeyPair} from "../interfaces/IKeyPair";
 
 const kyber = require('crystals-kyber');
 
-export class Kyber extends DefaultAdapter implements CryptoAdapter {
+export class Kyber extends DefaultAdapter implements ICryptoAdapter {
     public constructor(private readonly keySize: number) {
         super();
     }
 
-    public generateKeyPair(): KeyPair {
+    public generateKeyPair(): IKeyPair {
         switch (this.keySize) {
             case 512:
                 const keys_512 = kyber.KeyGen512();
@@ -43,8 +43,8 @@ export class Kyber extends DefaultAdapter implements CryptoAdapter {
         }
     }
 
-    public getEncryptedTopicKeysObject(topicEncryptionKey: Buffer, topicEncryptionInitVector: Buffer, publicKeys: string[]): EncryptedTopicKeysObject {
-        const encryptedTopicKeysObject: EncryptedTopicKeysObject = {
+    public getEncryptedTopicKeysObject(topicEncryptionKey: Buffer, topicEncryptionInitVector: Buffer, publicKeys: string[]): IEncryptedTopicKeysObject {
+        const encryptedTopicKeysObject: IEncryptedTopicKeysObject = {
             a: [],
             b: []
         }
@@ -75,7 +75,7 @@ export class Kyber extends DefaultAdapter implements CryptoAdapter {
         return encryptedTopicKeysObject;
     }
 
-    public decryptTopicData(encryptedTopicKeysObject: EncryptedTopicKeysObject, encryptedTopicDataInBase64: string, privateKey: string): TopicData {
+    public decryptTopicData(encryptedTopicKeysObject: IEncryptedTopicKeysObject, encryptedTopicDataInBase64: string, privateKey: string): ITopicData {
         if (!encryptedTopicKeysObject.c) {
             throw new Error('Encrypted topic keys object does not have encapsulated symmetric keys. (Are you trying to use Kyber on a non-Kyber encrypted topic?)');
         }
@@ -99,7 +99,7 @@ export class Kyber extends DefaultAdapter implements CryptoAdapter {
                     try {
                         const decryptedTopicConfigurationObject = this.symmetricDecrypt(encryptedTopicDataInBase64, Buffer.from(topicEncryptionKey, 'base64'), Buffer.from(topicEncryptionInitVector, 'base64'));
 
-                        return JSON.parse(decryptedTopicConfigurationObject) as TopicData;
+                        return JSON.parse(decryptedTopicConfigurationObject) as ITopicData;
                     } catch (error) {
                     }
                 }
@@ -109,7 +109,7 @@ export class Kyber extends DefaultAdapter implements CryptoAdapter {
         throw new Error('Error fetching topic configuration object. Does user have access?');
     }
 
-    public getTopicEncryptionKeyAndInitVector(encryptedTopicKeysObject: EncryptedTopicKeysObject, privateKey: string): TopicEncryptionKeyAndInitVector {
+    public getTopicEncryptionKeyAndInitVector(encryptedTopicKeysObject: IEncryptedTopicKeysObject, privateKey: string): ITopicEncryptionKeyAndInitVector {
         if (!encryptedTopicKeysObject.c) {
             throw new Error('Encrypted topic keys object does not have encapsulated symmetric keys. (Are you trying to use Kyber on a non-Kyber encrypted topic?)');
         }
