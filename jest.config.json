@@ -3,8 +3,6 @@
   "transform": {
     "^.+\\.(t|j)s$": "ts-jest"
   },
-  "collectCoverage": true,
-  "coverageReporters": ["text"],
   "coverageThreshold": {
     "global": {
       "branches": 90,
