@@ -94,13 +94,14 @@ export class EncryptedTopic {
     }
 
     // "addParticipant" adds a new participant to the encrypted topic, and stores it in the participants topic if the
-    // topic memo specifies it
-    public async addParticipant(publicKey: string, forwardSecrecy?: boolean): Promise<void> {
+    // topic memo specifies
+    public async addParticipant(publicKey: string, forwardSecrecy?: boolean): Promise<boolean> {
         if (forwardSecrecy) {
             await this.rotateEncryptionKey();
         }
 
         await this.setMemo();
+        await this.setConfigurationMessage();
 
         if (!this.topicMemoObject.s.c.f) {
             throw new Error('New participants can only be added to topics that use the File Service as storage medium for their configuration. Requested topic uses the Consensus Service.');
@@ -140,7 +141,7 @@ export class EncryptedTopic {
 
         this.topicConfigurationMessage = this.topicConfigurationMessage + newEncryptedTopicEncryptionKeyAndInitVectorsString;
 
-        return;
+        return true;
     }
 
     // "submitMessage" submits a message on an encrypted topic (if the user has access)
@@ -167,6 +168,7 @@ export class EncryptedTopic {
     // "getMessage" gets a message from an encrypted topic (if the user has access)
     public async getMessage(sequenceNumber: number): Promise<string> {
         await this.setMemo();
+        await this.setConfigurationMessage();
         let encryptedMessageInBase64;
 
         if (this.topicMemoObject.s.m.f) {
@@ -215,6 +217,7 @@ export class EncryptedTopic {
     // every participant's public key, appending the new configuration message to the old one
     public async rotateEncryptionKey(): Promise<void> {
         await this.setMemo();
+        await this.setConfigurationMessage();
 
         if (!this.topicMemoObject.s.c.f) {
             throw new Error('Topic encryption key rotation is only available in encrypted topics that use the File Service as storage medium for their configuration. Requested topic uses the Consensus Service.');

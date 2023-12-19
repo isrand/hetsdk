@@ -13,7 +13,7 @@ export declare class EncryptedTopic {
     constructor(encryptedTopicConfiguration: EncryptedTopicConfiguration);
     static generateKeyPair(algorithm: EncryptionAlgorithms): KeyPair;
     create(createEncryptedTopicConfiguration: CreateEncryptedTopicConfiguration): Promise<string>;
-    addParticipant(publicKey: string, forwardSecrecy?: boolean): Promise<void>;
+    addParticipant(publicKey: string, forwardSecrecy?: boolean): Promise<boolean>;
     submitMessage(message: string): Promise<number>;
     getMessage(sequenceNumber: number): Promise<string>;
     getParticipants(): Promise<string[]>;
