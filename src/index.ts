@@ -64,7 +64,6 @@ export class EncryptedTopic {
     // "create" creates a new encrypted topic in the Hedera network
     public async create(createEncryptedTopicConfiguration: CreateEncryptedTopicConfiguration): Promise<string> {
         const submitKey: string = PrivateKey.generateED25519().toStringRaw();
-        // this.topicConfigurationMessage = this.createTopicConfigurationMessage(submitKey, createEncryptedTopicConfiguration);
         this.topicConfigurationMessage = this.createTopicConfigurationMessage({
             submitKey: submitKey,
             algorithm: createEncryptedTopicConfiguration.algorithm.split('-')[0],
@@ -133,7 +132,6 @@ export class EncryptedTopic {
         }
 
         await this.hederaStub.appendToFile(this.topicMemoObject.s.c.i, newEncryptedTopicEncryptionKeyAndInitVectorsString);
-
 
         if (this.topicMemoObject.s.p.p) {
             const submitKey = await this.getSubmitKey(currentConfigurationMessageVersion);
@@ -241,18 +239,12 @@ export class EncryptedTopic {
         }
 
         if (!this.topicMemoObject.s.p.p) {
-            throw new Error('Topic did not choose to store participants upon creation, topic encryption key rotation is impossible.');
+            throw new Error('Topic did not choose to store participants upon creation, topic encryption key rotation is not possible.');
         }
 
         const currentVersion = await this.getCurrentTopicConfigurationMessageVersion();
-
-        // 1. get all participants
         const participants = await this.getParticipants();
-
-        // 2. get topicData
         const topicData = await this.getTopicData(currentVersion);
-
-        // 3. get algorithm and size from current tcm
         const algorithm = await this.getEncryptionAlgorithmFromConfigurationMessage();
         const size = await this.getEncryptionSizeFromConfigurationMessage();
 
