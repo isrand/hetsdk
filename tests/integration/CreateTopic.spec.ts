@@ -4,8 +4,7 @@ import {EncryptedTopic} from "../../lib";
 import {EncryptionAlgorithms} from "../../lib/crypto/enums/EncryptionAlgorithms";
 import {StorageOptions} from "../../lib/hedera/enums/StorageOptions";
 
-// Run tests locally
-if (process.env.NODE_ENV !== 'CI') {
+if (String(process.env.NODE_ENV) !== 'CI') {
     if (!fs.existsSync(path.resolve(__dirname, '.env'))) {
         throw new Error('.env file not found, please provide one (follow the .env.template file)');
     }
