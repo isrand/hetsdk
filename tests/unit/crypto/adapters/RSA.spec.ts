@@ -1,11 +1,10 @@
 import {RSA} from "../../../../src/crypto/adapters/RSA";
 import * as crypto from 'crypto';
 import {ITopicData} from "../../../../lib/hedera/interfaces/ITopicData";
-import {Kyber} from "../../../../src/crypto/adapters/Kyber";
 
 describe("The RSA crypto adapter", () => {
     describe("constructor", () => {
-        test("should return a valid RSA object for all sizes, even wrong ones", () => {
+        test("should return a valid RSA object", () => {
             expect(new RSA()).toBeDefined();
         });
     });

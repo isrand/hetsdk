@@ -115,10 +115,6 @@ export class EncryptedTopic {
             throw new Error('New participants can only be added to topics that use the File Service as storage medium for their configuration. Requested topic uses the Consensus Service.');
         }
 
-        if (!this.topicMemoObject.s.c.i) {
-            throw new Error('Topic memo object does not specify configuration file Id');
-        }
-
         const currentConfigurationMessageVersion = await this.getCurrentTopicConfigurationMessageVersion();
 
         const algorithm = await this.getEncryptionAlgorithmFromConfigurationMessage();
@@ -215,7 +211,11 @@ export class EncryptedTopic {
 
         for (let i = 1; i <= sequenceNumber; i++) {
             const participant = await this.hederaStub.getMessageFromTopic(this.topicMemoObject.s.p.i, i);
-            participants.push(Buffer.from(participant, 'base64').toString('utf8'));
+            if (this.isPotentialBase64Encoded(participant)) {
+                participants.push(participant);
+            } else {
+                participants.push(Buffer.from(participant, 'base64').toString('utf8'));
+            }
         }
 
         return Array.from(new Set(participants));
@@ -229,10 +229,6 @@ export class EncryptedTopic {
 
         if (!this.topicMemoObject.s.c.f) {
             throw new Error('Topic encryption key rotation is only available in encrypted topics that use the File Service as storage medium for their configuration. Requested topic uses the Consensus Service.');
-        }
-
-        if (!this.topicMemoObject.s.c.i) {
-            throw new Error('Topic memo object does not specify configuration file Id.');
         }
 
         if (!this.topicMemoObject.s.p.p) {
@@ -313,7 +309,7 @@ export class EncryptedTopic {
         return {
             s: {
                 c: {
-                    i: topicConfigurationFileId || undefined,
+                    i: topicConfigurationFileId || '',
                     f: topicStorageOptions.configuration === StorageOptions.File,
                 },
                 m: {
@@ -321,7 +317,7 @@ export class EncryptedTopic {
                 },
                 p: {
                     p: topicStorageOptions.storeParticipants,
-                    i: participantsTopicId || undefined
+                    i: participantsTopicId || ''
                 }
             }
         }
@@ -484,5 +480,9 @@ export class EncryptedTopic {
         }
 
         return await this.hederaStub.getMessageFromTopic(this.topicId, sequenceNumber);
+    }
+
+    private isPotentialBase64Encoded(str: string): boolean {
+        return str.indexOf('/') > -1 && str.indexOf('+') > -1;
     }
 }

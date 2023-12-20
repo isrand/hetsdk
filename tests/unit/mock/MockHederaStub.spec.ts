@@ -95,13 +95,15 @@ describe("The MockHederaStub", () => {
             const topicMemo: ITopicMemoObject = {
                 s: {
                     c: {
-                        f: false
+                        f: false,
+                        i: ''
                     },
                     p: {
-                        p: false
+                        p: false,
+                        i: ''
                     },
                     m: {
-                        f: false
+                        f: false,
                     }
                 }
             };
