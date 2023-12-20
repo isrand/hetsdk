@@ -41,11 +41,7 @@ export class HederaStub implements IHederaStub {
         const encryptedTopicCreationResponse = await topicCreateTransaction.execute(this.client);
         const encryptedTopicCreationReceipt = await encryptedTopicCreationResponse.getReceipt(this.client);
 
-        if (!encryptedTopicCreationReceipt.topicId) {
-            throw new Error('Topic Id not found in encrypted topic creation transaction receipt.');
-        }
-
-        return encryptedTopicCreationReceipt.topicId.toString();
+        return encryptedTopicCreationReceipt.topicId?.toString() || '';
     }
 
     public async submitMessageToTopic(submitKey: string, topicId: string, contents: string): Promise<number> {
@@ -69,12 +65,10 @@ export class HederaStub implements IHederaStub {
             topicId: topicId
         }).setStartTime(0);
 
-        return await new Promise((resolve, reject) => {
+        return await new Promise((resolve) => {
             topicMessageQuery.subscribe(
                 this.client,
-                (error: unknown) => {
-                    reject(error);
-                },
+                null,
                 (topicMessage: TopicMessage) => {
                     // Check if the original message was split among different chunks
                     if (topicMessage.chunks.length > 0) {
@@ -114,11 +108,7 @@ export class HederaStub implements IHederaStub {
         const fileCreateTransactionResponse = await fileCreateTransaction.execute(this.client);
         const fileCreateTransactionReceipt = await fileCreateTransactionResponse.getReceipt(this.client);
 
-        if (!fileCreateTransactionReceipt.fileId) {
-            throw new Error('Error while fetching file id from file creation transaction receipt');
-        }
-
-        return fileCreateTransactionReceipt.fileId.toString();
+        return fileCreateTransactionReceipt.fileId?.toString() || '';
     }
 
     public async appendToFile(fileId: string, contents: string): Promise<void> {

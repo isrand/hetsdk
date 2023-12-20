@@ -5,8 +5,9 @@
   "main": "lib/index.js",
   "scripts": {
     "build": "rm -rf lib && tsc -p tsconfig.build.json",
-    "test:unit": "jest --verbose --config './jest.config.json' --testMatch '**/tests/unit/**/*.spec.ts' --coverage --collectCoverageFrom \"src/**/*.{js,jsx,ts,tsx}\" --coverageReporters text html",
-    "test:integration": "jest --verbose --config './jest.config.json' --rootDir ./tests/integration --forceExit"
+    "test:unit": "jest --bail --colors --verbose --config './jest.config.json' --testMatch '**/tests/unit/**/*.spec.ts' --coverage --coverageDirectory coverage/unit --collectCoverageFrom \"src/**/*.{js,jsx,ts,tsx}\" --coveragePathIgnorePatterns \"src/hedera\" --coverageReporters text html",
+    "test:integration": "jest --bail --colors --verbose --config './jest.config.json' --testMatch '**/tests/integration/**/*.spec.ts' --coverage --coverageDirectory coverage/integration --collectCoverageFrom \"src/hedera/**/*.{js,jsx,ts,tsx}\" --coverageReporters text html --forceExit",
+    "test:all": "jest --bail --colors --verbose --config './jest.config.json' --testMatch '**/tests/**/*.spec.ts' --coverage --coverageDirectory coverage/all --collectCoverageFrom \"src/**/*.{js,jsx,ts,tsx}\" --forceExit --coverageReporters text html"
   },
   "repository": {
     "type": "git",

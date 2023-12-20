@@ -8,13 +8,13 @@ interface ITopicMemoStorageObject {
 }
 interface ITopicMemoConfigurationStorageObject {
     f: boolean;
-    i?: string;
+    i: string;
 }
 interface ITopicMemoMessageStorageObject {
     f: boolean;
 }
 interface ITopicMemoParticipantsStorageObject {
     p: boolean;
-    i?: string;
+    i: string;
 }
 export {};

@@ -1,7 +1,6 @@
 import {RSA} from "../../../../src/crypto/adapters/RSA";
 import * as crypto from 'crypto';
 import {ITopicData} from "../../../../lib/hedera/interfaces/ITopicData";
-import {Kyber} from "../../../../src/crypto/adapters/Kyber";
 
 describe("The RSA crypto adapter", () => {
     describe("constructor", () => {

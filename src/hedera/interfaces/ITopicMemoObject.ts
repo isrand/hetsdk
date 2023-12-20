@@ -19,7 +19,7 @@ interface ITopicMemoConfigurationStorageObject {
     f: boolean;
 
     // "i" is the ID of the File where the topic configuration object is stored, if "u" is set to true
-    i?: string;
+    i: string;
 }
 
 interface ITopicMemoMessageStorageObject {
@@ -32,5 +32,5 @@ interface ITopicMemoParticipantsStorageObject {
     p: boolean;
 
     // "i" is the id of the Consensus Service topic where the participants are be stored
-    i?: string;
+    i: string;
 }
