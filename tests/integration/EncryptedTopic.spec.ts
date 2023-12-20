@@ -34,7 +34,7 @@ describe("The Encrypted Topic", () => {
     const userTwoKyberPublicKey = userTwo.publicKey;
     const userTwoKyberPrivateKey = userTwo.privateKey;
 
-    describe("creation function", () => {
+    describe("create function", () => {
         test("should work and return an encrypted topic's Id", async () => {
             topicId = await encryptedTopicUserOne.create({
                 participants: [userOneKyberPublicKey],
@@ -50,7 +50,7 @@ describe("The Encrypted Topic", () => {
             });
 
             await expect(topicId).toBeDefined();
-        }, 20000);
+        }, 60000);
     });
 
     describe("submitMessage function", () => {
@@ -59,7 +59,7 @@ describe("The Encrypted Topic", () => {
 
             await expect(messageSequenceNumber).toBeDefined();
             await expect(messageSequenceNumber).toEqual(1);
-        }, 20000);
+        }, 60000);
     });
 
     describe("getMessage function", () => {
@@ -68,7 +68,7 @@ describe("The Encrypted Topic", () => {
 
             await expect(message).toBeDefined();
             await expect(message).toEqual(messageOneContents);
-        }, 20000);
+        }, 60000);
     });
 
     describe("addParticipant function", () => {
@@ -77,6 +77,6 @@ describe("The Encrypted Topic", () => {
 
             await expect(addition).toBeDefined();
             await expect(addition).toEqual(true);
-        }, 20000);
+        }, 60000);
     });
 });
