@@ -47,8 +47,8 @@ export class MockHederaStub implements IHederaStub {
         return topicId;
     }
 
-    public async submitMessageToTopic(submitKey: string, topicId: string, contents: string): Promise<number> {
-        const topic = this.topics.get(topicId);
+    public async submitMessageToTopic(submitKey: string, topicId?: string, contents?: string): Promise<number> {
+        const topic = this.topics.get(String(topicId));
         if (!topic) {
             throw new Error(`Topic with Id ${topicId} does not exist.`);
         }
@@ -57,7 +57,7 @@ export class MockHederaStub implements IHederaStub {
             throw new Error('Wrong submit key used to submit messages on topic.');
         }
 
-        return topic.submitMessage(contents);
+        return topic.submitMessage(String(contents));
     }
 
     public async getMessageFromTopic(sequenceNumber: number, topicId?: string): Promise<string> {
@@ -69,8 +69,8 @@ export class MockHederaStub implements IHederaStub {
         return topic.getMessage(sequenceNumber);
     }
 
-    public async getTopicInfo(topicId: string): Promise<TopicInfo> {
-        const topic = this.topics.get(topicId);
+    public async getTopicInfo(topicId?: string): Promise<TopicInfo> {
+        const topic = this.topics.get(String(topicId));
         if (!topic) {
             throw new Error(`Topic with Id ${topicId} does not exist.`);
         }

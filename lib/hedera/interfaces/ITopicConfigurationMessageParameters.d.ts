@@ -1,7 +1,7 @@
 export interface ITopicConfigurationMessageParameters {
     algorithm: string;
     size: number;
-    participants: string[];
+    participants: Array<string>;
     submitKey: string;
-    metadata: any;
+    metadata: unknown;
 }

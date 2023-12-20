@@ -1,11 +1,11 @@
-import { IEncryptedTopicConfiguration } from "./hedera/interfaces/IEncryptedTopicConfiguration";
-import { ICreateEncryptedTopicConfiguration } from "./hedera/interfaces/ICreateEncryptedTopicConfiguration";
-import { EncryptionAlgorithms } from "./crypto/enums/EncryptionAlgorithms";
-import { IKeyPair } from "./crypto/interfaces/IKeyPair";
-import { IHederaStub } from "./hedera/interfaces/IHederaStub";
+import { IEncryptedTopicConfiguration } from './hedera/interfaces/IEncryptedTopicConfiguration';
+import { ICreateEncryptedTopicConfiguration } from './hedera/interfaces/ICreateEncryptedTopicConfiguration';
+import { EncryptionAlgorithms } from './crypto/enums/EncryptionAlgorithms';
+import { IKeyPair } from './crypto/interfaces/IKeyPair';
+import { IHederaStub } from './hedera/interfaces/IHederaStub';
 export declare class EncryptedTopic {
     private readonly encryptedTopicConfiguration;
-    private stub?;
+    private readonly stub?;
     private readonly hederaStub;
     private readonly privateKey;
     private crypto;
@@ -18,7 +18,7 @@ export declare class EncryptedTopic {
     addParticipant(publicKey: string, forwardSecrecy?: boolean): Promise<boolean>;
     submitMessage(message: string): Promise<number>;
     getMessage(sequenceNumber: number): Promise<string>;
-    getParticipants(): Promise<string[]>;
+    getParticipants(): Promise<Array<string>>;
     rotateEncryptionKey(): Promise<void>;
     private createTopicMessage;
     private createTopicConfigurationMessage;
