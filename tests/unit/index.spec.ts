@@ -74,7 +74,7 @@ describe("The EncryptedTopic class", () => {
 
     describe("create function", () => {
         describe("when specifying the configuration storage medium as 'Message'", () => {
-            test("should create a new topic and return its Id", async () => {
+            test("[Kyber512] should create a new topic and return its Id", async () => {
                 const mockHederaStub = new MockHederaStub();
                 const userOne = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
                 const encryptedTopic = new EncryptedTopic({
@@ -85,6 +85,69 @@ describe("The EncryptedTopic class", () => {
 
                 const topicId = await encryptedTopic.create({
                     algorithm: EncryptionAlgorithms.Kyber512,
+                    participants: [userOne.publicKey],
+                    storageOptions: {
+                        configuration: StorageOptions.Message,
+                        messages: StorageOptions.Message,
+                        storeParticipants: false
+                    }
+                });
+
+                await expect(topicId).toBeDefined();
+            });
+            test("[Kyber768] should create a new topic and return its Id", async () => {
+                const mockHederaStub = new MockHederaStub();
+                const userOne = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber768);
+                const encryptedTopic = new EncryptedTopic({
+                    hederaAccountId: hederaAccountId,
+                    privateKey: '',
+                    hederaPrivateKey: hederaPrivateKey
+                }, mockHederaStub);
+
+                const topicId = await encryptedTopic.create({
+                    algorithm: EncryptionAlgorithms.Kyber768,
+                    participants: [userOne.publicKey],
+                    storageOptions: {
+                        configuration: StorageOptions.Message,
+                        messages: StorageOptions.Message,
+                        storeParticipants: false
+                    }
+                });
+
+                await expect(topicId).toBeDefined();
+            });
+            test("[Kyber1024] should create a new topic and return its Id", async () => {
+                const mockHederaStub = new MockHederaStub();
+                const userOne = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber1024);
+                const encryptedTopic = new EncryptedTopic({
+                    hederaAccountId: hederaAccountId,
+                    privateKey: '',
+                    hederaPrivateKey: hederaPrivateKey
+                }, mockHederaStub);
+
+                const topicId = await encryptedTopic.create({
+                    algorithm: EncryptionAlgorithms.Kyber1024,
+                    participants: [userOne.publicKey],
+                    storageOptions: {
+                        configuration: StorageOptions.Message,
+                        messages: StorageOptions.Message,
+                        storeParticipants: false
+                    }
+                });
+
+                await expect(topicId).toBeDefined();
+            });
+            test("[RSA2048] should create a new topic and return its Id", async () => {
+                const mockHederaStub = new MockHederaStub();
+                const userOne = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.RSA2048);
+                const encryptedTopic = new EncryptedTopic({
+                    hederaAccountId: hederaAccountId,
+                    privateKey: '',
+                    hederaPrivateKey: hederaPrivateKey
+                }, mockHederaStub);
+
+                const topicId = await encryptedTopic.create({
+                    algorithm: EncryptionAlgorithms.RSA2048,
                     participants: [userOne.publicKey],
                     storageOptions: {
                         configuration: StorageOptions.Message,

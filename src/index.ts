@@ -1,9 +1,7 @@
 import {Client,PrivateKey} from "@hashgraph/sdk";
-import {Crypto} from "./crypto/Crypto";
 import {IEncryptedTopicConfiguration} from "./hedera/interfaces/IEncryptedTopicConfiguration";
 import {Long} from "@hashgraph/sdk/lib/long";
 import {ITopicEncryptionKeyAndInitVector} from "./hedera/interfaces/ITopicEncryptionKeyAndInitVector";
-import {ITopicEncryptedMessage} from "./hedera/interfaces/ITopicEncryptedMessage";
 import {ICreateEncryptedTopicConfiguration} from "./hedera/interfaces/ICreateEncryptedTopicConfiguration";
 import {ITopicMemoObject} from "./hedera/interfaces/ITopicMemoObject";
 import {ITopicStorageOptions} from "./hedera/interfaces/ITopicStorageOptions";
@@ -17,13 +15,15 @@ import {TopicConfigurationMessageIndexes} from "./hedera/enums/TopicConfiguratio
 import {ITopicData} from "./hedera/interfaces/ITopicData";
 import {ITopicConfigurationMessageParameters} from "./hedera/interfaces/ITopicConfigurationMessageParameters";
 import {IHederaStub} from "./hedera/interfaces/IHederaStub";
+import {RSA} from "./crypto/adapters/RSA";
+import {Kyber} from "./crypto/adapters/Kyber";
 
 export class EncryptedTopic {
 
     private readonly hederaStub: IHederaStub;
     private readonly privateKey: string;
 
-    private crypto!: Crypto;
+    private crypto!: RSA | Kyber;
 
     // Hold a copy of the topic configuration message for further use,
     // so we don't have to get it from the Hedera network every single time.
@@ -65,14 +65,20 @@ export class EncryptedTopic {
 
     // "generateKeyPair" allows the user to create a public / private key pair should they not have one already,
     // with the algorithm and key size of their choosing, without the need to initialize the EncryptedTopic object
-    public static generateKeyPair(algorithm: EncryptionAlgorithms): IKeyPair {
-        return new Crypto(algorithm.split('-')[0], parseInt(algorithm.split('-')[1])).generateKeyPair();
+    public static generateKeyPair(encryptionAlgorithm: EncryptionAlgorithms): IKeyPair {
+        const algorithm = encryptionAlgorithm.split('-')[0];
+        if (algorithm === 'rsa') {
+            return new RSA().generateKeyPair();
+        }
+        const size = parseInt(encryptionAlgorithm.split('-')[1]);
+
+        return new Kyber(size).generateKeyPair();
     }
 
     // "create" creates a new encrypted topic in the Hedera network
     public async create(createEncryptedTopicConfiguration: ICreateEncryptedTopicConfiguration): Promise<string> {
         const submitKey = PrivateKey.generateED25519().toStringRaw();
-        this.topicConfigurationMessage = this.createTopicConfigurationMessage({
+        this.topicConfigurationMessage = await this.createTopicConfigurationMessage({
             submitKey: submitKey,
             algorithm: createEncryptedTopicConfiguration.algorithm.split('-')[0],
             size: parseInt(createEncryptedTopicConfiguration.algorithm.split('-')[1]),
@@ -110,15 +116,15 @@ export class EncryptedTopic {
 
         await this.setMemo();
         await this.setConfigurationMessage();
+        const algorithm = await this.getEncryptionAlgorithmFromConfigurationMessage();
+        const size = await this.getEncryptionSizeFromConfigurationMessage();
+        await this.initializeCrypto(algorithm, size);
 
         if (!this.topicMemoObject.s.c.f) {
             throw new Error('New participants can only be added to topics that use the File Service as storage medium for their configuration. Requested topic uses the Consensus Service.');
         }
 
         const currentConfigurationMessageVersion = await this.getCurrentTopicConfigurationMessageVersion();
-
-        const algorithm = await this.getEncryptionAlgorithmFromConfigurationMessage();
-        const size = await this.getEncryptionSizeFromConfigurationMessage();
 
         this.crypto.validateParticipantKeys([publicKey], size);
 
@@ -173,6 +179,10 @@ export class EncryptedTopic {
     public async getMessage(sequenceNumber: number): Promise<string> {
         await this.setMemo();
         await this.setConfigurationMessage();
+        const algorithm = await this.getEncryptionAlgorithmFromConfigurationMessage();
+        const size = await this.getEncryptionSizeFromConfigurationMessage();
+        await this.initializeCrypto(algorithm, size);
+
         let encryptedMessageInBase64;
 
         if (this.topicMemoObject.s.m.f) {
@@ -238,7 +248,7 @@ export class EncryptedTopic {
         const algorithm = await this.getEncryptionAlgorithmFromConfigurationMessage();
         const size = await this.getEncryptionSizeFromConfigurationMessage();
 
-        const newTopicConfigurationMessage = this.createTopicConfigurationMessage({
+        const newTopicConfigurationMessage = await this.createTopicConfigurationMessage({
             submitKey: topicData.s,
             metadata: topicData.m,
             participants: participants,
@@ -273,7 +283,7 @@ export class EncryptedTopic {
         return Buffer.from(JSON.stringify(finalMessage)).toString('base64');
     }
 
-    private createTopicConfigurationMessage(topicConfigurationMessageParameters: ITopicConfigurationMessageParameters): string {
+    private async createTopicConfigurationMessage(topicConfigurationMessageParameters: ITopicConfigurationMessageParameters): Promise<string> {
         const algorithm = topicConfigurationMessageParameters.algorithm;
         const size = topicConfigurationMessageParameters.size;
         const participants = topicConfigurationMessageParameters.participants;
@@ -281,7 +291,7 @@ export class EncryptedTopic {
         const topicEncryptionKey = Buffer.from(crypto.randomBytes(32));
         const topicEncryptionInitVector = Buffer.from(crypto.randomBytes(16));
 
-        this.crypto = new Crypto(algorithm, size);
+        await this.initializeCrypto(algorithm, size);
         this.crypto.validateParticipantKeys(participants, size);
 
         const encryptedTopicDataInBase64 = this.crypto.symmetricEncrypt(JSON.stringify(topicData), topicEncryptionKey, topicEncryptionInitVector);
@@ -370,7 +380,9 @@ export class EncryptedTopic {
 
     private async getEncryptionKeyAndInitVector(version: number): Promise<ITopicEncryptionKeyAndInitVector> {
         await this.setConfigurationMessage();
-        await this.initializeCrypto();
+        const algorithm = await this.getEncryptionAlgorithmFromConfigurationMessage();
+        const size = await this.getEncryptionSizeFromConfigurationMessage();
+        await this.initializeCrypto(algorithm, size);
 
         const encryptedTopicKeysObject = await this.getEncryptedTopicKeysObjectFromTopicConfigurationMessage(version);
 
@@ -395,13 +407,19 @@ export class EncryptedTopic {
         }
     }
 
-    private async initializeCrypto(): Promise<void> {
-        this.crypto = new Crypto(await this.getEncryptionAlgorithmFromConfigurationMessage(), await this.getEncryptionSizeFromConfigurationMessage());
+    private async initializeCrypto(algorithm: string, size: number): Promise<void> {
+       if (algorithm === 'rsa') {
+           this.crypto = new RSA();
+       } else if (algorithm === 'kyber') {
+           this.crypto = new Kyber(size);
+       }
     }
 
     private async getTopicData(version: number): Promise<ITopicData> {
         await this.setConfigurationMessage();
-        await this.initializeCrypto();
+        const algorithm = await this.getEncryptionAlgorithmFromConfigurationMessage();
+        const size = await this.getEncryptionSizeFromConfigurationMessage();
+        await this.initializeCrypto(algorithm, size);
 
         const currentTopicConfigurationMessage = this.topicConfigurationMessage.split(',').filter((elem) => {
             return elem !== '';
