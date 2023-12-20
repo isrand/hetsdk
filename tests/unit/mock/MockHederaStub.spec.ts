@@ -157,7 +157,7 @@ describe("The MockHederaStub", () => {
                 fail('Topic not found in stub map.');
             }
 
-            expect(topicInStub.getMessage(sequenceNumber)).toEqual(contents);
+            expect(topicInStub.getMessage(sequenceNumber)).toEqual(Buffer.from(contents).toString('base64'));
         });
 
     });
@@ -194,7 +194,7 @@ describe("The MockHederaStub", () => {
 
             const message = await mockHederaStub.getMessageFromTopic(topicId, sequenceNumber);
 
-            await expect(contents).toEqual(message);
+            await expect(Buffer.from(contents).toString('base64')).toEqual(message);
         });
     });
 

@@ -25,5 +25,4 @@ export class MockFile {
     public append(contents: string) {
         this.contents += contents;
     }
-
 }

@@ -5,18 +5,14 @@ import {MockTopic} from "./MockTopic";
 import {MockFile} from "./MockFile";
 
 export class MockHederaStub implements IHederaStub {
-    public topics: Map<string, MockTopic>;
-    public files: Map<string, MockFile>;
+    public topics: Map<string, MockTopic> = new Map();
+    public files: Map<string, MockFile> = new Map();
 
-    public constructor() {
-        this.topics = new Map();
-        this.files = new Map();
-    }
+    public constructor() { }
 
     public async createFile(contents?: string): Promise<string> {
         const file = new MockFile(contents);
         const fileId = file.getId();
-
         this.files.set(fileId, file);
 
         return fileId;
@@ -80,5 +76,9 @@ export class MockHederaStub implements IHederaStub {
         }
 
         return topic.getInfo();
+    }
+
+    private isPotentialBase64Encoded(str: string): boolean {
+        return str.indexOf('/') > -1 || str.indexOf('+') > -1 || str.indexOf('=') > -1;
     }
 }
