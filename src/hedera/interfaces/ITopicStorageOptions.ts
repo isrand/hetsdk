@@ -1,4 +1,4 @@
-import { StorageOptions } from '../enums/StorageOptions';
+import {StorageOptions} from '../enums/StorageOptions';
 
 export interface ITopicStorageOptions {
   configuration: StorageOptions;

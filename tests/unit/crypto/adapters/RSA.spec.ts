@@ -86,10 +86,11 @@ describe("The RSA crypto adapter", () => {
             const rsa = new RSA();
             const keyPair = rsa.generateKeyPair();
             const secondKeyPair = rsa.generateKeyPair();
+            const thirdKeyPair = rsa.generateKeyPair();
             let topicEncryptionKey = crypto.randomBytes(32);
             let topicInitVector = crypto.randomBytes(16);
 
-            const encryptedTopicKeysObject = rsa.getEncryptedTopicKeysObject(topicEncryptionKey, topicInitVector, [keyPair.publicKey]);
+            const encryptedTopicKeysObject = rsa.getEncryptedTopicKeysObject(topicEncryptionKey, topicInitVector, [keyPair.publicKey, secondKeyPair.publicKey]);
 
             const topicData: ITopicData = {
                 s: '',
@@ -100,7 +101,34 @@ describe("The RSA crypto adapter", () => {
 
             const encryptedTopicDataInBase64 = rsa.symmetricEncrypt(JSON.stringify(topicData), topicEncryptionKey, topicInitVector);
             const func = () => {
-                rsa.decryptTopicData(encryptedTopicKeysObject, encryptedTopicDataInBase64, secondKeyPair.privateKey);
+                rsa.decryptTopicData(encryptedTopicKeysObject, encryptedTopicDataInBase64, thirdKeyPair.privateKey);
+            };
+
+            expect(func).toThrowError('Error fetching topic data. Does user have access?');
+        });
+
+        test("should fail with the wrong topic encryption key and init vector", () => {
+            const rsa = new RSA();
+            const keyPair = rsa.generateKeyPair();
+            const secondKeyPair = rsa.generateKeyPair();
+            const thirdKeyPair = rsa.generateKeyPair();
+            let topicEncryptionKey = crypto.randomBytes(32);
+            let topicInitVector = crypto.randomBytes(16);
+            let topicEncryptionKeyTwo = crypto.randomBytes(32);
+            let topicInitVectorTwo = crypto.randomBytes(16);
+
+            const topicData: ITopicData = {
+                s: '',
+                m: {
+                    a: 'b'
+                }
+            };
+
+            const encryptedTopicKeysObject = rsa.getEncryptedTopicKeysObject(topicEncryptionKeyTwo, topicInitVectorTwo, [keyPair.publicKey, secondKeyPair.publicKey]);
+
+            const encryptedTopicDataInBase64 = rsa.symmetricEncrypt(JSON.stringify(topicData), topicEncryptionKey, topicInitVector);
+            const func = () => {
+                rsa.decryptTopicData(encryptedTopicKeysObject, encryptedTopicDataInBase64, thirdKeyPair.privateKey);
             };
 
             expect(func).toThrowError('Error fetching topic data. Does user have access?');

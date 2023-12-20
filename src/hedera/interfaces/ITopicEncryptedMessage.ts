@@ -9,5 +9,5 @@ export interface ITopicEncryptedMessage {
   i: string;
 
   // "v" is the version of the topic configuration message under which this message can be decrypted
-  v: number
+  v: number;
 }

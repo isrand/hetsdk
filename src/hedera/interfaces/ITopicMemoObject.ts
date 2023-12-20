@@ -11,7 +11,7 @@ interface ITopicMemoStorageObject {
   m: ITopicMemoMessageStorageObject;
 
   // "p" is the key containing storage options for participants
-  p: ITopicMemoParticipantsStorageObject
+  p: ITopicMemoParticipantsStorageObject;
 }
 
 interface ITopicMemoConfigurationStorageObject {

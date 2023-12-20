@@ -1,9 +1,13 @@
-import { ICryptoAdapter } from '../interfaces/ICryptoAdapter';
-import { IEncryptedTopicKeysObject } from '../interfaces/IEncryptedTopicKeysObject';
-import { ITopicData } from '../../hedera/interfaces/ITopicData';
-import { ITopicEncryptionKeyAndInitVector } from '../../hedera/interfaces/ITopicEncryptionKeyAndInitVector';
-import { DefaultAdapter } from './DefaultAdapter';
-import { IKeyPair } from '../interfaces/IKeyPair';
+/* eslint-disable */
+// ESLint truly despises this file due to the use of the
+// crystals-kyber package. I am working on a type definition for said
+// package, but for now this will have to do...
+import {ICryptoAdapter} from '../interfaces/ICryptoAdapter';
+import {IEncryptedTopicKeysObject} from '../interfaces/IEncryptedTopicKeysObject';
+import {ITopicData} from '../../hedera/interfaces/ITopicData';
+import {ITopicEncryptionKeyAndInitVector} from '../../hedera/interfaces/ITopicEncryptionKeyAndInitVector';
+import {DefaultAdapter} from './DefaultAdapter';
+import {IKeyPair} from '../interfaces/IKeyPair';
 
 const kyber = require('crystals-kyber');
 
@@ -19,43 +23,43 @@ export class Kyber extends DefaultAdapter implements ICryptoAdapter {
 
         return {
           publicKey: Buffer.from(KEYS_512[0]).toString('base64'),
-          privateKey: Buffer.from(KEYS_512[1]).toString('base64'),
+          privateKey: Buffer.from(KEYS_512[1]).toString('base64')
         };
       case 768:
         const KEYS_768 = kyber.KeyGen768();
 
         return {
           publicKey: Buffer.from(KEYS_768[0]).toString('base64'),
-          privateKey: Buffer.from(KEYS_768[1]).toString('base64'),
+          privateKey: Buffer.from(KEYS_768[1]).toString('base64')
         };
       case 1024:
         const KEYS_1024 = kyber.KeyGen1024();
 
         return {
           publicKey: Buffer.from(KEYS_1024[0]).toString('base64'),
-          privateKey: Buffer.from(KEYS_1024[1]).toString('base64'),
+          privateKey: Buffer.from(KEYS_1024[1]).toString('base64')
         };
       default:
         throw new Error('Kyber adapter was initialized with wrong key size. Available sizes are 512, 768 and 1024.');
     }
   }
 
-  public getEncryptedTopicKeysObject(topicEncryptionKey: Buffer, topicEncryptionInitVector: Buffer, publicKeys: string[]): IEncryptedTopicKeysObject {
+  public getEncryptedTopicKeysObject(topicEncryptionKey: Buffer, topicEncryptionInitVector: Buffer, publicKeys: Array<string>): IEncryptedTopicKeysObject {
     const encryptedTopicKeysObject: IEncryptedTopicKeysObject = {
       a: [],
-      b: [],
+      b: []
     };
 
     // Initialize the "c" key in the encrypted topic objects since we are using Kyber
     encryptedTopicKeysObject.c = [];
 
     for (const publicKey of publicKeys) {
-      let symmetricAndEncapsulatedKey: Array<Array<number>> = this.getSymmetricAndEncapsulatedKey(Buffer.from(publicKey, 'base64'));
+      const symmetricAndEncapsulatedKey: Array<Array<number>> = this.getSymmetricAndEncapsulatedKey(Buffer.from(publicKey, 'base64'));
 
       const encapsulatedSymmetricKey: Array<number> | undefined = symmetricAndEncapsulatedKey[0];
       const symmetricKey: Array<number> | undefined = symmetricAndEncapsulatedKey[1];
 
-      let initVector: Buffer = this.getInitVectorFromSymmetricKeyNumberArray(symmetricKey);
+      const initVector: Buffer = this.getInitVectorFromSymmetricKeyNumberArray(symmetricKey);
 
       const encryptedTopicEncryptionKey = this.symmetricEncrypt(Buffer.from(topicEncryptionKey).toString('base64'), Buffer.from(symmetricKey), initVector);
       const encryptedTopicInitVector = this.symmetricEncrypt(Buffer.from(topicEncryptionInitVector).toString('base64'), Buffer.from(symmetricKey), initVector);
@@ -74,7 +78,7 @@ export class Kyber extends DefaultAdapter implements ICryptoAdapter {
     }
 
     for (const encapsulatedSymmetricKey of encryptedTopicKeysObject.c) {
-      let symmetricKey = this.decryptEncapsulatedSymmetricKey(encapsulatedSymmetricKey, privateKey);
+      const symmetricKey = this.decryptEncapsulatedSymmetricKey(encapsulatedSymmetricKey, privateKey);
       const initVector = this.getInitVectorFromSymmetricKeyNumberArray(symmetricKey);
 
       for (const encryptedTopicKey of encryptedTopicKeysObject.a) {
@@ -108,7 +112,7 @@ export class Kyber extends DefaultAdapter implements ICryptoAdapter {
     }
 
     for (const encapsulatedSymmetricKey of encryptedTopicKeysObject.c) {
-      let symmetricKey = this.decryptEncapsulatedSymmetricKey(encapsulatedSymmetricKey, privateKey);
+      const symmetricKey = this.decryptEncapsulatedSymmetricKey(encapsulatedSymmetricKey, privateKey);
       const initVector = this.getInitVectorFromSymmetricKeyNumberArray(symmetricKey);
 
       for (const encryptedTopicKey of encryptedTopicKeysObject.a) {
@@ -125,7 +129,7 @@ export class Kyber extends DefaultAdapter implements ICryptoAdapter {
 
           return {
             encryptionKey: topicEncryptionKey,
-            initVector: topicEncryptionInitVector,
+            initVector: topicEncryptionInitVector
           };
         }
       }
@@ -134,7 +138,7 @@ export class Kyber extends DefaultAdapter implements ICryptoAdapter {
     throw new Error('Error fetching topic encryption key and init vector. Does user have access?');
   }
 
-  public validateParticipantKeys(topicParticipants: string[], topicEncryptionKeySize: number): void {
+  public validateParticipantKeys(topicParticipants: Array<string>, topicEncryptionKeySize: number): void {
     // base64-encoded Kyber keys are 1068, 1580 or 2092 characters in length
     const expectedKeyLengthInBase64 = (this.keySize * 2) + 44;
 

@@ -1,8 +1,8 @@
 import { EncryptionAlgorithms } from '../../crypto/enums/EncryptionAlgorithms';
 import { ITopicStorageOptions } from './ITopicStorageOptions';
 export interface ICreateEncryptedTopicConfiguration {
-    participants: string[];
+    participants: Array<string>;
     algorithm: EncryptionAlgorithms;
     storageOptions: ITopicStorageOptions;
-    metadata?: any;
+    metadata?: unknown;
 }

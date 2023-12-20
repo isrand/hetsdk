@@ -8,10 +8,10 @@ import { IKeyPair } from '../interfaces/IKeyPair';
 export declare class RSA extends DefaultAdapter implements ICryptoAdapter {
     private readonly expectedKeyLengthInBase64;
     generateKeyPair(): IKeyPair;
-    getEncryptedTopicKeysObject(topicEncryptionKey: Buffer, topicEncryptionInitVector: Buffer, publicKeys: string[]): IEncryptedTopicKeysObject;
-    asymmetricEncrypt(data: Buffer, publicKey: string): Buffer;
-    asymmetricDecrypt(data: Buffer, privateKey: string): Buffer;
+    getEncryptedTopicKeysObject(topicEncryptionKey: Buffer, topicEncryptionInitVector: Buffer, publicKeys: Array<string>): IEncryptedTopicKeysObject;
+    asymmetricEncrypt(dataToEncrypt: Buffer, publicKey: string): Buffer;
+    asymmetricDecrypt(dataToDecrypt: Buffer, privateKey: string): Buffer;
     decryptTopicData(encryptedTopicKeysObject: IEncryptedTopicKeysObject, encryptedTopicDataInBase64: string, privateKey: string): ITopicData;
     getTopicEncryptionKeyAndInitVector(encryptedTopicKeysObject: IEncryptedTopicKeysObject, privateKey: string): ITopicEncryptionKeyAndInitVector;
-    validateParticipantKeys(topicParticipants: string[], topicEncryptionKeySize: number): void;
+    validateParticipantKeys(topicParticipants: Array<string>, topicEncryptionKeySize: number): void;
 }
