@@ -1,4 +1,10 @@
 # Hedera Hashgraph Encrypted Topic SDK (HETSDK)
+![](https://img.shields.io/badge/license-Apache_2.0-green)
+
+![](img/badge-lines.svg)
+![](img/badge-functions.svg)
+![](img/badge-statements.svg)
+![](img/badge-branches.svg)
 
 This repository contains an NPM package that can be used to create and interact with Encrypted Topics in the Hedera network.
 

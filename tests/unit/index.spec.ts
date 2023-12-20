@@ -317,7 +317,7 @@ describe("The EncryptedTopic class", () => {
                });
            });
 
-           describe("but the configuration storage medium is set to 'Message", () => {
+           describe("but the configuration storage medium is set to 'Message'", () => {
                test("should not add a new participant", async () => {
                    const mockHederaStub = new MockHederaStub();
                    const userOne = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
