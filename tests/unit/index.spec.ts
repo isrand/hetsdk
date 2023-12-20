@@ -4,7 +4,6 @@ import path from "path";
 import {MockHederaStub} from "./mock/MockHederaStub";
 import {EncryptionAlgorithms} from "../../src/crypto/enums/EncryptionAlgorithms";
 import {StorageOptions} from "../../src/hedera/enums/StorageOptions";
-import mock = jest.mock;
 
 if (String(process.env.NODE_ENV) !== 'CI') {
     if (!fs.existsSync(path.resolve(__dirname, '..', '.env'))) {

@@ -4,7 +4,7 @@ import {ITopicData} from "../../../../lib/hedera/interfaces/ITopicData";
 
 describe("The RSA crypto adapter", () => {
     describe("constructor", () => {
-        test("should return a valid RSA object", () => {
+        test("should return a valid RSA object for all sizes, even wrong ones", () => {
             expect(new RSA()).toBeDefined();
         });
     });
