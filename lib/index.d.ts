@@ -13,7 +13,7 @@ export declare class EncryptedTopic {
     private topicMemoObject;
     private topicId?;
     constructor(encryptedTopicConfiguration: IEncryptedTopicConfiguration, stub?: IHederaStub | undefined);
-    static generateKeyPair(algorithm: EncryptionAlgorithms): IKeyPair;
+    static generateKeyPair(encryptionAlgorithm: EncryptionAlgorithms): IKeyPair;
     create(createEncryptedTopicConfiguration: ICreateEncryptedTopicConfiguration): Promise<string>;
     addParticipant(publicKey: string, forwardSecrecy?: boolean): Promise<boolean>;
     submitMessage(message: string): Promise<number>;
