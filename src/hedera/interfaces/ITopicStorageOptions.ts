@@ -1,7 +1,7 @@
-import {StorageOptions} from "../enums/StorageOptions";
+import { StorageOptions } from '../enums/StorageOptions';
 
 export interface ITopicStorageOptions {
-    configuration: StorageOptions;
-    messages: StorageOptions;
-    storeParticipants: boolean;
+  configuration: StorageOptions;
+  messages: StorageOptions;
+  storeParticipants: boolean;
 }

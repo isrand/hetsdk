@@ -1,4 +1,4 @@
 export enum StorageOptions {
-    File = 'file',
-    Message = 'message'
+  File = 'file',
+  Message = 'message',
 }

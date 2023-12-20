@@ -1,4 +1,4 @@
 export interface ITopicEncryptionKeyAndInitVector {
-    encryptionKey: string;
-    initVector: string;
+  encryptionKey: string;
+  initVector: string;
 }

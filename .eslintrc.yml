@@ -1,0 +1,14 @@
+env:
+  es2021: true
+  node: true
+extends:
+  - airbnb-typescript/base
+parserOptions:
+  ecmaVersion: 2016
+  sourceType: module
+  project: ./tsconfig.json
+parser: "@typescript-eslint/parser"
+plugins:
+  - import
+  - "@typescript-eslint"
+rules: {}

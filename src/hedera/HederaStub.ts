@@ -1,135 +1,135 @@
 import {
-    Client,
-    FileAppendTransaction,
-    FileContentsQuery,
-    FileCreateTransaction, Hbar,
-    PrivateKey,
-    TopicCreateTransaction,
-    TopicInfo,
-    TopicInfoQuery,
-    TopicMessage,
-    TopicMessageQuery,
-    TopicMessageSubmitTransaction
-} from "@hashgraph/sdk";
-import {ITopicMemoObject} from "./interfaces/ITopicMemoObject";
-import {Long} from "@hashgraph/sdk/lib/long";
-import {IHederaStub} from "./interfaces/IHederaStub";
+  Client,
+  FileAppendTransaction,
+  FileContentsQuery,
+  FileCreateTransaction, Hbar,
+  PrivateKey,
+  TopicCreateTransaction,
+  TopicInfo,
+  TopicInfoQuery,
+  TopicMessage,
+  TopicMessageQuery,
+  TopicMessageSubmitTransaction,
+} from '@hashgraph/sdk';
+import { ITopicMemoObject } from './interfaces/ITopicMemoObject';
+import { Long } from '@hashgraph/sdk/lib/long';
+import { IHederaStub } from './interfaces/IHederaStub';
 
 export class HederaStub implements IHederaStub {
-    public constructor(
-        private readonly client: Client,
-        private readonly hederaPrivateKey: string,
-        private readonly hederaAccountId: string
-    ) {
+  public constructor(
+    private readonly client: Client,
+    private readonly hederaPrivateKey: string,
+    private readonly hederaAccountId: string,
+  ) {
+  }
+
+  public async createTopic(submitKey: string, topicMemoObject?: ITopicMemoObject): Promise<string> {
+    const topicCreateTransaction: TopicCreateTransaction = new TopicCreateTransaction({
+      adminKey: PrivateKey.fromString(this.hederaPrivateKey),
+      autoRenewAccountId: this.hederaAccountId,
+    });
+
+    topicCreateTransaction.setSubmitKey(PrivateKey.fromString(submitKey));
+
+    if (topicMemoObject) {
+      topicCreateTransaction.setTopicMemo(JSON.stringify(topicMemoObject));
     }
 
-    public async createTopic(submitKey: string, topicMemoObject?: ITopicMemoObject): Promise<string> {
-        const topicCreateTransaction: TopicCreateTransaction = new TopicCreateTransaction({
-            adminKey: PrivateKey.fromString(this.hederaPrivateKey),
-            autoRenewAccountId: this.hederaAccountId
-        });
+    await topicCreateTransaction.freezeWith(this.client);
+    await topicCreateTransaction.sign(PrivateKey.fromString(this.hederaPrivateKey));
 
-        topicCreateTransaction.setSubmitKey(PrivateKey.fromString(submitKey));
+    const encryptedTopicCreationResponse = await topicCreateTransaction.execute(this.client);
+    const encryptedTopicCreationReceipt = await encryptedTopicCreationResponse.getReceipt(this.client);
 
-        if (topicMemoObject) {
-            topicCreateTransaction.setTopicMemo(JSON.stringify(topicMemoObject));
-        }
+    return encryptedTopicCreationReceipt.topicId?.toString() || '';
+  }
 
-        await topicCreateTransaction.freezeWith(this.client);
-        await topicCreateTransaction.sign(PrivateKey.fromString(this.hederaPrivateKey));
+  public async submitMessageToTopic(submitKey: string, topicId: string, contents: string): Promise<number> {
+    const topicSubmitMessageTransaction: TopicMessageSubmitTransaction = new TopicMessageSubmitTransaction({
+      topicId: topicId,
+      message: contents,
+    });
 
-        const encryptedTopicCreationResponse = await topicCreateTransaction.execute(this.client);
-        const encryptedTopicCreationReceipt = await encryptedTopicCreationResponse.getReceipt(this.client);
+    await topicSubmitMessageTransaction.freezeWith(this.client);
+    await topicSubmitMessageTransaction.sign(PrivateKey.fromString(submitKey));
+    await topicSubmitMessageTransaction.sign(PrivateKey.fromString(this.hederaPrivateKey));
 
-        return encryptedTopicCreationReceipt.topicId?.toString() || '';
-    }
+    const response = await topicSubmitMessageTransaction.execute(this.client);
+    const receipt = await response.getReceipt(this.client);
 
-    public async submitMessageToTopic(submitKey: string, topicId: string, contents: string): Promise<number> {
-        const topicSubmitMessageTransaction: TopicMessageSubmitTransaction = new TopicMessageSubmitTransaction({
-            topicId: topicId,
-            message: contents
-        });
+    return receipt.topicSequenceNumber.toNumber();
+  }
 
-        await topicSubmitMessageTransaction.freezeWith(this.client);
-        await topicSubmitMessageTransaction.sign(PrivateKey.fromString(submitKey));
-        await topicSubmitMessageTransaction.sign(PrivateKey.fromString(this.hederaPrivateKey));
+  public async getMessageFromTopic(sequenceNumber: number, topicId?: string): Promise<string> {
+    const topicMessageQuery = new TopicMessageQuery({
+      topicId: topicId,
+    }).setStartTime(0);
 
-        const response = await topicSubmitMessageTransaction.execute(this.client);
-        const receipt = await response.getReceipt(this.client);
+    return new Promise((resolve) => {
+      topicMessageQuery.subscribe(
+        this.client,
+        null,
+        (topicMessage: TopicMessage) => {
+          // Check if the original message was split among different chunks
+          if (topicMessage.chunks.length > 0) {
+            for (const chunk of topicMessage.chunks) {
+              if ((chunk.sequenceNumber as Long).toNumber() === Number(sequenceNumber)) {
+                resolve(Buffer.from(topicMessage.contents).toString('base64'));
+              }
+            }
+          }
 
-        return receipt.topicSequenceNumber.toNumber();
-    }
+          // Check if the original message is kept within just one message (no chunks)
+          if ((topicMessage.sequenceNumber as Long).toNumber() === Number(sequenceNumber)) {
+            resolve(Buffer.from(topicMessage.contents).toString('base64'));
+          }
+        },
+      );
+    });
+  }
 
-    public async getMessageFromTopic(sequenceNumber: number, topicId?: string): Promise<string> {
-        const topicMessageQuery = new TopicMessageQuery({
-            topicId: topicId
-        }).setStartTime(0);
+  public async getTopicInfo(topicId?: string): Promise<TopicInfo> {
+    const topicInfo = new TopicInfoQuery({
+      topicId: topicId,
+    });
 
-        return await new Promise((resolve) => {
-            topicMessageQuery.subscribe(
-                this.client,
-                null,
-                (topicMessage: TopicMessage) => {
-                    // Check if the original message was split among different chunks
-                    if (topicMessage.chunks.length > 0) {
-                        for (const chunk of topicMessage.chunks) {
-                            if ((chunk.sequenceNumber as Long).toNumber() === Number(sequenceNumber)) {
-                                resolve(Buffer.from(topicMessage.contents).toString('base64'));
-                            }
-                        }
-                    }
+    return topicInfo.execute(this.client);
+  }
 
-                    // Check if the original message is kept within just one message (no chunks)
-                    if ((topicMessage.sequenceNumber as Long).toNumber() === Number(sequenceNumber)) {
-                        resolve(Buffer.from(topicMessage.contents).toString('base64'));
-                    }
-                }
-            );
-        });
-    }
+  public async createFile(contents?: string): Promise<string> {
+    const fileCreateTransaction: FileCreateTransaction = new FileCreateTransaction({
+      keys: [PrivateKey.fromString(this.hederaPrivateKey).publicKey],
+      contents: contents,
+    }).setMaxTransactionFee(new Hbar(5));
 
-    public async getTopicInfo(topicId?: string): Promise<TopicInfo> {
-        const topicInfo = new TopicInfoQuery({
-            topicId: topicId
-        });
+    await fileCreateTransaction.freezeWith(this.client);
+    await fileCreateTransaction.sign(PrivateKey.fromString(this.hederaPrivateKey));
 
-        return await topicInfo.execute(this.client);
-    }
+    const fileCreateTransactionResponse = await fileCreateTransaction.execute(this.client);
+    const fileCreateTransactionReceipt = await fileCreateTransactionResponse.getReceipt(this.client);
 
-    public async createFile(contents?: string): Promise<string> {
-        const fileCreateTransaction: FileCreateTransaction = new FileCreateTransaction({
-            keys: [PrivateKey.fromString(this.hederaPrivateKey).publicKey],
-            contents: contents
-        }).setMaxTransactionFee(new Hbar(5));
+    return fileCreateTransactionReceipt.fileId?.toString() || '';
+  }
 
-        await fileCreateTransaction.freezeWith(this.client);
-        await fileCreateTransaction.sign(PrivateKey.fromString(this.hederaPrivateKey));
+  public async appendToFile(fileId: string, contents: string): Promise<void> {
+    const fileAppendTransaction: FileAppendTransaction = new FileAppendTransaction({
+      fileId: fileId,
+      contents: contents,
+    }).setMaxTransactionFee(new Hbar(5));
 
-        const fileCreateTransactionResponse = await fileCreateTransaction.execute(this.client);
-        const fileCreateTransactionReceipt = await fileCreateTransactionResponse.getReceipt(this.client);
+    await fileAppendTransaction.freezeWith(this.client);
+    await fileAppendTransaction.sign(PrivateKey.fromString(this.hederaPrivateKey));
 
-        return fileCreateTransactionReceipt.fileId?.toString() || '';
-    }
+    await fileAppendTransaction.execute(this.client);
+  }
 
-    public async appendToFile(fileId: string, contents: string): Promise<void> {
-        const fileAppendTransaction: FileAppendTransaction = new FileAppendTransaction({
-            fileId: fileId,
-            contents: contents,
-        }).setMaxTransactionFee(new Hbar(5));
+  public async getFileContents(fileId: string): Promise<string> {
+    const fileGetContentsQuery: FileContentsQuery = new FileContentsQuery({
+      fileId: fileId,
+    });
 
-        await fileAppendTransaction.freezeWith(this.client);
-        await fileAppendTransaction.sign(PrivateKey.fromString(this.hederaPrivateKey));
+    const fileContentsUint8Array: Uint8Array = await fileGetContentsQuery.execute(this.client);
 
-        await fileAppendTransaction.execute(this.client);
-    }
-
-    public async getFileContents(fileId: string): Promise<string> {
-        const fileGetContentsQuery: FileContentsQuery = new FileContentsQuery({
-            fileId: fileId
-        });
-
-        const fileContentsUint8Array: Uint8Array = await fileGetContentsQuery.execute(this.client);
-
-        return fileContentsUint8Array.toString();
-    }
+    return fileContentsUint8Array.toString();
+  }
 }
