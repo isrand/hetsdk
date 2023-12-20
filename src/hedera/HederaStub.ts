@@ -60,7 +60,7 @@ export class HederaStub implements IHederaStub {
         return receipt.topicSequenceNumber.toNumber();
     }
 
-    public async getMessageFromTopic(topicId: string, sequenceNumber: number): Promise<string> {
+    public async getMessageFromTopic(sequenceNumber: number, topicId?: string): Promise<string> {
         const topicMessageQuery = new TopicMessageQuery({
             topicId: topicId
         }).setStartTime(0);
@@ -88,7 +88,7 @@ export class HederaStub implements IHederaStub {
         });
     }
 
-    public async getTopicInfo(topicId: string): Promise<TopicInfo> {
+    public async getTopicInfo(topicId?: string): Promise<TopicInfo> {
         const topicInfo = new TopicInfoQuery({
             topicId: topicId
         });

@@ -206,16 +206,12 @@ export class EncryptedTopic {
             throw new Error('Topic did not choose to store participants upon creation, cannot fetch list of participants.');
         }
 
-        if (!this.topicMemoObject.s.p.i) {
-            throw new Error('Topic memo does not specify participants storage topic Id.');
-        }
-
         const topicInfo = await this.hederaStub.getTopicInfo(this.topicMemoObject.s.p.i);
         const sequenceNumber = (topicInfo.sequenceNumber as Long).toNumber();
         const participants = [];
 
         for (let i = 1; i <= sequenceNumber; i++) {
-            const participant = await this.hederaStub.getMessageFromTopic(this.topicMemoObject.s.p.i, i);
+            const participant = await this.hederaStub.getMessageFromTopic(i, this.topicMemoObject.s.p.i);
             participants.push(Buffer.from(participant, 'base64').toString('utf8'));
         }
 
@@ -367,15 +363,9 @@ export class EncryptedTopic {
     }
 
     private async setMemo(): Promise<void> {
-        if (!this.topicId) {
-            throw new Error('Topic ID not set in constructor. Please provide a topic for the SDK to target.');
-        }
+        const topicInfo = await this.hederaStub.getTopicInfo(this.topicId);
 
-        if (!this.topicMemoObject) {
-            const topicInfo = await this.hederaStub.getTopicInfo(this.topicId);
-
-            this.topicMemoObject = JSON.parse(topicInfo.topicMemo) as ITopicMemoObject;
-        }
+        this.topicMemoObject = JSON.parse(topicInfo.topicMemo) as ITopicMemoObject;
     }
 
     private async getEncryptionKeyAndInitVector(version: number): Promise<ITopicEncryptionKeyAndInitVector> {
@@ -393,10 +383,6 @@ export class EncryptedTopic {
 
         // Topic memo specifies that topic configuration message is stored using the File Service
         if (this.topicMemoObject.s.c.f) {
-            if (!this.topicMemoObject.s.c.i) {
-                throw new Error('Topic memo object does not specify file Id');
-            }
-
             this.topicConfigurationMessage = await this.hederaStub.getFileContents(this.topicMemoObject.s.c.i);
         // Topic memo specifies that topic configuration message is stored using the Consensus Service
         } else {
@@ -472,10 +458,6 @@ export class EncryptedTopic {
     }
 
     private async getMessageFromTopic(sequenceNumber: number): Promise<string> {
-        // Make sure the topicId variable is set before starting...
-        if (!this.topicId) {
-            throw new Error('Topic ID not set in constructor. Please provide a topic for the SDK to target.');
-        }
 
         // First, check if topic has messages up to "sequenceNumber"
         const topicInfo = await this.hederaStub.getTopicInfo(this.topicId);
@@ -484,7 +466,7 @@ export class EncryptedTopic {
             throw new Error('Topic sequence number is less than the one provided.');
         }
 
-        return await this.hederaStub.getMessageFromTopic(this.topicId, sequenceNumber);
+        return await this.hederaStub.getMessageFromTopic(sequenceNumber, this.topicId);
     }
 
     private isBase64Encoded(str: string): boolean {

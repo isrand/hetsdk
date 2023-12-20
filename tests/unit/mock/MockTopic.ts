@@ -7,7 +7,7 @@ export class MockTopic {
     private readonly topicId: string;
     private readonly topicIdAsNumber: number;
     private readonly messages: MockMessage[];
-    private readonly memo: string;
+    private readonly memo?: ITopicMemoObject;
     private readonly submitKey: string;
     private topicInfo!: TopicInfo;
 
@@ -19,7 +19,7 @@ export class MockTopic {
         this.topicIdAsNumber = Math.floor(Math.random() * 500);
         this.topicId = `0.0.${this.topicIdAsNumber}`;
         this.submitKey = submitKey;
-        this.memo = JSON.stringify(memo);
+        this.memo = memo;
 
         this.topicInfo = TopicInfo._fromProtobuf({
             topicInfo: {
@@ -45,7 +45,7 @@ export class MockTopic {
     }
 
     public getMemo(): string {
-        return this.memo;
+        return this.topicInfo.topicMemo;
     }
 
     public getInfo(): TopicInfo {

@@ -60,8 +60,8 @@ export class MockHederaStub implements IHederaStub {
         return topic.submitMessage(contents);
     }
 
-    public async getMessageFromTopic(topicId: string, sequenceNumber: number): Promise<string> {
-        const topic = this.topics.get(topicId);
+    public async getMessageFromTopic(sequenceNumber: number, topicId?: string): Promise<string> {
+        const topic = this.topics.get(String(topicId));
         if (!topic) {
             throw new Error(`Topic with Id ${topicId} does not exist.`);
         }
@@ -76,9 +76,5 @@ export class MockHederaStub implements IHederaStub {
         }
 
         return topic.getInfo();
-    }
-
-    private isPotentialBase64Encoded(str: string): boolean {
-        return str.indexOf('/') > -1 || str.indexOf('+') > -1 || str.indexOf('=') > -1;
     }
 }
