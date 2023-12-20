@@ -78,12 +78,25 @@ describe("The Kyber crypto adapter", () => {
 
             let result = kyber512.getEncryptedTopicKeysObject(topicEncryptionKey, topicInitVector, [keyPair512.publicKey]);
 
+            expect(result.a).toBeDefined();
+            expect(result.a).toHaveLength(1);
+            expect(result.b).toBeDefined();
+            expect(result.b).toHaveLength(1);
+            expect(result.c).toBeDefined();
+            expect(result.c).toHaveLength(1);
+
             const kyber768 = new Kyber(768);
             const keyPair768 = kyber768.generateKeyPair();
             topicEncryptionKey = crypto.randomBytes(32);
             topicInitVector = crypto.randomBytes(16);
 
             result = kyber768.getEncryptedTopicKeysObject(topicEncryptionKey, topicInitVector, [keyPair768.publicKey]);
+            expect(result.a).toBeDefined();
+            expect(result.a).toHaveLength(1);
+            expect(result.b).toBeDefined();
+            expect(result.b).toHaveLength(1);
+            expect(result.c).toBeDefined();
+            expect(result.c).toHaveLength(1);
 
             const kyber1024 = new Kyber(1024);
             const keyPair1024 = kyber1024.generateKeyPair();
@@ -91,6 +104,12 @@ describe("The Kyber crypto adapter", () => {
             topicInitVector = crypto.randomBytes(16);
 
             result = kyber1024.getEncryptedTopicKeysObject(topicEncryptionKey, topicInitVector, [keyPair1024.publicKey]);
+            expect(result.a).toBeDefined();
+            expect(result.a).toHaveLength(1);
+            expect(result.b).toBeDefined();
+            expect(result.b).toHaveLength(1);
+            expect(result.c).toBeDefined();
+            expect(result.c).toHaveLength(1);
         });
 
         test("should fail when a wrong key size is passed", () => {
