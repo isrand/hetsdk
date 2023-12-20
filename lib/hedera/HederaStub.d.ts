@@ -1,6 +1,6 @@
-import { Client, TopicInfo } from "@hashgraph/sdk";
-import { ITopicMemoObject } from "./interfaces/ITopicMemoObject";
-import { IHederaStub } from "./interfaces/IHederaStub";
+import { Client, TopicInfo } from '@hashgraph/sdk';
+import { ITopicMemoObject } from './interfaces/ITopicMemoObject';
+import { IHederaStub } from './interfaces/IHederaStub';
 export declare class HederaStub implements IHederaStub {
     private readonly client;
     private readonly hederaPrivateKey;

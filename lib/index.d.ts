@@ -1,8 +1,8 @@
-import { IEncryptedTopicConfiguration } from "./hedera/interfaces/IEncryptedTopicConfiguration";
-import { ICreateEncryptedTopicConfiguration } from "./hedera/interfaces/ICreateEncryptedTopicConfiguration";
-import { EncryptionAlgorithms } from "./crypto/enums/EncryptionAlgorithms";
-import { IKeyPair } from "./crypto/interfaces/IKeyPair";
-import { IHederaStub } from "./hedera/interfaces/IHederaStub";
+import { IEncryptedTopicConfiguration } from './hedera/interfaces/IEncryptedTopicConfiguration';
+import { ICreateEncryptedTopicConfiguration } from './hedera/interfaces/ICreateEncryptedTopicConfiguration';
+import { EncryptionAlgorithms } from './crypto/enums/EncryptionAlgorithms';
+import { IKeyPair } from './crypto/interfaces/IKeyPair';
+import { IHederaStub } from './hedera/interfaces/IHederaStub';
 export declare class EncryptedTopic {
     private readonly encryptedTopicConfiguration;
     private stub?;
