@@ -15,7 +15,7 @@ export class RSA extends DefaultAdapter implements ICryptoAdapter {
         const keys = crypto.generateKeyPairSync('rsa', {
             modulusLength: 2048,
             publicKeyEncoding: {
-                type: 'pkcs1',
+                type: "spki",
                 format: 'pem'
             },
             privateKeyEncoding: {
@@ -77,7 +77,7 @@ export class RSA extends DefaultAdapter implements ICryptoAdapter {
             }
         }
 
-        throw new Error('Error fetching topic configuration object. Does user have access?');
+        throw new Error('Error fetching topic data. Does user have access?');
     }
 
     public getTopicEncryptionKeyAndInitVector(encryptedTopicKeysObject: IEncryptedTopicKeysObject, privateKey: string): ITopicEncryptionKeyAndInitVector {
@@ -90,7 +90,6 @@ export class RSA extends DefaultAdapter implements ICryptoAdapter {
                     topicEncryptionKey = this.asymmetricDecrypt(Buffer.from(encryptedTopicKey, 'base64'), privateKey);
                     topicEncryptionInitVector = this.asymmetricDecrypt(Buffer.from(encryptedTopicInitVector, 'base64'), privateKey);
                 } catch (error) {
-                    console.log(error);
                     continue;
                 }
 
