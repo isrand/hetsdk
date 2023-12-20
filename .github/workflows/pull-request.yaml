@@ -20,4 +20,7 @@ jobs:
         run: npm run build
 
       - name: Unit test
-        run: npm run test:all
+        run: npm run test:unit
+
+      - name: Integration test
+        run: npm run test:integration
