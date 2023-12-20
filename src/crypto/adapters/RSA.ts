@@ -15,7 +15,7 @@ export class RSA extends DefaultAdapter implements ICryptoAdapter {
         const keys = crypto.generateKeyPairSync('rsa', {
             modulusLength: 2048,
             publicKeyEncoding: {
-                type: "spki",
+                type: 'spki',
                 format: 'pem'
             },
             privateKeyEncoding: {
