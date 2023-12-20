@@ -41,7 +41,9 @@ export class HederaStub implements IHederaStub {
     const encryptedTopicCreationResponse = await topicCreateTransaction.execute(this.client);
     const encryptedTopicCreationReceipt = await encryptedTopicCreationResponse.getReceipt(this.client);
 
-    return encryptedTopicCreationReceipt.topicId?.toString() || '';
+    const topicId = encryptedTopicCreationReceipt.topicId;
+
+    return topicId !== null ? topicId.toString() : '';
   }
 
   public async submitMessageToTopic(submitKey: string, topicId?: string, contents?: string): Promise<number> {
@@ -108,7 +110,9 @@ export class HederaStub implements IHederaStub {
     const fileCreateTransactionResponse = await fileCreateTransaction.execute(this.client);
     const fileCreateTransactionReceipt = await fileCreateTransactionResponse.getReceipt(this.client);
 
-    return fileCreateTransactionReceipt.fileId?.toString() || '';
+    const fileId = fileCreateTransactionReceipt.fileId;
+
+    return fileId !== null ? fileId.toString() : '';
   }
 
   public async appendToFile(fileId: string, contents: string): Promise<void> {
