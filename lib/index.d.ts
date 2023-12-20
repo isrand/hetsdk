@@ -35,5 +35,5 @@ export declare class EncryptedTopic {
     private getSubmitKey;
     private getEncryptedTopicKeysObjectFromTopicConfigurationMessage;
     private getMessageFromTopic;
-    private isPotentialBase64Encoded;
+    private isBase64Encoded;
 }

@@ -1,5 +1,6 @@
 import {MockTopic} from "./MockTopic";
 import {ITopicMemoObject} from "../../../lib/hedera/interfaces/ITopicMemoObject";
+import {MockMessage} from "./MockMessage";
 
 describe("The MockTopic", () => {
     describe("constructor", () => {
@@ -8,25 +9,6 @@ describe("The MockTopic", () => {
 
             expect(mockTopic).toBeDefined();
             expect(mockTopic.getId()).toBeDefined();
-        });
-    });
-
-    describe("getMessages function", () => {
-        test("should return an empty array on topic creation", () => {
-            const mockTopic = new MockTopic('submitKey');
-
-            expect(mockTopic.getMessages()).toEqual(['']);
-        });
-
-        test("should return the correct messages once they are part of the topic", () => {
-            const mockTopic = new MockTopic('submitKey');
-            const messages = ['a', 'b', 'c'];
-
-            for (const message of messages) {
-                mockTopic.submitMessage(message);
-            }
-
-            expect(mockTopic.getMessages()).toEqual(['', ...messages]);
         });
     });
 
@@ -45,7 +27,7 @@ describe("The MockTopic", () => {
             const message = 'a';
             mockTopic.submitMessage(message);
 
-            expect(mockTopic.getMessage(1)).toEqual(message);
+            expect(mockTopic.getMessage(1)).toEqual(Buffer.from('a').toString('base64'));
         });
     });
 
@@ -55,7 +37,7 @@ describe("The MockTopic", () => {
             const message = 'a';
             mockTopic.submitMessage(message);
 
-            expect(mockTopic.getMessage(1)).toEqual(message);
+            expect(mockTopic.getMessage(1)).toEqual(Buffer.from('a').toString('base64'));
         });
     });
 

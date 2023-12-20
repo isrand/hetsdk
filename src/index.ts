@@ -166,7 +166,7 @@ export class EncryptedTopic {
             return await this.hederaStub.submitMessageToTopic(submitKey, this.topicId, Buffer.from(fileId).toString('base64'));
         }
 
-        return await this.hederaStub.submitMessageToTopic(submitKey, this.topicId, finalMessageInBase64);
+        return await this.hederaStub.submitMessageToTopic(submitKey, this.topicId, finalMessageInBase64, 'base64');
     }
 
     // "getMessage" gets a message from an encrypted topic (if the user has access)
@@ -176,15 +176,20 @@ export class EncryptedTopic {
         let encryptedMessageInBase64;
 
         if (this.topicMemoObject.s.m.f) {
-            const messageFileIdInBase64 = await this.getMessageFromTopic(sequenceNumber);
-            let fileId = Buffer.from(messageFileIdInBase64, 'base64').toString('utf8');
-            encryptedMessageInBase64 = await this.hederaStub.getFileContents(Buffer.from(fileId, 'base64').toString('utf8'));
+            let messageFileId = await this.getMessageFromTopic(sequenceNumber);
+            while (this.isBase64Encoded(messageFileId)) {
+                messageFileId = Buffer.from(messageFileId, 'base64').toString('utf8');
+            }
+            encryptedMessageInBase64 = await this.hederaStub.getFileContents(messageFileId);
         } else {
             encryptedMessageInBase64 = await this.getMessageFromTopic(sequenceNumber);
+        }
+
+        while (this.isBase64Encoded(encryptedMessageInBase64)) {
             encryptedMessageInBase64 = Buffer.from(encryptedMessageInBase64, 'base64').toString('utf8');
         }
 
-        const encryptedMessage: ITopicEncryptedMessage = JSON.parse(Buffer.from(encryptedMessageInBase64, 'base64').toString('utf8'));
+        const encryptedMessage = JSON.parse(encryptedMessageInBase64);
         const topicEncryptionKeyAndInitVector = await this.getEncryptionKeyAndInitVector(encryptedMessage.v);
         const decryptedMessageEncryptionKey = Buffer.from(this.crypto.symmetricDecrypt(encryptedMessage.k, Buffer.from(topicEncryptionKeyAndInitVector.encryptionKey, 'base64'),  Buffer.from(topicEncryptionKeyAndInitVector.initVector, 'base64')), 'base64');
         const decryptedMessageInitVector = Buffer.from(this.crypto.symmetricDecrypt(encryptedMessage.i, Buffer.from(topicEncryptionKeyAndInitVector.encryptionKey, 'base64'),  Buffer.from(topicEncryptionKeyAndInitVector.initVector, 'base64')), 'base64');
@@ -201,21 +206,13 @@ export class EncryptedTopic {
             throw new Error('Topic did not choose to store participants upon creation, cannot fetch list of participants.');
         }
 
-        if (!this.topicMemoObject.s.p.i) {
-            throw new Error('Topic memo does not specify participants storage topic Id.');
-        }
-
         const topicInfo = await this.hederaStub.getTopicInfo(this.topicMemoObject.s.p.i);
         const sequenceNumber = (topicInfo.sequenceNumber as Long).toNumber();
         const participants = [];
 
         for (let i = 1; i <= sequenceNumber; i++) {
-            const participant = await this.hederaStub.getMessageFromTopic(this.topicMemoObject.s.p.i, i);
-            if (this.isPotentialBase64Encoded(participant)) {
-                participants.push(participant);
-            } else {
-                participants.push(Buffer.from(participant, 'base64').toString('utf8'));
-            }
+            const participant = await this.hederaStub.getMessageFromTopic(i, this.topicMemoObject.s.p.i);
+            participants.push(Buffer.from(participant, 'base64').toString('utf8'));
         }
 
         return Array.from(new Set(participants));
@@ -366,15 +363,9 @@ export class EncryptedTopic {
     }
 
     private async setMemo(): Promise<void> {
-        if (!this.topicId) {
-            throw new Error('Topic ID not set in constructor. Please provide a topic for the SDK to target.');
-        }
+        const topicInfo = await this.hederaStub.getTopicInfo(this.topicId);
 
-        if (!this.topicMemoObject) {
-            const topicInfo = await this.hederaStub.getTopicInfo(this.topicId);
-
-            this.topicMemoObject = JSON.parse(topicInfo.topicMemo) as ITopicMemoObject;
-        }
+        this.topicMemoObject = JSON.parse(topicInfo.topicMemo) as ITopicMemoObject;
     }
 
     private async getEncryptionKeyAndInitVector(version: number): Promise<ITopicEncryptionKeyAndInitVector> {
@@ -392,15 +383,15 @@ export class EncryptedTopic {
 
         // Topic memo specifies that topic configuration message is stored using the File Service
         if (this.topicMemoObject.s.c.f) {
-            if (!this.topicMemoObject.s.c.i) {
-                throw new Error('Topic memo object does not specify file Id');
-            }
-
             this.topicConfigurationMessage = await this.hederaStub.getFileContents(this.topicMemoObject.s.c.i);
         // Topic memo specifies that topic configuration message is stored using the Consensus Service
         } else {
             topicConfigurationMessage = await this.getMessageFromTopic(1);
             this.topicConfigurationMessage = Buffer.from(topicConfigurationMessage, 'base64').toString('utf8');
+        }
+
+        while (this.isBase64Encoded(this.topicConfigurationMessage)) {
+            this.topicConfigurationMessage = Buffer.from(this.topicConfigurationMessage, 'base64').toString('utf8');
         }
     }
 
@@ -467,10 +458,6 @@ export class EncryptedTopic {
     }
 
     private async getMessageFromTopic(sequenceNumber: number): Promise<string> {
-        // Make sure the topicId variable is set before starting...
-        if (!this.topicId) {
-            throw new Error('Topic ID not set in constructor. Please provide a topic for the SDK to target.');
-        }
 
         // First, check if topic has messages up to "sequenceNumber"
         const topicInfo = await this.hederaStub.getTopicInfo(this.topicId);
@@ -479,10 +466,14 @@ export class EncryptedTopic {
             throw new Error('Topic sequence number is less than the one provided.');
         }
 
-        return await this.hederaStub.getMessageFromTopic(this.topicId, sequenceNumber);
+        return await this.hederaStub.getMessageFromTopic(sequenceNumber, this.topicId);
     }
 
-    private isPotentialBase64Encoded(str: string): boolean {
-        return str.indexOf('/') > -1 && str.indexOf('+') > -1;
+    private isBase64Encoded(str: string): boolean {
+        try {
+            return btoa(atob(str)) === str;
+        } catch (err) {
+            return false;
+        }
     }
 }

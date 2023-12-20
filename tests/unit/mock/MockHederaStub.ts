@@ -5,18 +5,14 @@ import {MockTopic} from "./MockTopic";
 import {MockFile} from "./MockFile";
 
 export class MockHederaStub implements IHederaStub {
-    public topics: Map<string, MockTopic>;
-    public files: Map<string, MockFile>;
+    public topics: Map<string, MockTopic> = new Map();
+    public files: Map<string, MockFile> = new Map();
 
-    public constructor() {
-        this.topics = new Map();
-        this.files = new Map();
-    }
+    public constructor() { }
 
     public async createFile(contents?: string): Promise<string> {
         const file = new MockFile(contents);
         const fileId = file.getId();
-
         this.files.set(fileId, file);
 
         return fileId;
@@ -64,8 +60,8 @@ export class MockHederaStub implements IHederaStub {
         return topic.submitMessage(contents);
     }
 
-    public async getMessageFromTopic(topicId: string, sequenceNumber: number): Promise<string> {
-        const topic = this.topics.get(topicId);
+    public async getMessageFromTopic(sequenceNumber: number, topicId?: string): Promise<string> {
+        const topic = this.topics.get(String(topicId));
         if (!topic) {
             throw new Error(`Topic with Id ${topicId} does not exist.`);
         }

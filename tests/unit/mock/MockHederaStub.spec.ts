@@ -157,7 +157,7 @@ describe("The MockHederaStub", () => {
                 fail('Topic not found in stub map.');
             }
 
-            expect(topicInStub.getMessage(sequenceNumber)).toEqual(contents);
+            expect(topicInStub.getMessage(sequenceNumber)).toEqual(Buffer.from(contents).toString('base64'));
         });
 
     });
@@ -167,7 +167,7 @@ describe("The MockHederaStub", () => {
             const topicId = 'does_not_exist';
             const mockHederaStub = new MockHederaStub();
             const func = async () => {
-                await mockHederaStub.getMessageFromTopic(topicId, 1);
+                await mockHederaStub.getMessageFromTopic(1, topicId);
             }
 
             await expect(func).rejects.toThrowError(`Topic with Id ${topicId} does not exist.`);
@@ -179,7 +179,7 @@ describe("The MockHederaStub", () => {
             const topicId = await mockHederaStub.createTopic(submitKey);
 
             const func = async () => {
-                await mockHederaStub.getMessageFromTopic(topicId, 1);
+                await mockHederaStub.getMessageFromTopic(1, topicId);
             }
 
             await expect(func).rejects.toThrowError('Sequence number requested is greater than topic has.');
@@ -192,9 +192,9 @@ describe("The MockHederaStub", () => {
             const contents = 'test';
             const sequenceNumber = await mockHederaStub.submitMessageToTopic(submitKey, topicId, contents);
 
-            const message = await mockHederaStub.getMessageFromTopic(topicId, sequenceNumber);
+            const message = await mockHederaStub.getMessageFromTopic(sequenceNumber, topicId);
 
-            await expect(contents).toEqual(message);
+            await expect(Buffer.from(contents).toString('base64')).toEqual(message);
         });
     });
 

@@ -4,6 +4,7 @@ import path from "path";
 import {MockHederaStub} from "./mock/MockHederaStub";
 import {EncryptionAlgorithms} from "../../src/crypto/enums/EncryptionAlgorithms";
 import {StorageOptions} from "../../src/hedera/enums/StorageOptions";
+import mock = jest.mock;
 
 if (String(process.env.NODE_ENV) !== 'CI') {
     if (!fs.existsSync(path.resolve(__dirname, '..', '.env'))) {
@@ -19,6 +20,7 @@ const hederaAccountId = String(process.env.HEDERA_ACCOUNT_ID);
 const hederaPrivateKey = String(process.env.HEDERA_PRIVATE_KEY);
 
 describe("The EncryptedTopic class", () => {
+
     describe("constructor", () => {
         test("should return a valid object when no external HederaStub is provided, hence creating its own", () => {
             expect(new EncryptedTopic({
@@ -350,4 +352,206 @@ describe("The EncryptedTopic class", () => {
            });
         });
     });
+
+    describe("getParticipants function", () => {
+        describe("when the encrypted topic admin chose to not store participants on topic creations", () => {
+            test("should fail when trying to get the topic participants", async () => {
+                const mockHederaStub = new MockHederaStub();
+                const userOne = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
+                const encryptedTopic = new EncryptedTopic({
+                    hederaAccountId: hederaAccountId,
+                    privateKey: userOne.privateKey,
+                    hederaPrivateKey: hederaPrivateKey
+                }, mockHederaStub);
+
+                const topicId = await encryptedTopic.create({
+                    algorithm: EncryptionAlgorithms.Kyber512,
+                    participants: [userOne.publicKey],
+                    storageOptions: {
+                        configuration: StorageOptions.Message,
+                        messages: StorageOptions.File,
+                        storeParticipants: false
+                    }
+                });
+
+                const func = async () => {
+                    await encryptedTopic.getParticipants();
+                }
+
+                await expect(func).rejects.toThrowError('Topic did not choose to store participants upon creation, cannot fetch list of participants.');
+            });
+        });
+
+        describe("when the encrypted topic admin chose to store participants on topic creations", () => {
+            test("should return the topic participants", async () => {
+                const mockHederaStub = new MockHederaStub();
+                const userOne = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
+                const encryptedTopic = new EncryptedTopic({
+                    hederaAccountId: hederaAccountId,
+                    privateKey: userOne.privateKey,
+                    hederaPrivateKey: hederaPrivateKey
+                }, mockHederaStub);
+
+                const topicId = await encryptedTopic.create({
+                    algorithm: EncryptionAlgorithms.Kyber512,
+                    participants: [userOne.publicKey],
+                    storageOptions: {
+                        configuration: StorageOptions.Message,
+                        messages: StorageOptions.File,
+                        storeParticipants: true
+                    }
+                });
+
+                const participants = await encryptedTopic.getParticipants();
+
+                await expect(participants).toEqual([userOne.publicKey]);
+            });
+        });
+    });
+
+    describe("submitMessage function", () => {
+        describe("when the message storage medium is set to 'File'", () => {
+            test("should submit a new message on the topic with the file Id as contents and return its sequence number", async () => {
+                const mockHederaStub = new MockHederaStub();
+                const userOne = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
+                const encryptedTopic = new EncryptedTopic({
+                    hederaAccountId: hederaAccountId,
+                    privateKey: userOne.privateKey,
+                    hederaPrivateKey: hederaPrivateKey
+                }, mockHederaStub);
+
+                const topicId = await encryptedTopic.create({
+                    algorithm: EncryptionAlgorithms.Kyber512,
+                    participants: [userOne.publicKey],
+                    storageOptions: {
+                        configuration: StorageOptions.Message,
+                        messages: StorageOptions.File,
+                        storeParticipants: false
+                    }
+                });
+
+                const message = 'test';
+
+                const sequenceNumber = await encryptedTopic.submitMessage(message);
+                await expect(sequenceNumber).toBeDefined();
+                // sequence number is 2 because the first message is the topic configuration message...
+                await expect(sequenceNumber).toEqual(2);
+            });
+        });
+
+        describe("when the message storage medium is set to 'Message'", () => {
+            test("should submit a new message on the topic", async () => {
+                const mockHederaStub = new MockHederaStub();
+                const userOne = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
+                const encryptedTopic = new EncryptedTopic({
+                    hederaAccountId: hederaAccountId,
+                    privateKey: userOne.privateKey,
+                    hederaPrivateKey: hederaPrivateKey
+                }, mockHederaStub);
+
+                await encryptedTopic.create({
+                    algorithm: EncryptionAlgorithms.Kyber512,
+                    participants: [userOne.publicKey],
+                    storageOptions: {
+                        configuration: StorageOptions.Message,
+                        messages: StorageOptions.Message,
+                        storeParticipants: false
+                    }
+                });
+
+                const message = 'test';
+
+                const sequenceNumber = await encryptedTopic.submitMessage(message);
+                await expect(sequenceNumber).toBeDefined();
+                // sequence number is 2 because the first message is the topic configuration message...
+                await expect(sequenceNumber).toEqual(2);
+            });
+        });
+    });
+
+    describe("getMessage function", () => {
+
+
+        describe("when the message storage medium is set to 'File'", () => {
+
+            test("should get the message correctly", async () => {
+                let sequenceNumber: number = 0;
+                const mockHederaStub = new MockHederaStub();
+                const userOne = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
+                const encryptedTopic = new EncryptedTopic({
+                    hederaAccountId: hederaAccountId,
+                    privateKey: userOne.privateKey,
+                    hederaPrivateKey: hederaPrivateKey
+                }, mockHederaStub);
+                const message = 'test';
+                await encryptedTopic.create({
+                    algorithm: EncryptionAlgorithms.Kyber512,
+                    participants: [userOne.publicKey],
+                    storageOptions: {
+                        configuration: StorageOptions.Message,
+                        messages: StorageOptions.File,
+                        storeParticipants: false
+                    }
+                });
+
+                sequenceNumber = await encryptedTopic.submitMessage(message);
+
+                const messageFromTopic = await encryptedTopic.getMessage(sequenceNumber);
+                await expect(message).toEqual(messageFromTopic);
+            });
+
+            test("should fail when getting a message with a sequence number greater than the one from the topic", async () => {
+                const mockHederaStub = new MockHederaStub();
+                const userOne = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
+                const encryptedTopic = new EncryptedTopic({
+                    hederaAccountId: hederaAccountId,
+                    privateKey: userOne.privateKey,
+                    hederaPrivateKey: hederaPrivateKey
+                }, mockHederaStub);
+                await encryptedTopic.create({
+                    algorithm: EncryptionAlgorithms.Kyber512,
+                    participants: [userOne.publicKey],
+                    storageOptions: {
+                        configuration: StorageOptions.Message,
+                        messages: StorageOptions.File,
+                        storeParticipants: false
+                    }
+                });
+
+                const func = async () => {
+                    await encryptedTopic.getMessage(25);
+                }
+                await expect(func).rejects.toThrowError('Topic sequence number is less than the one provided.');
+            });
+        });
+
+        describe("when the message storage medium is set to 'Message'", () => {
+
+            test("should get the message correctly", async () => {
+                let sequenceNumber: number = 0;
+                const mockHederaStub = new MockHederaStub();
+                const userOne = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
+                const encryptedTopic = new EncryptedTopic({
+                    hederaAccountId: hederaAccountId,
+                    privateKey: userOne.privateKey,
+                    hederaPrivateKey: hederaPrivateKey
+                }, mockHederaStub);
+                const message = 'test';
+                await encryptedTopic.create({
+                    algorithm: EncryptionAlgorithms.Kyber512,
+                    participants: [userOne.publicKey],
+                    storageOptions: {
+                        configuration: StorageOptions.Message,
+                        messages: StorageOptions.Message,
+                        storeParticipants: false
+                    }
+                });
+
+                sequenceNumber = await encryptedTopic.submitMessage(message);
+                const messageFromTopic = await encryptedTopic.getMessage(sequenceNumber);
+                await expect(message).toEqual(messageFromTopic);
+            });
+        });
+    });
 });
+
