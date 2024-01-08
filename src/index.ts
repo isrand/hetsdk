@@ -22,7 +22,7 @@ import {Kyber} from './crypto/adapters/Kyber';
 import {ITopicEncryptedMessage} from './hedera/interfaces/ITopicEncryptedMessage';
 import {
   ITopicConfigurationMessageObject
-} from "./hedera/interfaces/ITopicConfigurationMessageObject";
+} from './hedera/interfaces/ITopicConfigurationMessageObject';
 
 export class EncryptedTopic {
   private readonly hederaStub: IHederaStub;
@@ -329,7 +329,7 @@ export class EncryptedTopic {
 
     const encryptedTopicDataInBase64 = this.crypto.symmetricEncrypt(JSON.stringify(topicData), topicEncryptionKey, topicEncryptionInitVector);
 
-    let topicConfigurationMessage = `${encryptedTopicDataInBase64}#${algorithm}#${size}#`;
+    const topicConfigurationMessage = `${encryptedTopicDataInBase64}#${algorithm}#${size}#`;
     let participantsEncryptedTopicKeys = '';
     const encryptedTopicKeysObject = this.crypto.getEncryptedTopicKeysObject(topicEncryptionKey, topicEncryptionInitVector, participants);
 

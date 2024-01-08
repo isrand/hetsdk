@@ -1,5 +1,5 @@
 import {MockTopic} from "./MockTopic";
-import {ITopicMemoObject} from "../../../lib/hedera/interfaces/ITopicMemoObject";
+import {ITopicMemoObject} from "../../../src/hedera/interfaces/ITopicMemoObject";
 import {MockMessage} from "./MockMessage";
 
 describe("The MockTopic", () => {

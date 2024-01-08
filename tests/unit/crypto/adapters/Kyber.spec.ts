@@ -1,6 +1,6 @@
 import {Kyber} from "../../../../src/crypto/adapters/Kyber";
 import * as crypto from 'crypto';
-import {ITopicData} from "../../../../lib/hedera/interfaces/ITopicData";
+import {ITopicData} from "../../../../src/hedera/interfaces/ITopicData";
 
 describe("The Kyber crypto adapter", () => {
     describe("constructor", () => {

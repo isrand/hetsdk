@@ -1,4 +1,4 @@
 export interface IEncryptedPayload {
-    cipherText: string;
-    tag: string;
+  cipherText: string;
+  tag: string;
 }

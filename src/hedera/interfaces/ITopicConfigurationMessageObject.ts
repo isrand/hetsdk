@@ -1,4 +1,4 @@
 export interface ITopicConfigurationMessageObject {
-    topicConfigurationMessage: string;
-    participantsEncryptedTopicKeys: string;
+  topicConfigurationMessage: string;
+  participantsEncryptedTopicKeys: string;
 }

@@ -1,5 +1,5 @@
 import {MockHederaStub} from "./MockHederaStub";
-import {ITopicMemoObject} from "../../../lib/hedera/interfaces/ITopicMemoObject";
+import {ITopicMemoObject} from "../../../src/hedera/interfaces/ITopicMemoObject";
 
 describe("The MockHederaStub", () => {
     describe("constructor", () => {

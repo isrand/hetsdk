@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import {IEncryptedPayload} from "../interfaces/IEncryptedPayload";
+import {IEncryptedPayload} from '../interfaces/IEncryptedPayload';
 
 export class DefaultAdapter {
   public symmetricEncrypt(dataToEncrypt: string, symmetricKey: Buffer, initVector: Buffer): string {
@@ -10,7 +10,7 @@ export class DefaultAdapter {
     const encryptedPayload: IEncryptedPayload = {
       cipherText: encryptedData,
       tag: cipher.getAuthTag().toString('base64')
-    }
+    };
 
     return Buffer.from(JSON.stringify(encryptedPayload)).toString('base64');
   }
