@@ -20,6 +20,9 @@ import {IHederaStub} from './hedera/interfaces/IHederaStub';
 import {RSA} from './crypto/adapters/RSA';
 import {Kyber} from './crypto/adapters/Kyber';
 import {ITopicEncryptedMessage} from './hedera/interfaces/ITopicEncryptedMessage';
+import {
+  ITopicConfigurationMessageObject
+} from "./hedera/interfaces/ITopicConfigurationMessageObject";
 
 export class EncryptedTopic {
   private readonly hederaStub: IHederaStub;
@@ -93,18 +96,20 @@ export class EncryptedTopic {
   // "create" creates a new encrypted topic in the Hedera network
   public async create(createEncryptedTopicConfiguration: ICreateEncryptedTopicConfiguration): Promise<string> {
     const submitKey = PrivateKey.generateED25519().toStringRaw();
-    this.topicConfigurationMessage = this.createTopicConfigurationMessage({
+    const topicConfigurationMessageObject = this.createTopicConfigurationMessageObject({
       submitKey: submitKey,
       algorithm: createEncryptedTopicConfiguration.algorithm.split('-')[0],
       size: Number(createEncryptedTopicConfiguration.algorithm.split('-')[1]),
       participants: Array.from(new Set(createEncryptedTopicConfiguration.participants)),
       metadata: createEncryptedTopicConfiguration.metadata
     });
+    this.topicConfigurationMessage = `${topicConfigurationMessageObject.topicConfigurationMessage}${topicConfigurationMessageObject.participantsEncryptedTopicKeys}`;
 
     let fileId;
 
     if (createEncryptedTopicConfiguration.storageOptions.configuration === StorageOptions.File) {
       fileId = await this.hederaStub.createFile();
+
       await this.hederaStub.appendToFile(fileId, this.topicConfigurationMessage);
     }
 
@@ -275,7 +280,7 @@ export class EncryptedTopic {
     const algorithm = await this.getEncryptionAlgorithmFromConfigurationMessage();
     const size = await this.getEncryptionSizeFromConfigurationMessage();
 
-    const newTopicConfigurationMessage = this.createTopicConfigurationMessage({
+    const newTopicConfigurationMessageObject = this.createTopicConfigurationMessageObject({
       submitKey: topicData.s,
       metadata: topicData.m,
       participants: participants,
@@ -283,6 +288,7 @@ export class EncryptedTopic {
       algorithm: algorithm
     });
 
+    const newTopicConfigurationMessage = `${newTopicConfigurationMessageObject.topicConfigurationMessage}${newTopicConfigurationMessageObject.participantsEncryptedTopicKeys}`;
     const newTopicConfigurationString = `,${newTopicConfigurationMessage}`;
 
     await this.hederaStub.appendToFile(this.topicMemoObject.s.c.i, newTopicConfigurationString);
@@ -310,7 +316,7 @@ export class EncryptedTopic {
     return Buffer.from(JSON.stringify(finalMessage)).toString('base64');
   }
 
-  private createTopicConfigurationMessage(topicConfigurationMessageParameters: ITopicConfigurationMessageParameters): string {
+  private createTopicConfigurationMessageObject(topicConfigurationMessageParameters: ITopicConfigurationMessageParameters): ITopicConfigurationMessageObject {
     const algorithm = topicConfigurationMessageParameters.algorithm;
     const size = topicConfigurationMessageParameters.size;
     const participants = topicConfigurationMessageParameters.participants;
@@ -324,6 +330,7 @@ export class EncryptedTopic {
     const encryptedTopicDataInBase64 = this.crypto.symmetricEncrypt(JSON.stringify(topicData), topicEncryptionKey, topicEncryptionInitVector);
 
     let topicConfigurationMessage = `${encryptedTopicDataInBase64}#${algorithm}#${size}#`;
+    let participantsEncryptedTopicKeys = '';
     const encryptedTopicKeysObject = this.crypto.getEncryptedTopicKeysObject(topicEncryptionKey, topicEncryptionInitVector, participants);
 
     for (let i = 0; i < participants.length; i++) {
@@ -333,10 +340,13 @@ export class EncryptedTopic {
         participantString += `_${encryptedTopicKeysObject.c[i]}`;
       }
 
-      topicConfigurationMessage += `${participantString}#`;
+      participantsEncryptedTopicKeys += `${participantString}#`;
     }
 
-    return topicConfigurationMessage;
+    return {
+      topicConfigurationMessage: topicConfigurationMessage,
+      participantsEncryptedTopicKeys: participantsEncryptedTopicKeys
+    };
   }
 
   private createMemoObject(topicStorageOptions: ITopicStorageOptions, participantsTopicId?: string, topicConfigurationFileId?: string): ITopicMemoObject {

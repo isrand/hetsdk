@@ -533,10 +533,7 @@ describe("The EncryptedTopic class", () => {
     });
 
     describe("getMessage function", () => {
-
-
         describe("when the message storage medium is set to 'File'", () => {
-
             test("should get the message correctly", async () => {
                 let sequenceNumber: number = 0;
                 const mockHederaStub = new MockHederaStub();

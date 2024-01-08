@@ -21,7 +21,7 @@ export declare class EncryptedTopic {
     getParticipants(): Promise<Array<string>>;
     rotateEncryptionKey(): Promise<void>;
     private createTopicMessage;
-    private createTopicConfigurationMessage;
+    private createTopicConfigurationMessageObject;
     private createMemoObject;
     private getCurrentTopicConfigurationMessageVersion;
     private createParticipantsTopic;
