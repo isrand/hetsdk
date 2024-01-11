@@ -1,0 +1,4 @@
+WARNING: You are currently running a test suite that tries to reach the limits of what the SDK allows (i.e. max number of participants per topic). This suite will be SLOW and can potentially drain your Hedera Account's balance. Proceed with caution!
+To run specific tests, run
+
+    npm run test:limits <name>

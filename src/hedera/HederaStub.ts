@@ -16,6 +16,8 @@ import {Long} from '@hashgraph/sdk/lib/long';
 import {IHederaStub} from './interfaces/IHederaStub';
 
 export class HederaStub implements IHederaStub {
+  private readonly maxAppendTransactionSize = 4000 - 256; // Hedera's 4KB max append transaction size minus buffer just in case.
+
   public constructor(
     private readonly client: Client,
     private readonly hederaPrivateKey: string,
@@ -112,15 +114,43 @@ export class HederaStub implements IHederaStub {
   }
 
   public async appendToFile(fileId: string, contents: string): Promise<void> {
-    const fileAppendTransaction: FileAppendTransaction = new FileAppendTransaction({
-      fileId: fileId,
-      contents: contents
-    }).setMaxTransactionFee(new Hbar(5));
+    let index = 0;
+    let newString = '';
 
-    fileAppendTransaction.freezeWith(this.client);
-    await fileAppendTransaction.sign(PrivateKey.fromString(this.hederaPrivateKey));
+    while (index <= contents.length) {
+      if ((newString + contents[index]).length < this.maxAppendTransactionSize) {
+        // Edge case: append last characters while still below max allowed transaction size
+        if (index === contents.length - 1) {
+          newString += contents[contents.length - 1];
 
-    await fileAppendTransaction.execute(this.client);
+          const fileAppendTransaction: FileAppendTransaction = new FileAppendTransaction({
+            fileId: fileId,
+            contents: newString
+          }).setMaxTransactionFee(new Hbar(5));
+
+          fileAppendTransaction.freezeWith(this.client);
+          await fileAppendTransaction.sign(PrivateKey.fromString(this.hederaPrivateKey));
+
+          await fileAppendTransaction.execute(this.client);
+
+          break;
+        }
+
+        newString += contents[index];
+        index++;
+      } else {
+        const fileAppendTransaction: FileAppendTransaction = new FileAppendTransaction({
+          fileId: fileId,
+          contents: newString
+        }).setMaxTransactionFee(new Hbar(5));
+
+        fileAppendTransaction.freezeWith(this.client);
+        await fileAppendTransaction.sign(PrivateKey.fromString(this.hederaPrivateKey));
+
+        await fileAppendTransaction.execute(this.client);
+        newString = '';
+      }
+    }
   }
 
   public async getFileContents(fileId: string): Promise<string> {
