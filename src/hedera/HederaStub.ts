@@ -119,10 +119,9 @@ export class HederaStub implements IHederaStub {
 
     while (index <= contents.length) {
       if ((newString + contents[index]).length < this.maxAppendTransactionSize) {
+        newString += contents[index];
         // Edge case: append last characters while still below max allowed transaction size
         if (index === contents.length - 1) {
-          newString += contents[contents.length - 1];
-
           const fileAppendTransaction: FileAppendTransaction = new FileAppendTransaction({
             fileId: fileId,
             contents: newString
@@ -132,11 +131,8 @@ export class HederaStub implements IHederaStub {
           await fileAppendTransaction.sign(PrivateKey.fromString(this.hederaPrivateKey));
 
           await fileAppendTransaction.execute(this.client);
-
-          break;
         }
 
-        newString += contents[index];
         index++;
       } else {
         const fileAppendTransaction: FileAppendTransaction = new FileAppendTransaction({

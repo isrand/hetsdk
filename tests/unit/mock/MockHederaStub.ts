@@ -8,7 +8,7 @@ export class MockHederaStub implements IHederaStub {
     public topics: Map<string, MockTopic> = new Map();
     public files: Map<string, MockFile> = new Map();
 
-    private readonly MAX_APPEND_TRANSACTION_SIZE = 4000 - 256; // Hedera's 4KB max append transaction size minus buffer just in case.
+    private readonly maxAppendTransactionSize = 4000 - 256; // Hedera's 4KB max append transaction size minus buffer just in case.
 
     public constructor() { }
 
@@ -29,21 +29,17 @@ export class MockHederaStub implements IHederaStub {
         let index = 0;
         let newString = '';
         while (index <= contents.length) {
-            if ((newString + contents[index]).length < this.MAX_APPEND_TRANSACTION_SIZE) {
-                if (index === contents.length - 1) {
-                    newString += contents[contents.length - 1];
-                    file.append(newString);
-                    break;
-                }
+            if ((newString + contents[index]).length < this.maxAppendTransactionSize) {
                 newString += contents[index];
+                if (index === contents.length - 1) {
+                    file.append(newString);
+                }
                 index++;
             } else {
                 file.append(newString);
                 newString = '';
             }
         }
-
-        return;
     }
 
     public async getFileContents(fileId: string): Promise<string> {
