@@ -120,6 +120,7 @@ export class HederaStub implements IHederaStub {
     while (index <= contents.length) {
       if ((newString + contents[index]).length < this.maxAppendTransactionSize) {
         newString += contents[index];
+
         // Edge case: append last characters while still below max allowed transaction size
         if (index === contents.length - 1) {
           const fileAppendTransaction: FileAppendTransaction = new FileAppendTransaction({
