@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-unit_test:
+  lint-build-test:
     runs-on: ubuntu-latest
     env:
       HEDERA_ACCOUNT_ID: ${{ secrets.HEDERA_ACCOUNT_ID }}
