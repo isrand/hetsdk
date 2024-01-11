@@ -6,5 +6,5 @@ This folder contains tests that try to reach the limits of what can be done with
 > To run specific tests, run
 >
 > ```
-> npm run test:limits <name> <options>
+> npm run test:limits <name>
 > ```
