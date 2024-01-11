@@ -1,5 +1,6 @@
 import {MockHederaStub} from "./MockHederaStub";
 import {ITopicMemoObject} from "../../../src/hedera/interfaces/ITopicMemoObject";
+import {StringGenerator} from "../utils/StringGenerator";
 
 describe("The MockHederaStub", () => {
     describe("constructor", () => {
@@ -47,6 +48,22 @@ describe("The MockHederaStub", () => {
             }
 
             await expect(func).rejects.toThrowError(`File with Id ${fileId} does not exist.`)
+        });
+
+        test("should append contents to a file, even when the contents go above the MAX_APPEND_TRANSACTION_SIZE", async () => {
+            const fiveKiloBytes = 5000;
+            const contents = new StringGenerator(fiveKiloBytes).generate();
+            const mockHederaStub = new MockHederaStub();
+            const fileId = await mockHederaStub.createFile();
+
+            await mockHederaStub.appendToFile(fileId, contents);
+
+            const fileInStub = mockHederaStub.files.get(fileId);
+            if (!fileInStub) {
+                fail('File not found in stub map.');
+            }
+
+            expect(fileInStub.getContents()).toEqual(contents);
         });
 
         test("should append contents to a file found in its internal map", async () => {
