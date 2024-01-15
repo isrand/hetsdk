@@ -1,9 +1,11 @@
-name: pull-request
+# This is the "release" pipeline, triggered when merging development -> main
+
+name: main
 
 on:
-  pull_request:
-    branches: "**"
-  workflow_dispatch:
+  push:
+    branches:
+      - main
 
 jobs:
   lint-build-test:

@@ -1,30 +1,17 @@
-import * as path from 'path';
-import * as fs from 'fs';
 import {EncryptedTopic} from "../../src";
 import {EncryptionAlgorithms} from "../../src/crypto/enums/EncryptionAlgorithms";
 import {StorageOptions} from "../../src/hedera/enums/StorageOptions";
+import {EnvironmentConfigurationResolver} from "../utils/EnvironmentConfigurationResolver";
 
-if (String(process.env.NODE_ENV) !== 'CI') {
-    if (!fs.existsSync(path.resolve(__dirname, '..', '.env'))) {
-        throw new Error('.env file not found, please provide one (follow the .env.template file)');
-    }
-
-    require('dotenv').config(
-        { path: path.resolve(__dirname, '..', '.env') }
-    );
-}
-
-const hederaAccountId = String(process.env.HEDERA_ACCOUNT_ID);
-const hederaPrivateKey = String(process.env.HEDERA_PRIVATE_KEY);
-
+const configuration = new EnvironmentConfigurationResolver(String(process.env.NODE_ENV)).resolve();
 const MAX_NUMBER_OF_PARTICIPANTS = 20;
 
 const userOne = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
 const userOneKyberPublicKey = userOne.publicKey;
 const userOneKyberPrivateKey = userOne.privateKey;
 const encryptedTopicUserOne = new EncryptedTopic({
-    hederaAccountId: hederaAccountId,
-    hederaPrivateKey: hederaPrivateKey,
+    hederaAccountId: configuration.hederaAccountId,
+    hederaPrivateKey: configuration.hederaPrivateKey,
     privateKey: userOneKyberPrivateKey,
 });
 
@@ -67,8 +54,8 @@ describe("The Encrypted Topic", () => {
 
             for (const participantPrivateKey of participantPrivateKeys) {
                 const message = await new EncryptedTopic({
-                    hederaAccountId: hederaAccountId,
-                    hederaPrivateKey: hederaPrivateKey,
+                    hederaAccountId: configuration.hederaAccountId,
+                    hederaPrivateKey: configuration.hederaPrivateKey,
                     privateKey: participantPrivateKey,
                     topicId: topicId
                 }).getMessage(messageSequenceNumber);
