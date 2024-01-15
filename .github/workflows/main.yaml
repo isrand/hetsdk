@@ -1,0 +1,31 @@
+# This is the "release" pipeline, triggered when merging development -> main
+
+name: main
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  lint-build-test:
+    runs-on: ubuntu-latest
+    env:
+      HEDERA_ACCOUNT_ID: ${{ secrets.HEDERA_ACCOUNT_ID }}
+      HEDERA_PRIVATE_KEY: ${{ secrets.HEDERA_PRIVATE_KEY }}
+      NODE_ENV: CI
+    steps:
+      - uses: actions/checkout@v2
+      - uses: bahmutov/npm-install@v1
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+
+      - name: Unit test
+        run: npm run test:unit
+
+      - name: Integration test
+        run: npm run test:integration
