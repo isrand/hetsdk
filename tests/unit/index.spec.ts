@@ -1,41 +1,29 @@
 import {EncryptedTopic} from "../../src/index";
-import fs from "fs";
-import path from "path";
 import {MockHederaStub} from "./mock/MockHederaStub";
 import {EncryptionAlgorithms} from "../../src/crypto/enums/EncryptionAlgorithms";
 import {StorageOptions} from "../../src/hedera/enums/StorageOptions";
 import {ITopicMemoObject} from "../../src/hedera/interfaces/ITopicMemoObject";
+import {EnvironmentConfigurationResolver} from "../utils/EnvironmentConfigurationResolver";
 
-if (String(process.env.NODE_ENV) !== 'CI') {
-    if (!fs.existsSync(path.resolve(__dirname, '..', '.env'))) {
-        throw new Error('.env file not found, please provide one (follow the .env.template file)');
-    }
-
-    require('dotenv').config(
-        { path: path.resolve(__dirname, '..', '.env') }
-    );
-}
-
-const hederaAccountId = String(process.env.HEDERA_ACCOUNT_ID);
-const hederaPrivateKey = String(process.env.HEDERA_PRIVATE_KEY);
+const configuration = new EnvironmentConfigurationResolver(String(process.env.NODE_ENV)).resolve();
 
 describe("The EncryptedTopic class", () => {
 
     describe("constructor", () => {
         test("should return a valid object when no external HederaStub is provided, hence creating its own", () => {
             expect(new EncryptedTopic({
-                hederaAccountId: hederaAccountId,
+                hederaAccountId: configuration.hederaAccountId,
                 privateKey: '',
-                hederaPrivateKey: hederaPrivateKey
+                hederaPrivateKey: configuration.hederaPrivateKey
             })).toBeDefined();
         });
 
         test("should return a valid object when an external HederaStub is provided", () => {
             const mockHederaStub = new MockHederaStub();
             expect(new EncryptedTopic({
-                hederaAccountId: hederaAccountId,
+                hederaAccountId: configuration.hederaAccountId,
                 privateKey: '',
-                hederaPrivateKey: hederaPrivateKey
+                hederaPrivateKey: configuration.hederaPrivateKey
             }, mockHederaStub)).toBeDefined();
         });
     });
@@ -81,9 +69,9 @@ describe("The EncryptedTopic class", () => {
                 const mockHederaStub = new MockHederaStub();
                 const userOne = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
                 const encryptedTopic = new EncryptedTopic({
-                    hederaAccountId: hederaAccountId,
+                    hederaAccountId: configuration.hederaAccountId,
                     privateKey: '',
-                    hederaPrivateKey: hederaPrivateKey
+                    hederaPrivateKey: configuration.hederaPrivateKey
                 }, mockHederaStub);
 
                 const topicId = await encryptedTopic.create({
@@ -102,9 +90,9 @@ describe("The EncryptedTopic class", () => {
                 const mockHederaStub = new MockHederaStub();
                 const userOne = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber768);
                 const encryptedTopic = new EncryptedTopic({
-                    hederaAccountId: hederaAccountId,
+                    hederaAccountId: configuration.hederaAccountId,
                     privateKey: '',
-                    hederaPrivateKey: hederaPrivateKey
+                    hederaPrivateKey: configuration.hederaPrivateKey
                 }, mockHederaStub);
 
                 const topicId = await encryptedTopic.create({
@@ -123,9 +111,9 @@ describe("The EncryptedTopic class", () => {
                 const mockHederaStub = new MockHederaStub();
                 const userOne = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber1024);
                 const encryptedTopic = new EncryptedTopic({
-                    hederaAccountId: hederaAccountId,
+                    hederaAccountId: configuration.hederaAccountId,
                     privateKey: '',
-                    hederaPrivateKey: hederaPrivateKey
+                    hederaPrivateKey: configuration.hederaPrivateKey
                 }, mockHederaStub);
 
                 const topicId = await encryptedTopic.create({
@@ -144,9 +132,9 @@ describe("The EncryptedTopic class", () => {
                 const mockHederaStub = new MockHederaStub();
                 const userOne = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.RSA2048);
                 const encryptedTopic = new EncryptedTopic({
-                    hederaAccountId: hederaAccountId,
+                    hederaAccountId: configuration.hederaAccountId,
                     privateKey: '',
-                    hederaPrivateKey: hederaPrivateKey
+                    hederaPrivateKey: configuration.hederaPrivateKey
                 }, mockHederaStub);
 
                 const topicId = await encryptedTopic.create({
@@ -168,9 +156,9 @@ describe("The EncryptedTopic class", () => {
                 const mockHederaStub = new MockHederaStub();
                 const userOne = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
                 const encryptedTopic = new EncryptedTopic({
-                    hederaAccountId: hederaAccountId,
+                    hederaAccountId: configuration.hederaAccountId,
                     privateKey: '',
-                    hederaPrivateKey: hederaPrivateKey
+                    hederaPrivateKey: configuration.hederaPrivateKey
                 }, mockHederaStub);
 
                 const topicId = await encryptedTopic.create({
@@ -192,9 +180,9 @@ describe("The EncryptedTopic class", () => {
                 const mockHederaStub = new MockHederaStub();
                 const userOne = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
                 const encryptedTopic = new EncryptedTopic({
-                    hederaAccountId: hederaAccountId,
+                    hederaAccountId: configuration.hederaAccountId,
                     privateKey: '',
-                    hederaPrivateKey: hederaPrivateKey
+                    hederaPrivateKey: configuration.hederaPrivateKey
                 }, mockHederaStub);
 
                 const topicId = await encryptedTopic.create({
@@ -216,9 +204,9 @@ describe("The EncryptedTopic class", () => {
                 const mockHederaStub = new MockHederaStub();
                 const userOne = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
                 const encryptedTopic = new EncryptedTopic({
-                    hederaAccountId: hederaAccountId,
+                    hederaAccountId: configuration.hederaAccountId,
                     privateKey: userOne.privateKey,
-                    hederaPrivateKey: hederaPrivateKey
+                    hederaPrivateKey: configuration.hederaPrivateKey
                 }, mockHederaStub);
 
                 const topicId = await encryptedTopic.create({
@@ -240,9 +228,9 @@ describe("The EncryptedTopic class", () => {
                 const mockHederaStub = new MockHederaStub();
                 const userOne = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
                 const encryptedTopic = new EncryptedTopic({
-                    hederaAccountId: hederaAccountId,
+                    hederaAccountId: configuration.hederaAccountId,
                     privateKey: userOne.privateKey,
-                    hederaPrivateKey: hederaPrivateKey
+                    hederaPrivateKey: configuration.hederaPrivateKey
                 }, mockHederaStub);
 
                 const topicId = await encryptedTopic.create({
@@ -267,9 +255,9 @@ describe("The EncryptedTopic class", () => {
             const mockHederaStub = new MockHederaStub();
             const userOne = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
             const encryptedTopic = new EncryptedTopic({
-                hederaAccountId: hederaAccountId,
+                hederaAccountId: configuration.hederaAccountId,
                 privateKey: userOne.privateKey,
-                hederaPrivateKey: hederaPrivateKey
+                hederaPrivateKey: configuration.hederaPrivateKey
             }, mockHederaStub);
 
             await encryptedTopic.create({
@@ -297,9 +285,9 @@ describe("The EncryptedTopic class", () => {
                 const mockHederaStub = new MockHederaStub();
                 const userOne = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
                 const encryptedTopic = new EncryptedTopic({
-                    hederaAccountId: hederaAccountId,
+                    hederaAccountId: configuration.hederaAccountId,
                     privateKey: userOne.privateKey,
-                    hederaPrivateKey: hederaPrivateKey
+                    hederaPrivateKey: configuration.hederaPrivateKey
                 }, mockHederaStub);
 
                 const topicId = await encryptedTopic.create({
@@ -328,9 +316,9 @@ describe("The EncryptedTopic class", () => {
                        const mockHederaStub = new MockHederaStub();
                        const userOne = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
                        const encryptedTopic = new EncryptedTopic({
-                           hederaAccountId: hederaAccountId,
+                           hederaAccountId: configuration.hederaAccountId,
                            privateKey: userOne.privateKey,
-                           hederaPrivateKey: hederaPrivateKey
+                           hederaPrivateKey: configuration.hederaPrivateKey
                        }, mockHederaStub);
 
                        const topicId = await encryptedTopic.create({
@@ -361,9 +349,9 @@ describe("The EncryptedTopic class", () => {
 
                        const userOne = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
                        const encryptedTopic = new EncryptedTopic({
-                           hederaAccountId: hederaAccountId,
+                           hederaAccountId: configuration.hederaAccountId,
                            privateKey: userOne.privateKey,
-                           hederaPrivateKey: hederaPrivateKey
+                           hederaPrivateKey: configuration.hederaPrivateKey
                        }, mockHederaStub);
 
                        await encryptedTopic.create({
@@ -390,9 +378,9 @@ describe("The EncryptedTopic class", () => {
                    const mockHederaStub = new MockHederaStub();
                    const userOne = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
                    const encryptedTopic = new EncryptedTopic({
-                       hederaAccountId: hederaAccountId,
+                       hederaAccountId: configuration.hederaAccountId,
                        privateKey: userOne.privateKey,
-                       hederaPrivateKey: hederaPrivateKey
+                       hederaPrivateKey: configuration.hederaPrivateKey
                    }, mockHederaStub);
 
                    const topicId = await encryptedTopic.create({
@@ -425,9 +413,9 @@ describe("The EncryptedTopic class", () => {
                 const mockHederaStub = new MockHederaStub();
                 const userOne = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
                 const encryptedTopic = new EncryptedTopic({
-                    hederaAccountId: hederaAccountId,
+                    hederaAccountId: configuration.hederaAccountId,
                     privateKey: userOne.privateKey,
-                    hederaPrivateKey: hederaPrivateKey
+                    hederaPrivateKey: configuration.hederaPrivateKey
                 }, mockHederaStub);
 
                 const topicId = await encryptedTopic.create({
@@ -453,9 +441,9 @@ describe("The EncryptedTopic class", () => {
                 const mockHederaStub = new MockHederaStub();
                 const userOne = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
                 const encryptedTopic = new EncryptedTopic({
-                    hederaAccountId: hederaAccountId,
+                    hederaAccountId: configuration.hederaAccountId,
                     privateKey: userOne.privateKey,
-                    hederaPrivateKey: hederaPrivateKey
+                    hederaPrivateKey: configuration.hederaPrivateKey
                 }, mockHederaStub);
 
                 const topicId = await encryptedTopic.create({
@@ -481,9 +469,9 @@ describe("The EncryptedTopic class", () => {
                 const mockHederaStub = new MockHederaStub();
                 const userOne = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
                 const encryptedTopic = new EncryptedTopic({
-                    hederaAccountId: hederaAccountId,
+                    hederaAccountId: configuration.hederaAccountId,
                     privateKey: userOne.privateKey,
-                    hederaPrivateKey: hederaPrivateKey
+                    hederaPrivateKey: configuration.hederaPrivateKey
                 }, mockHederaStub);
 
                 const topicId = await encryptedTopic.create({
@@ -510,9 +498,9 @@ describe("The EncryptedTopic class", () => {
                 const mockHederaStub = new MockHederaStub();
                 const userOne = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
                 const encryptedTopic = new EncryptedTopic({
-                    hederaAccountId: hederaAccountId,
+                    hederaAccountId: configuration.hederaAccountId,
                     privateKey: userOne.privateKey,
-                    hederaPrivateKey: hederaPrivateKey
+                    hederaPrivateKey: configuration.hederaPrivateKey
                 }, mockHederaStub);
 
                 const topicId = await encryptedTopic.create({
@@ -539,9 +527,9 @@ describe("The EncryptedTopic class", () => {
                 const mockHederaStub = new MockHederaStub();
                 const userOne = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
                 const encryptedTopic = new EncryptedTopic({
-                    hederaAccountId: hederaAccountId,
+                    hederaAccountId: configuration.hederaAccountId,
                     privateKey: userOne.privateKey,
-                    hederaPrivateKey: hederaPrivateKey
+                    hederaPrivateKey: configuration.hederaPrivateKey
                 }, mockHederaStub);
 
                 const topicId = await encryptedTopic.create({
@@ -595,9 +583,9 @@ describe("The EncryptedTopic class", () => {
                 const mockHederaStub = new MockHederaStub();
                 const userOne = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
                 const encryptedTopic = new EncryptedTopic({
-                    hederaAccountId: hederaAccountId,
+                    hederaAccountId: configuration.hederaAccountId,
                     privateKey: userOne.privateKey,
-                    hederaPrivateKey: hederaPrivateKey
+                    hederaPrivateKey: configuration.hederaPrivateKey
                 }, mockHederaStub);
 
                 const topicId = await encryptedTopic.create({
@@ -624,9 +612,9 @@ describe("The EncryptedTopic class", () => {
                 const mockHederaStub = new MockHederaStub();
                 const userOne = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
                 const encryptedTopic = new EncryptedTopic({
-                    hederaAccountId: hederaAccountId,
+                    hederaAccountId: configuration.hederaAccountId,
                     privateKey: userOne.privateKey,
-                    hederaPrivateKey: hederaPrivateKey
+                    hederaPrivateKey: configuration.hederaPrivateKey
                 }, mockHederaStub);
 
                 await encryptedTopic.create({
@@ -656,9 +644,9 @@ describe("The EncryptedTopic class", () => {
                 const mockHederaStub = new MockHederaStub();
                 const userOne = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
                 const encryptedTopic = new EncryptedTopic({
-                    hederaAccountId: hederaAccountId,
+                    hederaAccountId: configuration.hederaAccountId,
                     privateKey: userOne.privateKey,
-                    hederaPrivateKey: hederaPrivateKey
+                    hederaPrivateKey: configuration.hederaPrivateKey
                 }, mockHederaStub);
                 const message = 'test';
                 await encryptedTopic.create({
@@ -681,9 +669,9 @@ describe("The EncryptedTopic class", () => {
                 const mockHederaStub = new MockHederaStub();
                 const userOne = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
                 const encryptedTopic = new EncryptedTopic({
-                    hederaAccountId: hederaAccountId,
+                    hederaAccountId: configuration.hederaAccountId,
                     privateKey: userOne.privateKey,
-                    hederaPrivateKey: hederaPrivateKey
+                    hederaPrivateKey: configuration.hederaPrivateKey
                 }, mockHederaStub);
                 await encryptedTopic.create({
                     algorithm: EncryptionAlgorithms.Kyber512,
@@ -709,9 +697,9 @@ describe("The EncryptedTopic class", () => {
                 const mockHederaStub = new MockHederaStub();
                 const userOne = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
                 const encryptedTopic = new EncryptedTopic({
-                    hederaAccountId: hederaAccountId,
+                    hederaAccountId: configuration.hederaAccountId,
                     privateKey: userOne.privateKey,
-                    hederaPrivateKey: hederaPrivateKey
+                    hederaPrivateKey: configuration.hederaPrivateKey
                 }, mockHederaStub);
                 const message = 'test';
                 await encryptedTopic.create({
