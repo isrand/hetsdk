@@ -4,7 +4,7 @@ import path from "path";
 import {MockHederaStub} from "./mock/MockHederaStub";
 import {EncryptionAlgorithms} from "../../src/crypto/enums/EncryptionAlgorithms";
 import {StorageOptions} from "../../src/hedera/enums/StorageOptions";
-import mock = jest.mock;
+import {ITopicMemoObject} from "../../src/hedera/interfaces/ITopicMemoObject";
 
 if (String(process.env.NODE_ENV) !== 'CI') {
     if (!fs.existsSync(path.resolve(__dirname, '..', '.env'))) {
@@ -41,32 +41,35 @@ describe("The EncryptedTopic class", () => {
     });
 
     describe("generateKeyPair function", () => {
-        test("should return a valid set of keys given an encryption algorithm", () => {
+        test("should return a valid set of Kyber512 keys", () => {
             const keyPair512 = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
             expect(keyPair512).toBeDefined();
             expect(keyPair512.publicKey).toBeDefined();
-            // base64-encoded Kyber keys are 1068, 1580 or 2092 characters in length
+            // base64-encoded Kyber512 public keys are 1068 characters in length
             expect(keyPair512.publicKey.length).toEqual((512*2) + 44);
             expect(keyPair512.privateKey).toBeDefined();
-
+        });
+        test("should return a valid set of Kyber768 keys", () => {
             const keyPair768 = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber768);
             expect(keyPair768).toBeDefined();
             expect(keyPair768.publicKey).toBeDefined();
-            // base64-encoded Kyber keys are 1068, 1580 or 2092 characters in length
+            // base64-encoded Kyber768 public keys are 1580 characters in length
             expect(keyPair768.publicKey.length).toEqual((768*2) + 44);
             expect(keyPair768.privateKey).toBeDefined();
-
+        });
+        test("should return a valid set of Kyber1024 keys", () => {
             const keyPair1024 = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber1024);
             expect(keyPair1024).toBeDefined();
             expect(keyPair1024.publicKey).toBeDefined();
-            // base64-encoded Kyber keys are 1068, 1580 or 2092 characters in length
+            // base64-encoded Kyber1024 public keys are 2092 characters in length
             expect(keyPair1024.publicKey.length).toEqual((1024*2) + 44);
             expect(keyPair1024.privateKey).toBeDefined();
-
+        });
+        test("should return a valid set of RSA2048 keys", () => {
             const keyPair2048 = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.RSA2048);
             expect(keyPair2048).toBeDefined();
             expect(keyPair2048.publicKey).toBeDefined();
-            // base64-encoded Kyber keys are 1068, 1580 or 2092 characters in length
+            // base64-encoded RSA2048 public keys are 604 characters in length
             expect(keyPair2048.publicKey.length).toEqual(604);
             expect(keyPair2048.privateKey).toBeDefined();
         });
@@ -74,7 +77,7 @@ describe("The EncryptedTopic class", () => {
 
     describe("create function", () => {
         describe("when specifying the configuration storage medium as 'Message'", () => {
-            test("[Kyber512] should create a new topic and return its Id", async () => {
+            test("should create a new topic using Kyber512 and return its Id", async () => {
                 const mockHederaStub = new MockHederaStub();
                 const userOne = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
                 const encryptedTopic = new EncryptedTopic({
@@ -95,7 +98,7 @@ describe("The EncryptedTopic class", () => {
 
                 await expect(topicId).toBeDefined();
             });
-            test("[Kyber768] should create a new topic and return its Id", async () => {
+            test("should create a new topic using Kyber768 and return its Id", async () => {
                 const mockHederaStub = new MockHederaStub();
                 const userOne = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber768);
                 const encryptedTopic = new EncryptedTopic({
@@ -116,7 +119,7 @@ describe("The EncryptedTopic class", () => {
 
                 await expect(topicId).toBeDefined();
             });
-            test("[Kyber1024] should create a new topic and return its Id", async () => {
+            test("should create a new topic using Kyber1024 and return its Id", async () => {
                 const mockHederaStub = new MockHederaStub();
                 const userOne = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber1024);
                 const encryptedTopic = new EncryptedTopic({
@@ -137,7 +140,7 @@ describe("The EncryptedTopic class", () => {
 
                 await expect(topicId).toBeDefined();
             });
-            test("[RSA2048] should create a new topic and return its Id", async () => {
+            test("should create a new topic using RSA2048 and return its Id", async () => {
                 const mockHederaStub = new MockHederaStub();
                 const userOne = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.RSA2048);
                 const encryptedTopic = new EncryptedTopic({
@@ -417,7 +420,7 @@ describe("The EncryptedTopic class", () => {
     });
 
     describe("getParticipants function", () => {
-        describe("when the encrypted topic admin chose to not store participants on topic creations", () => {
+        describe("when the encrypted topic admin chose to not store participants on topic creation", () => {
             test("should fail when trying to get the topic participants", async () => {
                 const mockHederaStub = new MockHederaStub();
                 const userOne = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
@@ -445,7 +448,7 @@ describe("The EncryptedTopic class", () => {
             });
         });
 
-        describe("when the encrypted topic admin chose to store participants on topic creations", () => {
+        describe("when the encrypted topic admin chose to store participants on topic creation", () => {
             test("should return the topic participants", async () => {
                 const mockHederaStub = new MockHederaStub();
                 const userOne = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
@@ -468,6 +471,120 @@ describe("The EncryptedTopic class", () => {
                 const participants = await encryptedTopic.getParticipants();
 
                 await expect(participants).toEqual([userOne.publicKey]);
+            });
+        });
+    });
+
+    describe("rotateEncryptionKey function", () => {
+        describe("when the configuration storage medium is set to 'Message'", () => {
+            test("should fail when trying to rotate the topic encryption key", async () => {
+                const mockHederaStub = new MockHederaStub();
+                const userOne = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
+                const encryptedTopic = new EncryptedTopic({
+                    hederaAccountId: hederaAccountId,
+                    privateKey: userOne.privateKey,
+                    hederaPrivateKey: hederaPrivateKey
+                }, mockHederaStub);
+
+                const topicId = await encryptedTopic.create({
+                    algorithm: EncryptionAlgorithms.Kyber512,
+                    participants: [userOne.publicKey],
+                    storageOptions: {
+                        configuration: StorageOptions.Message,
+                        messages: StorageOptions.Message,
+                        storeParticipants: false
+                    }
+                });
+
+                await expect(topicId).toBeDefined();
+
+                const func = async () => {
+                    await encryptedTopic.rotateEncryptionKey();
+                }
+
+                await expect(func).rejects.toThrowError('Topic encryption key rotation is only available in encrypted topics that use the File Service as storage medium for their configuration. Requested topic uses the Consensus Service.');
+            });
+        });
+        describe("when the encrypted topic admin chose to not store participants on topic creation", () => {
+            test("should fail when trying to rotate the topic encryption key", async () => {
+                const mockHederaStub = new MockHederaStub();
+                const userOne = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
+                const encryptedTopic = new EncryptedTopic({
+                    hederaAccountId: hederaAccountId,
+                    privateKey: userOne.privateKey,
+                    hederaPrivateKey: hederaPrivateKey
+                }, mockHederaStub);
+
+                const topicId = await encryptedTopic.create({
+                    algorithm: EncryptionAlgorithms.Kyber512,
+                    participants: [userOne.publicKey],
+                    storageOptions: {
+                        configuration: StorageOptions.File,
+                        messages: StorageOptions.Message,
+                        storeParticipants: false
+                    }
+                });
+
+                await expect(topicId).toBeDefined();
+
+                const func = async () => {
+                    await encryptedTopic.rotateEncryptionKey();
+                }
+
+                await expect(func).rejects.toThrowError('Topic did not choose to store participants upon creation, topic encryption key rotation is not possible.');
+            });
+        });
+        describe("when the configuration storage medium is set to 'File'", () => {
+            test("should rotate the topic encryption key", async () => {
+                const mockHederaStub = new MockHederaStub();
+                const userOne = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
+                const encryptedTopic = new EncryptedTopic({
+                    hederaAccountId: hederaAccountId,
+                    privateKey: userOne.privateKey,
+                    hederaPrivateKey: hederaPrivateKey
+                }, mockHederaStub);
+
+                const topicId = await encryptedTopic.create({
+                    algorithm: EncryptionAlgorithms.Kyber512,
+                    participants: [userOne.publicKey],
+                    storageOptions: {
+                        configuration: StorageOptions.File,
+                        messages: StorageOptions.Message,
+                        storeParticipants: true
+                    }
+                });
+
+                await expect(topicId).toBeDefined();
+
+                const topicInStub = mockHederaStub.topics.get(topicId);
+                if (!topicInStub) {
+                    fail('Topic not found in stub map.');
+                }
+
+                const topicConfigurationFileId: string = (JSON.parse(topicInStub.getMemo()) as ITopicMemoObject).s.c.i;
+
+                let fileInStub = mockHederaStub.files.get(topicConfigurationFileId);
+                if (!fileInStub) {
+                    fail('Topic configuration file not found in stub map.');
+                }
+
+                const fileContentsLengthBeforeRotation = fileInStub.getContents().length;
+
+                await encryptedTopic.rotateEncryptionKey();
+
+                fileInStub = mockHederaStub.files.get(topicConfigurationFileId);
+                if (!fileInStub) {
+                    fail('Topic configuration file not found in stub map.');
+                }
+
+                const fileContentsLengthAfterRotation = fileInStub.getContents().length;
+
+                const commaFound = fileInStub.getContents().indexOf(',') > -1;
+                expect(commaFound).toEqual(true);
+
+                // Rotating the encryption key essentially "duplicates" the old file contents with the new keys, and adds a comma
+                // as separating character. Hence, we expect twice the original length plus one character.
+                expect(fileContentsLengthAfterRotation).toEqual((fileContentsLengthBeforeRotation * 2) + 1);
             });
         });
     });
