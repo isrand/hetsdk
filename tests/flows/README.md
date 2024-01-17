@@ -8,7 +8,7 @@ Since the SDK offers great granularity in its configuration (i.e. different encr
 algorithm: EncryptionAlgorithms.Kyber512,
 storageOptions: {
     storeParticipants: false,
-    configuration: StorageOptions.Message,
+    configuration: StorageOptions.File,
     messages: StorageOptions.Message
 }
 ```
