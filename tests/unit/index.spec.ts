@@ -1,5 +1,5 @@
-import {EncryptedTopic} from "../../src/index";
-import {MockHederaStub} from "./mock/MockHederaStub";
+import {EncryptedTopic} from "../../src";
+import {MockHederaStub} from "../../src/hedera/mock/MockHederaStub";
 import {EncryptionAlgorithms} from "../../src/crypto/enums/EncryptionAlgorithms";
 import {StorageOptions} from "../../src/hedera/enums/StorageOptions";
 import {ITopicMemoObject} from "../../src/hedera/interfaces/ITopicMemoObject";

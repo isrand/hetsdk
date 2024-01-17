@@ -1,4 +1,4 @@
-import {MockHederaStub} from "./MockHederaStub";
+import {MockHederaStub} from "../../../src/hedera/mock/MockHederaStub";
 import {ITopicMemoObject} from "../../../src/hedera/interfaces/ITopicMemoObject";
 import {StringGenerator} from "../utils/StringGenerator";
 

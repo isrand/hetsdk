@@ -3,13 +3,16 @@
 
 This repository contains an NPM package that can be used to create and interact with Encrypted Topics in the Hedera network.
 
-Encrypted Topics are standard Hedera topics that are configured and behave in specific ways to implement private messaging exchanges, most notably with a post-quantum cryptography encryption algorithm: CRYSTALS-Kyber.
+Encrypted Topics are standard Hedera topics that are configured and behave in specific ways to implement private messaging exchanges, most notably with a quantum-resistant encryption algorithm: [CRYSTALS-Kyber](https://pq-crystals.org/kyber/).
 
 ## Table of contents
 
 - [Introduction](#introduction)
+- [Encryption](#encryption)
 - [Installation](#installation)
 - [Example](#example)
+- [Cost calculator](#example)
+- [Testing](#testing)
 - [API](#api-reference)
   - [generateKeyPair](#generatekeypair-algorithm)
   - [create](#create-createencryptedtopicconfiguration)
@@ -19,8 +22,7 @@ Encrypted Topics are standard Hedera topics that are configured and behave in sp
   - [getParticipants](#getparticipants-)
   - [rotateEncryptionKey](#rotateencryptionkey-)
   - [migrateConfigurationStorageMedium](#migrateconfigurationstoragemedium-)
-- [Encryption process](#encryption-process)
-- [In the works](#in-the-works)
+
 
 ## Introduction
 
@@ -30,13 +32,23 @@ It has been developed as the backbone for enterprise applications that want to l
 
 The SDK provides a great deal of flexibility in terms of the amount of data that's stored. Take a look at each method's input parameters to fine-tune the use of the SDK to your particular case.
 
-A feature is in development to provide recommendations on storage options given sample use cases.
-
 > [!WARNING]
 > The Hedera Network will keep every transaction you create in its ledgers, forever. Be mindful of the information you choose to share and the encryption algorithm that you will use.
 > _Harvest now, decrypt later_ techniques must be thought of as happening constantly given the open nature of the Network.
 >
 > The current implementation of CRYSTALS-Kyber is subject to future change as new attacks are discovered and mitigations are implemented.
+
+## Encryption
+
+The SDK uses a topic-wide symmetric key for encryption: `tek`. The topic configuration object, containing the submit key for the topic and any extra metadata, is encrypted with `tek` using `AES-256-GCM`.
+
+`tek` is encrypted with each participant's public key.
+
+Messages are encrypted using `AES-256-GCM` with a one-time use symmetric key: `mek`, that in turn is encrypted with `tek` and placed next to the encrypted payload.
+
+Users with access to `tek` can then decrypt `mek` and see the contents of the message.
+
+Furthermore, messages can be decrypted and shared by distributing their `mek`, without compromising the privacy of the rest of the messages of the topic. This can be useful for auditing purposes.
 
 ## Installation
 
@@ -153,6 +165,95 @@ main();
 ```
 
 > The above pieces of code may fail due to issues when connecting to the Hedera Network, or due to consensus delays. Ensure that enough time has passed between topic creation, message submission and subsequent fetching of the message.
+
+## Cost calculator
+
+The SDK provides a mock stub to calculate the approximate cost of performing operations on the Network. These values have been gathered after running the flows several times, targeting the Hedera Testnet, averaging the costs.
+They are a very rough estimate and fluctuate constantly.
+
+The snippet below contains the cost (in USD) of the main operations:
+
+```
+ConsensusCreateTopic = 0.0110
+ConsensusUpdateTopic = 0.000100
+ConsensusGetTopicInfo = 0.000100
+ConsensusSubmitMessagePerCharacter = 0.00000032
+ConsensusGetMessage = 0.000100
+
+FileCreate = 0.0390
+FileAppendPerCharacter = 0.000025
+FileGetContents = 0.00010
+```
+
+> [!NOTE]
+> As of now I am not aware of any Hedera API that returns these values in realtime, which would be really helpful.
+Should this change in the future I'll develop a smarter approach.
+
+You can initialise the `EncryptedTopic` object with the mock stub, which effectively sets it to run in "dry-run" mode, set up your flow and calculate the total cost at the end. Here is an example piece of code to do so:
+
+```javascript
+const EncryptedTopic = require('hetsdk').EncryptedTopic;
+const EncryptionAlgorithms = require('hetsdk/lib/crypto/enums/EncryptionAlgorithms').EncryptionAlgorithms;
+const StorageOptions = require('hetsdk/lib/hedera/enums/StorageOptions').StorageOptions;
+const HederaStubCostCalculator = require('hetsdk/lib/hedera/calculator/HederaStubCostCalculator').HederaStubCostCalculator;
+
+// Hedera account data
+// Private keys must be DER-encoded
+const hederaAccountId = '0.0.abc';
+const hederaPrivateKey = '...';
+
+// Encryption data, shown below is Kyber
+// Keys must be base64-encoded
+const kyberPublicKey = '...';
+const kyberPrivateKey = '...';
+
+// Someone else's data
+const otherKyberPublicKey = '...';
+
+// Initialise the cost calculator
+const hederaStubCostCalculator = new HederaStubCostCalculator();
+
+async function main() {
+  // Initialize the encryptedTopic object
+  const encryptedTopic = new EncryptedTopic({
+    hederaAccountId: hederaAccountId,
+    hederaPrivateKey: hederaPrivateKey,
+    privateKey: kyberPrivateKey
+  }, hederaStubCostCalculator);     // Initialise the EncryptedObject with the cost calculator
+
+  // Create a new encrypted topic with Kyber-512 as the encryption algorithm
+  const topicId = await encryptedTopic.create({
+    participants: [kyberPublicKey, otherKyberPublicKey],
+    algorithm: EncryptionAlgorithms.Kyber512,
+    storageOptions: {
+      storeParticipants: false,
+      configuration: StorageOptions.Message,
+      messages: StorageOptions.Message
+    },
+    metadata: {
+      name: "Supply Chain Logistics"
+    }
+  });
+  
+  console.log('Topic created. Topic ID: ', topicId);
+
+  // Submit a message to the encrypted topic
+  const messageSequenceNumber = await encryptedTopic.submitMessage('Hey there!');
+
+  // Get a message from the encrypted topic
+  const message = await encryptedTopic.getMessage(messageSequenceNumber);
+  
+  // Calculate the total cost of the flow
+  const totalCost = hederaStubCostCalculator.getTotalCost();
+  
+  console.log(totalCost); // Cost in USD of the operations performed above
+```
+
+Furthermore, you can run `npm run test:cost` from the root folder of this repository to get the latest delta between the estimated cost and the real one, given the current exchange rate of the Hedera Network. Please consult the testing chapter to learn more about the test suites.
+
+## Testing
+
+Work in progress...
 
 ## API Reference
 
@@ -347,21 +448,3 @@ await encryptedTopic.migrateConfigurationStorageMedium();
 ```
 
 ---
-
-## Encryption process
-
-The SDK uses a topic-wide symmetric key for encryption: `tek`. The topic configuration object, containing the submit key for the topic, is encrypted with `tek`.
-
-`tek` is encrypted with each participant's public key, be it Kyber or RSA-2048.
-
-Messages are encrypted with a one-time use symmetric key: `mek`, that in turn is encrypted with `tek` and placed next to the encrypted payload.
-
-Users with access to `tek` can then decrypt `mek` and see the contents of the message.
-
-Furthermore, messages can be decrypted and shared by distributing their `mek`, without compromising the privacy of the rest of the messages of the topic. This can be useful for auditing purposes.
-
-## In the works
-
-- Calculate maximum possible JSON payload size with File Service as storage medium for messages.
-- Calculate maximum number of participants possible with File Service as storage medium for topic configuration message given an empty topic metadata object.
-- Provide a method to calculate storage costs and provide the user with recommendations on which storage medium to use.

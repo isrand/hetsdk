@@ -1,4 +1,4 @@
-import {MockFile} from "./MockFile";
+import {MockFile} from "../../../src/hedera/mock/MockFile";
 
 describe("The MockFile", () => {
     describe("constructor", () => {
