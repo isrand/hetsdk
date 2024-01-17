@@ -9,7 +9,7 @@ import {
   TopicInfoQuery,
   TopicMessage,
   TopicMessageQuery,
-  TopicMessageSubmitTransaction
+  TopicMessageSubmitTransaction, TopicUpdateTransaction
 } from '@hashgraph/sdk';
 import {ITopicMemoObject} from './interfaces/ITopicMemoObject';
 import {Long} from '@hashgraph/sdk/lib/long';
@@ -40,10 +40,23 @@ export class HederaStub implements IHederaStub {
     topicCreateTransaction.freezeWith(this.client);
     await topicCreateTransaction.sign(PrivateKey.fromString(this.hederaPrivateKey));
 
-    const encryptedTopicCreationResponse = await topicCreateTransaction.execute(this.client);
-    const encryptedTopicCreationReceipt = await encryptedTopicCreationResponse.getReceipt(this.client);
+    const topicCreationResponse = await topicCreateTransaction.execute(this.client);
+    const topicCreationReceipt = await topicCreationResponse.getReceipt(this.client);
 
-    return encryptedTopicCreationReceipt.topicId?.toString() || '';
+    return topicCreationReceipt.topicId?.toString() || '';
+  }
+
+  public async updateTopicMemo(topicMemoObject: ITopicMemoObject, topicId?: string): Promise<void> {
+    const topicUpdateTransaction: TopicUpdateTransaction = new TopicUpdateTransaction({
+      topicId: topicId,
+      topicMemo: JSON.stringify(topicMemoObject),
+      adminKey: PrivateKey.fromString(this.hederaPrivateKey)
+    });
+
+    topicUpdateTransaction.freezeWith(this.client);
+    await topicUpdateTransaction.sign(PrivateKey.fromString(this.hederaPrivateKey));
+
+    await topicUpdateTransaction.execute(this.client);
   }
 
   public async submitMessageToTopic(submitKey: string, topicId?: string, contents?: string): Promise<number> {

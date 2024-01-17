@@ -18,8 +18,7 @@ Encrypted Topics are standard Hedera topics that are configured and behave in sp
   - [getMessage](#getmessage-messagesequencenumber)
   - [getParticipants](#getparticipants-)
   - [rotateEncryptionKey](#rotateencryptionkey-)
-- [Storage](#storage)
-  - [Consensus Service](#consensus-service)
+  - [migrateConfigurationStorageMedium](#migrateconfigurationstoragemedium-)
 - [Encryption process](#encryption-process)
 - [In the works](#in-the-works)
 
@@ -335,49 +334,19 @@ await encryptedTopic.rotateEncryptionKey();
 
 ---
 
-## Storage
+### `migrateConfigurationStorageMedium ()`
 
-The SDK can be configured to store the two main artifacts (topic configuration message and encrypted messages) either in the Consensus Service as standard messages, or in the File Service as files (which are then referenced in a Consensus Service message).
-These artifact storage mediums are decoupled, meaning that you can choose to store the topic configuration message in the File Service and the messages in the Consensus Service, and viceversa.
-There are benefits and drawbacks to each medium.
+**Description**
 
-- Consensus Service: the cheaper approach, but it's limited to messages of at most 20 chunks in size, each chunk being at most 1024KB in length. Good for use cases with few participants (see table below) and / or small message sizes, like simple JSON payloads.
-- File Service: a bit more costly, but it allows for more topic participants and / or bigger messages, plus addition of new topic participants down the line.
+Migrate the topic's configuration to the File Service. This method is useful when requirements change and the topic needs to grow beyond its original design. For example, adding more participants to a topic that was created using the Consensus Service as the storage medium for the configuration.
 
-When creating a topic you can choose whether to store the participants array to keep track of them or not.
-
-To set the storage medium, simply set the `storageOptions` object when calling the `create` method:
+**Usage**
 
 ```typescript
-storageOptions: {
-    storeParticipants: true | false
-    configuration: StorageOptions.Message | StorageOptions.File // Consensus Service or File Service
-    messages: StorageOptions.Message | StorageOptions.File // Consensus Service or File Service
-}
+await encryptedTopic.migrateConfigurationStorageMedium();
 ```
 
-The storage options are themselves stored as the topic memo, so the SDK can know at a glance which storage medium to use when fetching the artifacts.
-
-> Topics are configured from the start to use one approach or the other, and currently can't be changed after creation. Further decoupling is in the works to allow for a fully hybrid approach.
-
-### Consensus Service
-
-The cheaper approach, but it's limited to messages of at most 20 chunks in size, each chunk being at most 1024KB in length. Good for use cases with few participants (see table below) and / or small message sizes, like simple JSON payloads.
-
-#### Limits: topic configuration message
-
-The following table describes the maximum number of participants that can be part of said topic, assuming no topic metadata object is passed. Providing a rich topic metadata object will reduce the remaining available size for extra participants.
-
-| Algorithm  | Number of participants |
-|------------|------------------------|
-| RSA-2048   | 16                     |
-| Kyber-512  | 13                     |         
-| Kyber-768  | 9                      |
-| Kyber-1024 | 6                      |
-
-#### Limits: topic messages
-
-The maximum size for a string message or stringified JSON payload is ~ `11350 B (11.35 kB)`
+---
 
 ## Encryption process
 

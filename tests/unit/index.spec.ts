@@ -34,7 +34,7 @@ describe("The EncryptedTopic class", () => {
             expect(keyPair512).toBeDefined();
             expect(keyPair512.publicKey).toBeDefined();
             // base64-encoded Kyber512 public keys are 1068 characters in length
-            expect(keyPair512.publicKey.length).toEqual((512*2) + 44);
+            expect(keyPair512.publicKey.length).toEqual((512 * 2) + 44);
             expect(keyPair512.privateKey).toBeDefined();
         });
         test("should return a valid set of Kyber768 keys", () => {
@@ -42,7 +42,7 @@ describe("The EncryptedTopic class", () => {
             expect(keyPair768).toBeDefined();
             expect(keyPair768.publicKey).toBeDefined();
             // base64-encoded Kyber768 public keys are 1580 characters in length
-            expect(keyPair768.publicKey.length).toEqual((768*2) + 44);
+            expect(keyPair768.publicKey.length).toEqual((768 * 2) + 44);
             expect(keyPair768.privateKey).toBeDefined();
         });
         test("should return a valid set of Kyber1024 keys", () => {
@@ -50,7 +50,7 @@ describe("The EncryptedTopic class", () => {
             expect(keyPair1024).toBeDefined();
             expect(keyPair1024.publicKey).toBeDefined();
             // base64-encoded Kyber1024 public keys are 2092 characters in length
-            expect(keyPair1024.publicKey.length).toEqual((1024*2) + 44);
+            expect(keyPair1024.publicKey.length).toEqual((1024 * 2) + 44);
             expect(keyPair1024.privateKey).toBeDefined();
         });
         test("should return a valid set of RSA2048 keys", () => {
@@ -252,31 +252,31 @@ describe("The EncryptedTopic class", () => {
     describe("addParticipant function", () => {
         describe("when the encrypted topic configuration storage medium is set to 'Message'", () => {
             test("should not a new participant", async () => {
-            const mockHederaStub = new MockHederaStub();
-            const userOne = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
-            const encryptedTopic = new EncryptedTopic({
-                hederaAccountId: configuration.hederaAccountId,
-                privateKey: userOne.privateKey,
-                hederaPrivateKey: configuration.hederaPrivateKey
-            }, mockHederaStub);
+                const mockHederaStub = new MockHederaStub();
+                const userOne = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
+                const encryptedTopic = new EncryptedTopic({
+                    hederaAccountId: configuration.hederaAccountId,
+                    privateKey: userOne.privateKey,
+                    hederaPrivateKey: configuration.hederaPrivateKey
+                }, mockHederaStub);
 
-            await encryptedTopic.create({
-                algorithm: EncryptionAlgorithms.Kyber512,
-                participants: [userOne.publicKey],
-                storageOptions: {
-                    configuration: StorageOptions.Message,
-                    messages: StorageOptions.Message,
-                    storeParticipants: false
+                await encryptedTopic.create({
+                    algorithm: EncryptionAlgorithms.Kyber512,
+                    participants: [userOne.publicKey],
+                    storageOptions: {
+                        configuration: StorageOptions.Message,
+                        messages: StorageOptions.Message,
+                        storeParticipants: false
+                    }
+                });
+
+                const userTwo = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
+
+                const func = async () => {
+                    await encryptedTopic.addParticipant(userTwo.publicKey);
                 }
-            });
 
-            const userTwo = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
-
-            const func = async () => {
-                await encryptedTopic.addParticipant(userTwo.publicKey);
-            }
-
-            await expect(func).rejects.toThrowError('New participants can only be added to topics that use the File Service as storage medium for their configuration. Requested topic uses the Consensus Service.');
+                await expect(func).rejects.toThrowError('New participants can only be added to topics that use the File Service as storage medium for their configuration. Requested topic uses the Consensus Service.');
             });
         });
 
@@ -310,100 +310,100 @@ describe("The EncryptedTopic class", () => {
         });
 
         describe("when forward secrecy is requested", () => {
-           describe("and the configuration storage medium is set to 'File'", () => {
-               describe("but the topic creation step did not choose to store participants in a separate topic", () => {
-                   test("should not add a new participant", async () => {
-                       const mockHederaStub = new MockHederaStub();
-                       const userOne = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
-                       const encryptedTopic = new EncryptedTopic({
-                           hederaAccountId: configuration.hederaAccountId,
-                           privateKey: userOne.privateKey,
-                           hederaPrivateKey: configuration.hederaPrivateKey
-                       }, mockHederaStub);
+            describe("and the configuration storage medium is set to 'File'", () => {
+                describe("but the topic creation step did not choose to store participants in a separate topic", () => {
+                    test("should not add a new participant", async () => {
+                        const mockHederaStub = new MockHederaStub();
+                        const userOne = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
+                        const encryptedTopic = new EncryptedTopic({
+                            hederaAccountId: configuration.hederaAccountId,
+                            privateKey: userOne.privateKey,
+                            hederaPrivateKey: configuration.hederaPrivateKey
+                        }, mockHederaStub);
 
-                       const topicId = await encryptedTopic.create({
-                           algorithm: EncryptionAlgorithms.Kyber512,
-                           participants: [userOne.publicKey],
-                           storageOptions: {
-                               configuration: StorageOptions.File,
-                               messages: StorageOptions.Message,
-                               storeParticipants: false
-                           }
-                       });
+                        const topicId = await encryptedTopic.create({
+                            algorithm: EncryptionAlgorithms.Kyber512,
+                            participants: [userOne.publicKey],
+                            storageOptions: {
+                                configuration: StorageOptions.File,
+                                messages: StorageOptions.Message,
+                                storeParticipants: false
+                            }
+                        });
 
-                       await expect(topicId).toBeDefined();
+                        await expect(topicId).toBeDefined();
 
-                       const userTwo = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
+                        const userTwo = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
 
-                       const func = async () => {
-                           await encryptedTopic.addParticipant(userTwo.publicKey, true);
-                       }
+                        const func = async () => {
+                            await encryptedTopic.addParticipant(userTwo.publicKey, true);
+                        }
 
-                       await expect(func).rejects.toThrowError('Topic did not choose to store participants upon creation, topic encryption key rotation is not possible.');
-                   });
-               });
+                        await expect(func).rejects.toThrowError('Topic did not choose to store participants upon creation, topic encryption key rotation is not possible.');
+                    });
+                });
 
-               describe("and the topic creation step chose to store participants in a separate topic", () => {
-                   test("should add a new participant", async () => {
-                       const mockHederaStub = new MockHederaStub();
+                describe("and the topic creation step chose to store participants in a separate topic", () => {
+                    test("should add a new participant", async () => {
+                        const mockHederaStub = new MockHederaStub();
 
-                       const userOne = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
-                       const encryptedTopic = new EncryptedTopic({
-                           hederaAccountId: configuration.hederaAccountId,
-                           privateKey: userOne.privateKey,
-                           hederaPrivateKey: configuration.hederaPrivateKey
-                       }, mockHederaStub);
+                        const userOne = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
+                        const encryptedTopic = new EncryptedTopic({
+                            hederaAccountId: configuration.hederaAccountId,
+                            privateKey: userOne.privateKey,
+                            hederaPrivateKey: configuration.hederaPrivateKey
+                        }, mockHederaStub);
 
-                       await encryptedTopic.create({
-                           algorithm: EncryptionAlgorithms.Kyber512,
-                           participants: [userOne.publicKey],
-                           storageOptions: {
-                               configuration: StorageOptions.File,
-                               messages: StorageOptions.Message,
-                               storeParticipants: true
-                           }
-                       });
+                        await encryptedTopic.create({
+                            algorithm: EncryptionAlgorithms.Kyber512,
+                            participants: [userOne.publicKey],
+                            storageOptions: {
+                                configuration: StorageOptions.File,
+                                messages: StorageOptions.Message,
+                                storeParticipants: true
+                            }
+                        });
 
-                       const userTwo = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
+                        const userTwo = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
 
-                       const additionSuccess = await encryptedTopic.addParticipant(userTwo.publicKey, true);
+                        const additionSuccess = await encryptedTopic.addParticipant(userTwo.publicKey, true);
 
-                       await expect(additionSuccess).toEqual(true);
-                   });
-               });
-           });
+                        await expect(additionSuccess).toEqual(true);
+                    });
+                });
+            });
 
-           describe("but the configuration storage medium is set to 'Message'", () => {
-               test("should not add a new participant", async () => {
-                   const mockHederaStub = new MockHederaStub();
-                   const userOne = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
-                   const encryptedTopic = new EncryptedTopic({
-                       hederaAccountId: configuration.hederaAccountId,
-                       privateKey: userOne.privateKey,
-                       hederaPrivateKey: configuration.hederaPrivateKey
-                   }, mockHederaStub);
+            describe("but the configuration storage medium is set to 'Message'", () => {
+                test("should not add a new participant", async () => {
+                    const mockHederaStub = new MockHederaStub();
+                    const userOne = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
+                    const encryptedTopic = new EncryptedTopic({
+                        hederaAccountId: configuration.hederaAccountId,
+                        privateKey: userOne.privateKey,
+                        hederaPrivateKey: configuration.hederaPrivateKey
+                    }, mockHederaStub);
 
-                   const topicId = await encryptedTopic.create({
-                       algorithm: EncryptionAlgorithms.Kyber512,
-                       participants: [userOne.publicKey],
-                       storageOptions: {
-                           configuration: StorageOptions.Message,
-                           messages: StorageOptions.Message,
-                           storeParticipants: false
-                       }
-                   });
+                    const topicId = await encryptedTopic.create({
+                        algorithm: EncryptionAlgorithms.Kyber512,
+                        participants: [userOne.publicKey],
+                        storageOptions: {
+                            configuration: StorageOptions.Message,
+                            messages: StorageOptions.Message,
+                            storeParticipants: false
+                        }
+                    });
 
-                   await expect(topicId).toBeDefined();
+                    await expect(topicId).toBeDefined();
 
-                   const userTwo = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
+                    const userTwo = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
 
-                   const func = async () => {
-                       await encryptedTopic.addParticipant(userTwo.publicKey, true);
-                   }
+                    const func = async () => {
+                        await encryptedTopic.addParticipant(userTwo.publicKey, true);
+                    }
 
-                   await expect(func).rejects.toThrowError('Topic encryption key rotation is only available in encrypted topics that use the File Service as storage medium for their configuration. Requested topic uses the Consensus Service.');
-               });
-           });
+                    await expect(func).rejects.toThrowError('Topic encryption key rotation is only available in encrypted topics that use the File Service as storage medium for their configuration. Requested topic uses the Consensus Service.');
+                });
+            });
         });
     });
 
@@ -718,5 +718,63 @@ describe("The EncryptedTopic class", () => {
             });
         });
     });
-});
 
+    describe("migrateConfigurationStorageMedium function", () => {
+        describe("given a topic with its configuration storage medium is set to 'File'", () => {
+            test("should not allow a redundant migration to the File Service", async () => {
+                const mockHederaStub = new MockHederaStub();
+                const userOne = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
+                const encryptedTopic = new EncryptedTopic({
+                    hederaAccountId: configuration.hederaAccountId,
+                    privateKey: userOne.privateKey,
+                    hederaPrivateKey: configuration.hederaPrivateKey
+                }, mockHederaStub);
+                await encryptedTopic.create({
+                    algorithm: EncryptionAlgorithms.Kyber512,
+                    participants: [userOne.publicKey],
+                    storageOptions: {
+                        configuration: StorageOptions.File,
+                        messages: StorageOptions.File,
+                        storeParticipants: false
+                    }
+                });
+
+                const func = async () => {
+                    await encryptedTopic.migrateConfigurationStorageMedium();
+                };
+
+                await expect(func).rejects.toThrowError('Cannot migrate configuration storage medium: topic already uses File Service as storage medium.');
+            });
+        });
+        describe("given a topic with its configuration storage medium is set to 'Message'", () => {
+            let topicId;
+            const mockHederaStub = new MockHederaStub();
+            const userOne = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
+            const encryptedTopic = new EncryptedTopic({
+                hederaAccountId: configuration.hederaAccountId,
+                privateKey: userOne.privateKey,
+                hederaPrivateKey: configuration.hederaPrivateKey
+            }, mockHederaStub);
+            const newParticipant = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
+
+            test("should migrate this topic's configuration medium to 'File' correctly", async () => {
+                topicId = await encryptedTopic.create({
+                    algorithm: EncryptionAlgorithms.Kyber512,
+                    participants: [userOne.publicKey],
+                    storageOptions: {
+                        configuration: StorageOptions.Message,
+                        messages: StorageOptions.File,
+                        storeParticipants: false
+                    }
+                });
+                await encryptedTopic.migrateConfigurationStorageMedium();
+            });
+
+            test("should allow to add a new participant after the migration", async () => {
+                const additionSuccess = await encryptedTopic.addParticipant(newParticipant.publicKey);
+
+                expect(additionSuccess).toEqual(true);
+            });
+        });
+    });
+});

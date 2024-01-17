@@ -295,6 +295,29 @@ export class EncryptedTopic {
   }
 
   /*
+   * "migrateConfigurationStorageMedium" allows the topic administrator to migrate a topic's configuration message storage medium
+   * to use the File Service. This is useful when requirements change and the topic needs to grow beyond its original design.
+   */
+  public async migrateConfigurationStorageMedium(): Promise<void> {
+    await this.setMemo();
+    await this.setConfigurationMessage();
+
+    if (this.topicMemoObject.s.c.f) {
+      throw new Error('Cannot migrate configuration storage medium: topic already uses File Service as storage medium.');
+    }
+
+    const fileId = await this.hederaStub.createFile();
+    await this.hederaStub.appendToFile(fileId, this.topicConfigurationMessage);
+
+    const newTopicMemoObject: ITopicMemoObject = this.topicMemoObject;
+
+    newTopicMemoObject.s.c.f = true;
+    newTopicMemoObject.s.c.i = fileId;
+
+    await this.hederaStub.updateTopicMemo(newTopicMemoObject, this.topicId);
+  }
+
+  /*
    *
    *--- SDK INTERNAL METHODS ---
    *

@@ -7,7 +7,7 @@ export class MockTopic {
     private readonly topicId: string;
     private readonly topicIdAsNumber: number;
     private readonly messages: MockMessage[];
-    private readonly memo?: ITopicMemoObject;
+    private memo?: ITopicMemoObject;
     private readonly submitKey: string;
     private topicInfo!: TopicInfo;
 
@@ -46,6 +46,24 @@ export class MockTopic {
 
     public getMemo(): string {
         return this.topicInfo.topicMemo;
+    }
+
+    public setMemo(topicMemo: ITopicMemoObject): void {
+        this.memo = topicMemo;
+
+        this.topicInfo = TopicInfo._fromProtobuf({
+            topicInfo: {
+                memo: JSON.stringify(topicMemo),
+                sequenceNumber: (0 as Long),
+                submitKey: null,
+                runningHash: new Uint8Array([])
+            },
+            topicID: {
+                shardNum: 0 as Long,
+                realmNum: 0 as Long,
+                topicNum: this.topicIdAsNumber as Long
+            }
+        });
     }
 
     public getInfo(): TopicInfo {

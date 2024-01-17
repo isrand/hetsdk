@@ -20,6 +20,7 @@ export declare class EncryptedTopic {
     getMessage(sequenceNumber: number): Promise<string>;
     getParticipants(): Promise<Array<string>>;
     rotateEncryptionKey(): Promise<void>;
+    migrateConfigurationStorageMedium(): Promise<void>;
     private createTopicMessage;
     private createTopicConfigurationMessageObject;
     private createMemoObject;
