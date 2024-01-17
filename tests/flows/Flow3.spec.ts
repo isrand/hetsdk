@@ -35,7 +35,7 @@ test("passes", async () => {
         algorithm: EncryptionAlgorithms.Kyber512,
         storageOptions: {
             storeParticipants: false,
-            configuration: StorageOptions.Message,
+            configuration: StorageOptions.File,
             messages: StorageOptions.Message
         },
         metadata: {
