@@ -60,6 +60,15 @@ export class MockHederaStub implements IHederaStub {
         return topicId;
     }
 
+    public async updateTopicMemo(topicMemoObject: ITopicMemoObject, topicId?: string): Promise<void> {
+        const topic = this.topics.get(String(topicId));
+        if (!topic) {
+            throw new Error(`Topic with Id ${topicId} does not exist.`);
+        }
+
+        topic.setMemo(topicMemoObject);
+    }
+
     public async submitMessageToTopic(submitKey: string, topicId?: string, contents?: string): Promise<number> {
         const topic = this.topics.get(String(topicId));
         if (!topic) {

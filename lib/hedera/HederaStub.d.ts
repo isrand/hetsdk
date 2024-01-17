@@ -8,6 +8,7 @@ export declare class HederaStub implements IHederaStub {
     private readonly maxAppendTransactionSize;
     constructor(client: Client, hederaPrivateKey: string, hederaAccountId: string);
     createTopic(submitKey: string, topicMemoObject?: ITopicMemoObject): Promise<string>;
+    updateTopicMemo(topicMemoObject: ITopicMemoObject, topicId?: string): Promise<void>;
     submitMessageToTopic(submitKey: string, topicId?: string, contents?: string): Promise<number>;
     getMessageFromTopic(sequenceNumber: number, topicId?: string): Promise<string>;
     getTopicInfo(topicId?: string): Promise<TopicInfo>;

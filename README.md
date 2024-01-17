@@ -18,6 +18,7 @@ Encrypted Topics are standard Hedera topics that are configured and behave in sp
   - [getMessage](#getmessage-messagesequencenumber)
   - [getParticipants](#getparticipants-)
   - [rotateEncryptionKey](#rotateencryptionkey-)
+  - [migrateConfigurationStorageMedium](#migrateconfigurationstoragemedium-)
 - [Storage](#storage)
   - [Consensus Service](#consensus-service)
 - [Encryption process](#encryption-process)
@@ -331,6 +332,20 @@ Rotate the topic encryption key. This method requires the storage of the topic p
 
 ```typescript
 await encryptedTopic.rotateEncryptionKey();
+```
+
+---
+
+### `migrateConfigurationStorageMedium ()`
+
+**Description**
+
+Migrate the topic's configuration to the File Service. This method is useful when requirements change and the topic needs to grow beyond its original design. For example, adding more participants to a topic that was created using the Consensus Service as the storage medium for the configuration.
+
+**Usage**
+
+```typescript
+await encryptedTopic.migrateConfigurationStorageMedium();
 ```
 
 ---

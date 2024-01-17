@@ -136,6 +136,55 @@ describe("The MockHederaStub", () => {
         });
     });
 
+    describe("updateTopicMemo function", () => {
+        test("should update a topic's memo correctly", async () => {
+            const mockHederaStub = new MockHederaStub();
+            const submitKey = 'submitKey';
+            const topicMemo: ITopicMemoObject = {
+                s: {
+                    c: {
+                        f: false,
+                        i: ''
+                    },
+                    p: {
+                        p: false,
+                        i: ''
+                    },
+                    m: {
+                        f: false,
+                    }
+                }
+            };
+
+            const topicId = await mockHederaStub.createTopic(submitKey, topicMemo);
+
+            const newTopicMemo: ITopicMemoObject = {
+                s: {
+                    c: {
+                        f: true,
+                        i: '1234'
+                    },
+                    p: {
+                        p: false,
+                        i: ''
+                    },
+                    m: {
+                        f: false,
+                    }
+                }
+            }
+
+            await mockHederaStub.updateTopicMemo(newTopicMemo, topicId);
+
+            const topicInStub = mockHederaStub.topics.get(topicId);
+            if (!topicInStub) {
+                fail('Topic not found in stub map.');
+            }
+
+            expect(topicInStub.getMemo()).toEqual(JSON.stringify(newTopicMemo));
+        });
+    });
+
     describe("submitMessageToTopic function", () => {
         test("should throw an error if the topic does not exist", async () => {
             const topicId = 'does_not_exist';
