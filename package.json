@@ -7,6 +7,7 @@
     "build": "rm -rf lib && tsc -p tsconfig.build.json",
     "test:unit": "rm -rf coverage; jest --rootDir . --bail --colors --verbose --config './tests/unit/jest.config.json' --testMatch '**/tests/unit/**/*.spec.ts' --coverage --coverageDirectory coverage --collectCoverageFrom \"src/**/*.{js,jsx,ts,tsx}\" --coveragePathIgnorePatterns \"src/hedera\" --coverageReporters text html json-summary",
     "test:flows": "jest --rootDir . --bail --colors --verbose --config './tests/flows/jest.config.json' --testMatch '**/tests/flows/**/*.spec.ts' --forceExit",
+    "test:cost": "jest --rootDir . --bail --colors --verbose --config './tests/cost/jest.config.json' --testMatch '**/tests/cost/**/*.spec.ts' --forceExit",
     "test:all": "npm run test:unit && npm run test:flows",
     "lint": "eslint \"src/**/*.ts\" --fix",
     "prepare": "husky install"

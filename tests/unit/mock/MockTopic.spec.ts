@@ -1,6 +1,6 @@
-import {MockTopic} from "./MockTopic";
+import {MockTopic} from "../../../src/hedera/mock/MockTopic";
 import {ITopicMemoObject} from "../../../src/hedera/interfaces/ITopicMemoObject";
-import {MockMessage} from "./MockMessage";
+import {MockMessage} from "../../../src/hedera/mock/MockMessage";
 
 describe("The MockTopic", () => {
     describe("constructor", () => {
