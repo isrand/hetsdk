@@ -57,9 +57,16 @@ test("passes", async () => {
         topicId: topicId
     });
 
-    const func = async () => {
-        const message = await encryptedTopicUserThree.getMessage(messageSequenceNumber);
-    }
+    const additionSuccess = await encryptedTopicUserOne.addParticipant(userThreeKyberPublicKey, false);
 
-    await expect(func).rejects.toThrowError('Error fetching topic encryption key and init vector. Does user have access?');
+    const messageAsParticipantThree = await encryptedTopicUserThree.getMessage(messageSequenceNumber);
+    expect(messageAsParticipantThree).toEqual(message);
+
+    const messageFromParticipantThreeSequenceNumber = await encryptedTopicUserThree.submitMessage(message);
+
+    const messageFromParticipantThreeAsUserOne = await encryptedTopicUserOne.getMessage(messageFromParticipantThreeSequenceNumber);
+    expect(messageFromParticipantThreeAsUserOne).toEqual(message);
+
+    const messageFromParticipantThreeAsUserTwo = await encryptedTopicUserTwo.getMessage(messageFromParticipantThreeSequenceNumber);
+    expect(messageFromParticipantThreeAsUserTwo).toEqual(message);
 }, 2147483647);

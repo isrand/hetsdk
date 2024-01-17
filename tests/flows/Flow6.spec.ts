@@ -30,7 +30,7 @@ test("passes", async () => {
         participants: [userOneKyberPublicKey, userTwoKyberPublicKey],
         algorithm: EncryptionAlgorithms.Kyber512,
         storageOptions: {
-            storeParticipants: false,
+            storeParticipants: true,
             configuration: StorageOptions.File,
             messages: StorageOptions.Message
         },
@@ -57,9 +57,13 @@ test("passes", async () => {
         topicId: topicId
     });
 
-    const func = async () => {
-        const message = await encryptedTopicUserThree.getMessage(messageSequenceNumber);
-    }
+    const additionSuccess = await encryptedTopicUserOne.addParticipant(userThreeKyberPublicKey, true);
 
-    await expect(func).rejects.toThrowError('Error fetching topic encryption key and init vector. Does user have access?');
+    const messageFromUserThreeSequenceNumber = await encryptedTopicUserThree.submitMessage(message);
+
+    const messageFromUserThreeAsParticipantOne = await encryptedTopicUserOne.getMessage(messageFromUserThreeSequenceNumber);
+    expect(messageFromUserThreeAsParticipantOne).toEqual(message);
+
+    const messageFromUserThreeAsParticipantTwo = await encryptedTopicUserTwo.getMessage(messageFromUserThreeSequenceNumber);
+    expect (messageFromUserThreeAsParticipantTwo).toEqual(message);
 }, 2147483647);
