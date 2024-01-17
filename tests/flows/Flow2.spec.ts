@@ -3,16 +3,11 @@ import {EncryptionAlgorithms} from "../../src/crypto/enums/EncryptionAlgorithms"
 import {StorageOptions} from "../../src/hedera/enums/StorageOptions";
 import {EnvironmentConfigurationResolver} from "../utils/EnvironmentConfigurationResolver";
 
-const flowDescription = `
-#1 Create Topic With Two Participants
-
-This flow creates a topic in the Hedera Network with two participants using Kyber512 and tests that the topic's id is returned.
-`;
-
-console.log(flowDescription);
+// #2 Send Message On Topic With Two Participants
+//
+// This flow creates an encrypted topic with two participants, and has both participants send a message, expecting them both to be able to see both messages.
 
 const configuration = new EnvironmentConfigurationResolver(String(process.env.NODE_ENV)).resolve();
-
 
 const userOne = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
 const userOneKyberPublicKey = userOne.publicKey;
@@ -27,6 +22,8 @@ const encryptedTopicUserOne = new EncryptedTopic({
     hederaPrivateKey: configuration.hederaPrivateKey,
     privateKey: userOneKyberPrivateKey,
 });
+
+const message = 'Hello there!';
 
 test("passes", async () => {
     const topicId = await encryptedTopicUserOne.create({
@@ -43,4 +40,29 @@ test("passes", async () => {
     });
 
     await expect(topicId).toBeDefined();
-}, 60000);
+
+    const encryptedTopicUserTwo = new EncryptedTopic({
+        hederaAccountId: configuration.hederaAccountId,
+        hederaPrivateKey: configuration.hederaPrivateKey,
+        privateKey: userTwoKyberPrivateKey,
+        topicId: topicId
+    });
+
+    // User one sends message
+    const messageFromUserOneSequenceNumber = await encryptedTopicUserOne.submitMessage(message);
+
+    const messageOneAsParticipantOne = await encryptedTopicUserOne.getMessage(messageFromUserOneSequenceNumber);
+    expect(messageOneAsParticipantOne).toEqual(message);
+
+    const messageOneAsParticipantTwo = await encryptedTopicUserTwo.getMessage(messageFromUserOneSequenceNumber);
+    expect (messageOneAsParticipantTwo).toEqual(message);
+
+    // User two sends message
+    const messageFromUserTwoSequenceNumber = await encryptedTopicUserTwo.submitMessage(message);
+
+    const messageTwoAsParticipantOne = await encryptedTopicUserOne.getMessage(messageFromUserTwoSequenceNumber);
+    expect(messageTwoAsParticipantOne).toEqual(message);
+
+    const messageTwoAsParticipantTwo = await encryptedTopicUserTwo.getMessage(messageFromUserTwoSequenceNumber);
+    expect (messageTwoAsParticipantTwo).toEqual(message);
+}, 2147483647);
