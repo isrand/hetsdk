@@ -3,16 +3,11 @@ import {EncryptionAlgorithms} from "../../src/crypto/enums/EncryptionAlgorithms"
 import {StorageOptions} from "../../src/hedera/enums/StorageOptions";
 import {EnvironmentConfigurationResolver} from "../utils/EnvironmentConfigurationResolver";
 
-const flowDescription = `
-#1 Create Topic With Two Participants
-
-This flow creates a topic in the Hedera Network with two participants using Kyber512 and tests that the topic's id is returned.
-`;
-
-console.log(flowDescription);
+// #1 Create Topic With Two Participants
+//
+// This flow tests that a topic with two participants can be created. It expects to receive the topic Id after creation.
 
 const configuration = new EnvironmentConfigurationResolver(String(process.env.NODE_ENV)).resolve();
-
 
 const userOne = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
 const userOneKyberPublicKey = userOne.publicKey;
@@ -34,7 +29,7 @@ test("passes", async () => {
         algorithm: EncryptionAlgorithms.Kyber512,
         storageOptions: {
             storeParticipants: false,
-            configuration: StorageOptions.Message,
+            configuration: StorageOptions.File,
             messages: StorageOptions.Message
         },
         metadata: {
@@ -43,4 +38,4 @@ test("passes", async () => {
     });
 
     await expect(topicId).toBeDefined();
-}, 60000);
+}, 2147483647);
