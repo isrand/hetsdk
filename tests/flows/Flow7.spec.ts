@@ -13,10 +13,6 @@ const userTwo = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
 const userTwoKyberPublicKey = userTwo.publicKey;
 const userTwoKyberPrivateKey = userTwo.privateKey;
 
-const userThree = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
-const userThreeKyberPublicKey = userThree.publicKey;
-const userThreeKyberPrivateKey = userThree.privateKey;
-
 const encryptedTopicUserOne = new EncryptedTopic({
     hederaAccountId: configuration.hederaAccountId,
     hederaPrivateKey: configuration.hederaPrivateKey,
@@ -30,7 +26,7 @@ test("passes", async () => {
         participants: [userOneKyberPublicKey, userTwoKyberPublicKey],
         algorithm: EncryptionAlgorithms.Kyber512,
         storageOptions: {
-            storeParticipants: false,
+            storeParticipants: true,
             configuration: StorageOptions.File,
             messages: StorageOptions.Message
         },
@@ -41,7 +37,7 @@ test("passes", async () => {
 
     await expect(topicId).toBeDefined();
 
-    const messageSequenceNumber = await encryptedTopicUserOne.submitMessage(message);
+    const firstMessageSequenceNumber = await encryptedTopicUserOne.submitMessage(message);
 
     const encryptedTopicUserTwo = new EncryptedTopic({
         hederaAccountId: configuration.hederaAccountId,
@@ -50,24 +46,19 @@ test("passes", async () => {
         topicId: topicId
     });
 
-    const encryptedTopicUserThree = new EncryptedTopic({
-        hederaAccountId: configuration.hederaAccountId,
-        hederaPrivateKey: configuration.hederaPrivateKey,
-        privateKey: userThreeKyberPrivateKey,
-        topicId: topicId
-    });
+    await encryptedTopicUserOne.rotateEncryptionKey();
 
-    const additionSuccess = await encryptedTopicUserOne.addParticipant(userThreeKyberPublicKey, false);
-    expect(additionSuccess).toEqual(true);
+    const firstMessageAsParticipantOne = await encryptedTopicUserOne.getMessage(firstMessageSequenceNumber);
+    expect(firstMessageAsParticipantOne).toEqual(message);
 
-    const messageAsParticipantThree = await encryptedTopicUserThree.getMessage(messageSequenceNumber);
-    expect(messageAsParticipantThree).toEqual(message);
+    const firstMessageFromUserThreeAsParticipantTwo = await encryptedTopicUserTwo.getMessage(firstMessageSequenceNumber);
+    expect (firstMessageAsParticipantOne).toEqual(message);
 
-    const messageFromParticipantThreeSequenceNumber = await encryptedTopicUserThree.submitMessage(message);
+    const secondMessageSequenceNumber = await encryptedTopicUserOne.submitMessage(message);
 
-    const messageFromParticipantThreeAsUserOne = await encryptedTopicUserOne.getMessage(messageFromParticipantThreeSequenceNumber);
-    expect(messageFromParticipantThreeAsUserOne).toEqual(message);
+    const secondMessageAsParticipantOne = await encryptedTopicUserOne.getMessage(secondMessageSequenceNumber);
+    expect(secondMessageAsParticipantOne).toEqual(message);
 
-    const messageFromParticipantThreeAsUserTwo = await encryptedTopicUserTwo.getMessage(messageFromParticipantThreeSequenceNumber);
-    expect(messageFromParticipantThreeAsUserTwo).toEqual(message);
+    const secondMessageFromUserThreeAsParticipantTwo = await encryptedTopicUserTwo.getMessage(secondMessageSequenceNumber);
+    expect (secondMessageFromUserThreeAsParticipantTwo).toEqual(message);
 }, 2147483647);
