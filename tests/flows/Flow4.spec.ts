@@ -2,6 +2,7 @@ import {EncryptedTopic} from "../../src";
 import {EncryptionAlgorithms} from "../../src/crypto/enums/EncryptionAlgorithms";
 import {StorageOptions} from "../../src/hedera/enums/StorageOptions";
 import {EnvironmentConfigurationResolver} from "../utils/EnvironmentConfigurationResolver";
+import {add} from "husky";
 
 const configuration = new EnvironmentConfigurationResolver(String(process.env.NODE_ENV)).resolve();
 
@@ -57,9 +58,17 @@ test("passes", async () => {
         topicId: topicId
     });
 
-    const func = async () => {
-        const message = await encryptedTopicUserThree.getMessage(messageSequenceNumber);
-    }
+    const additionSuccess = await encryptedTopicUserOne.addParticipant(userThreeKyberPublicKey, false);
+    expect(additionSuccess).toEqual(true);
 
-    await expect(func).rejects.toThrowError('Error fetching topic encryption key and init vector. Does user have access?');
+    const messageAsParticipantThree = await encryptedTopicUserThree.getMessage(messageSequenceNumber);
+    expect(messageAsParticipantThree).toEqual(message);
+
+    const messageFromParticipantThreeSequenceNumber = await encryptedTopicUserThree.submitMessage(message);
+
+    const messageFromParticipantThreeAsUserOne = await encryptedTopicUserOne.getMessage(messageFromParticipantThreeSequenceNumber);
+    expect(messageFromParticipantThreeAsUserOne).toEqual(message);
+
+    const messageFromParticipantThreeAsUserTwo = await encryptedTopicUserTwo.getMessage(messageFromParticipantThreeSequenceNumber);
+    expect(messageFromParticipantThreeAsUserTwo).toEqual(message);
 }, 2147483647);

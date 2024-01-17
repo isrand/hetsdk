@@ -3,10 +3,6 @@ import {EncryptionAlgorithms} from "../../src/crypto/enums/EncryptionAlgorithms"
 import {StorageOptions} from "../../src/hedera/enums/StorageOptions";
 import {EnvironmentConfigurationResolver} from "../utils/EnvironmentConfigurationResolver";
 
-// #2 Send Message On Topic With Two Participants
-//
-// This flow creates an encrypted topic with two participants, and has both participants send a message, expecting them both to be able to see both messages.
-
 const configuration = new EnvironmentConfigurationResolver(String(process.env.NODE_ENV)).resolve();
 
 const userOne = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
