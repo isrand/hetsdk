@@ -2,6 +2,7 @@ import {EncryptedTopic} from "../../src";
 import {EncryptionAlgorithms} from "../../src/crypto/enums/EncryptionAlgorithms";
 import {StorageOptions} from "../../src/hedera/enums/StorageOptions";
 import {EnvironmentConfigurationResolver} from "../utils/EnvironmentConfigurationResolver";
+import {add} from "husky";
 
 const configuration = new EnvironmentConfigurationResolver(String(process.env.NODE_ENV)).resolve();
 
@@ -58,6 +59,7 @@ test("passes", async () => {
     });
 
     const additionSuccess = await encryptedTopicUserOne.addParticipant(userThreeKyberPublicKey, false);
+    expect(additionSuccess).toEqual(true);
 
     const messageAsParticipantThree = await encryptedTopicUserThree.getMessage(messageSequenceNumber);
     expect(messageAsParticipantThree).toEqual(message);

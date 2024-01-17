@@ -58,6 +58,7 @@ test("passes", async () => {
     });
 
     const additionSuccess = await encryptedTopicUserOne.addParticipant(userThreeKyberPublicKey, true);
+    expect(additionSuccess).toEqual(true);
 
     const messageFromUserThreeSequenceNumber = await encryptedTopicUserThree.submitMessage(message);
 
