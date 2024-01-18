@@ -1,4 +1,4 @@
-import {AccountBalanceQuery, Client, ExchangeRate, FileCreateTransaction, Hbar, PrivateKey} from "@hashgraph/sdk";
+import {AccountBalanceQuery, Client, FileCreateTransaction, Hbar, PrivateKey} from "@hashgraph/sdk";
 import {EnvironmentConfigurationResolver} from "../utils/EnvironmentConfigurationResolver";
 import {EncryptedTopic} from "../../src";
 import {EncryptionAlgorithms} from "../../src/crypto/enums/EncryptionAlgorithms";
@@ -43,8 +43,7 @@ describe("The HederaStubCostCalculator", () => {
            algorithm: EncryptionAlgorithms.Kyber512,
            storageOptions: {
                storeParticipants: true,
-               configuration: StorageOptions.Message,
-               messages: StorageOptions.Message
+               configuration: StorageOptions.Message
            },
            metadata: {
                name: "Supply Chain Logistics"
@@ -56,8 +55,7 @@ describe("The HederaStubCostCalculator", () => {
            algorithm: EncryptionAlgorithms.Kyber512,
            storageOptions: {
                storeParticipants: true,
-               configuration: StorageOptions.Message,
-               messages: StorageOptions.Message
+               configuration: StorageOptions.Message
            },
            metadata: {
                name: "Supply Chain Logistics"
@@ -65,8 +63,8 @@ describe("The HederaStubCostCalculator", () => {
        });
 
        // Demo flow with most of the functions from the SDK...
-       const messageSequenceNumberWithoutCostCalculator = await encryptedTopicWithoutCostCalculator.submitMessage('test');
-       const messageSequenceNumberWithCostCalculator = await encryptedTopicWithCostCalculator.submitMessage('test');
+       const messageSequenceNumberWithoutCostCalculator = await encryptedTopicWithoutCostCalculator.submitMessage('test', StorageOptions.File);
+       const messageSequenceNumberWithCostCalculator = await encryptedTopicWithCostCalculator.submitMessage('test',  StorageOptions.File);
 
        await encryptedTopicWithoutCostCalculator.getMessage(messageSequenceNumberWithoutCostCalculator);
        await encryptedTopicWithCostCalculator.getMessage(messageSequenceNumberWithCostCalculator);
@@ -80,8 +78,8 @@ describe("The HederaStubCostCalculator", () => {
        await encryptedTopicWithoutCostCalculator.rotateEncryptionKey();
        await encryptedTopicWithCostCalculator.rotateEncryptionKey();
 
-       await encryptedTopicWithoutCostCalculator.submitMessage('test');
-       await encryptedTopicWithCostCalculator.submitMessage('test');
+       await encryptedTopicWithoutCostCalculator.submitMessage('test',  StorageOptions.File);
+       await encryptedTopicWithCostCalculator.submitMessage('test',  StorageOptions.File);
 
        await encryptedTopicWithoutCostCalculator.addParticipant(userThreeKyberPublicKey, true);
        await encryptedTopicWithCostCalculator.addParticipant(userThreeKyberPublicKey, true);
