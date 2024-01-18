@@ -4,6 +4,7 @@ import {EncryptionAlgorithms} from "../../src/crypto/enums/EncryptionAlgorithms"
 import {StorageOptions} from "../../src/hedera/enums/StorageOptions";
 import {ITopicMemoObject} from "../../src/hedera/interfaces/ITopicMemoObject";
 import {EnvironmentConfigurationResolver} from "../utils/EnvironmentConfigurationResolver";
+import {StringGenerator} from "./utils/StringGenerator";
 
 const configuration = new EnvironmentConfigurationResolver(String(process.env.NODE_ENV)).resolve();
 
@@ -65,6 +66,34 @@ describe("The EncryptedTopic class", () => {
 
     describe("create function", () => {
         describe("when specifying the configuration storage medium as 'Message'", () => {
+            test("when adding too many participants, causing the topic configuration message to exceed Hedera's maximum allowed message size, should fail", async () => {
+                const mockHederaStub = new MockHederaStub();
+                const userOne = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
+                const participants = [userOne.publicKey];
+                for (let i = 0; i < 1000; i++) {
+                    const user = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
+                    participants.push(user.publicKey);
+                }
+
+                const encryptedTopic = new EncryptedTopic({
+                    hederaAccountId: configuration.hederaAccountId,
+                    privateKey: '',
+                    hederaPrivateKey: configuration.hederaPrivateKey
+                }, mockHederaStub);
+
+                const func = async () => {
+                    await encryptedTopic.create({
+                        algorithm: EncryptionAlgorithms.Kyber512,
+                        participants: participants,
+                        storageOptions: {
+                            configuration: StorageOptions.Message,
+                            storeParticipants: false
+                        }
+                    });
+                }
+
+                await expect(func).rejects.toThrowError('Topic configuration object exceeds maximum message size allowed for Consensus Service. Please use the File Service instead.');
+            });
             test("should create a new topic using Kyber512 and return its Id", async () => {
                 const mockHederaStub = new MockHederaStub();
                 const userOne = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
@@ -79,7 +108,6 @@ describe("The EncryptedTopic class", () => {
                     participants: [userOne.publicKey],
                     storageOptions: {
                         configuration: StorageOptions.Message,
-                        messages: StorageOptions.Message,
                         storeParticipants: false
                     }
                 });
@@ -100,7 +128,6 @@ describe("The EncryptedTopic class", () => {
                     participants: [userOne.publicKey],
                     storageOptions: {
                         configuration: StorageOptions.Message,
-                        messages: StorageOptions.Message,
                         storeParticipants: false
                     }
                 });
@@ -121,7 +148,6 @@ describe("The EncryptedTopic class", () => {
                     participants: [userOne.publicKey],
                     storageOptions: {
                         configuration: StorageOptions.Message,
-                        messages: StorageOptions.Message,
                         storeParticipants: false
                     }
                 });
@@ -142,7 +168,6 @@ describe("The EncryptedTopic class", () => {
                     participants: [userOne.publicKey],
                     storageOptions: {
                         configuration: StorageOptions.Message,
-                        messages: StorageOptions.Message,
                         storeParticipants: false
                     }
                 });
@@ -166,55 +191,6 @@ describe("The EncryptedTopic class", () => {
                     participants: [userOne.publicKey],
                     storageOptions: {
                         configuration: StorageOptions.File,
-                        messages: StorageOptions.Message,
-                        storeParticipants: false
-                    }
-                });
-
-                await expect(topicId).toBeDefined();
-            });
-        });
-
-        describe("when specifying the messages storage medium as 'Message'", () => {
-            test("should create a new topic and return its Id", async () => {
-                const mockHederaStub = new MockHederaStub();
-                const userOne = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
-                const encryptedTopic = new EncryptedTopic({
-                    hederaAccountId: configuration.hederaAccountId,
-                    privateKey: '',
-                    hederaPrivateKey: configuration.hederaPrivateKey
-                }, mockHederaStub);
-
-                const topicId = await encryptedTopic.create({
-                    algorithm: EncryptionAlgorithms.Kyber512,
-                    participants: [userOne.publicKey],
-                    storageOptions: {
-                        configuration: StorageOptions.Message,
-                        messages: StorageOptions.Message,
-                        storeParticipants: false
-                    }
-                });
-
-                await expect(topicId).toBeDefined();
-            });
-        });
-
-        describe("when specifying the messages storage medium as 'File'", () => {
-            test("should create a new topic and return its Id", async () => {
-                const mockHederaStub = new MockHederaStub();
-                const userOne = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
-                const encryptedTopic = new EncryptedTopic({
-                    hederaAccountId: configuration.hederaAccountId,
-                    privateKey: userOne.privateKey,
-                    hederaPrivateKey: configuration.hederaPrivateKey
-                }, mockHederaStub);
-
-                const topicId = await encryptedTopic.create({
-                    algorithm: EncryptionAlgorithms.Kyber512,
-                    participants: [userOne.publicKey],
-                    storageOptions: {
-                        configuration: StorageOptions.Message,
-                        messages: StorageOptions.File,
                         storeParticipants: false
                     }
                 });
@@ -238,7 +214,6 @@ describe("The EncryptedTopic class", () => {
                     participants: [userOne.publicKey],
                     storageOptions: {
                         configuration: StorageOptions.Message,
-                        messages: StorageOptions.Message,
                         storeParticipants: true
                     }
                 });
@@ -265,7 +240,6 @@ describe("The EncryptedTopic class", () => {
                     participants: [userOne.publicKey],
                     storageOptions: {
                         configuration: StorageOptions.Message,
-                        messages: StorageOptions.Message,
                         storeParticipants: false
                     }
                 });
@@ -295,7 +269,6 @@ describe("The EncryptedTopic class", () => {
                     participants: [userOne.publicKey],
                     storageOptions: {
                         configuration: StorageOptions.File,
-                        messages: StorageOptions.Message,
                         storeParticipants: false
                     }
                 });
@@ -326,7 +299,6 @@ describe("The EncryptedTopic class", () => {
                             participants: [userOne.publicKey],
                             storageOptions: {
                                 configuration: StorageOptions.File,
-                                messages: StorageOptions.Message,
                                 storeParticipants: false
                             }
                         });
@@ -359,7 +331,6 @@ describe("The EncryptedTopic class", () => {
                             participants: [userOne.publicKey],
                             storageOptions: {
                                 configuration: StorageOptions.File,
-                                messages: StorageOptions.Message,
                                 storeParticipants: true
                             }
                         });
@@ -388,7 +359,6 @@ describe("The EncryptedTopic class", () => {
                         participants: [userOne.publicKey],
                         storageOptions: {
                             configuration: StorageOptions.Message,
-                            messages: StorageOptions.Message,
                             storeParticipants: false
                         }
                     });
@@ -423,7 +393,6 @@ describe("The EncryptedTopic class", () => {
                     participants: [userOne.publicKey],
                     storageOptions: {
                         configuration: StorageOptions.Message,
-                        messages: StorageOptions.File,
                         storeParticipants: false
                     }
                 });
@@ -451,7 +420,6 @@ describe("The EncryptedTopic class", () => {
                     participants: [userOne.publicKey],
                     storageOptions: {
                         configuration: StorageOptions.Message,
-                        messages: StorageOptions.File,
                         storeParticipants: true
                     }
                 });
@@ -479,7 +447,6 @@ describe("The EncryptedTopic class", () => {
                     participants: [userOne.publicKey],
                     storageOptions: {
                         configuration: StorageOptions.Message,
-                        messages: StorageOptions.Message,
                         storeParticipants: false
                     }
                 });
@@ -508,7 +475,6 @@ describe("The EncryptedTopic class", () => {
                     participants: [userOne.publicKey],
                     storageOptions: {
                         configuration: StorageOptions.File,
-                        messages: StorageOptions.Message,
                         storeParticipants: false
                     }
                 });
@@ -537,7 +503,6 @@ describe("The EncryptedTopic class", () => {
                     participants: [userOne.publicKey],
                     storageOptions: {
                         configuration: StorageOptions.File,
-                        messages: StorageOptions.Message,
                         storeParticipants: true
                     }
                 });
@@ -593,14 +558,13 @@ describe("The EncryptedTopic class", () => {
                     participants: [userOne.publicKey],
                     storageOptions: {
                         configuration: StorageOptions.Message,
-                        messages: StorageOptions.File,
                         storeParticipants: false
                     }
                 });
 
                 const message = 'test';
 
-                const sequenceNumber = await encryptedTopic.submitMessage(message);
+                const sequenceNumber = await encryptedTopic.submitMessage(message, StorageOptions.File);
                 await expect(sequenceNumber).toBeDefined();
                 // sequence number is 2 because the first message is the topic configuration message...
                 await expect(sequenceNumber).toEqual(2);
@@ -608,6 +572,31 @@ describe("The EncryptedTopic class", () => {
         });
 
         describe("when the message storage medium is set to 'Message'", () => {
+            test("should not submit a new message on the topic if the message size is greater than the maximum allowed by the Consensus Service", async () => {
+                const mockHederaStub = new MockHederaStub();
+                const userOne = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
+                const encryptedTopic = new EncryptedTopic({
+                    hederaAccountId: configuration.hederaAccountId,
+                    privateKey: userOne.privateKey,
+                    hederaPrivateKey: configuration.hederaPrivateKey
+                }, mockHederaStub);
+
+                await encryptedTopic.create({
+                    algorithm: EncryptionAlgorithms.Kyber512,
+                    participants: [userOne.publicKey],
+                    storageOptions: {
+                        configuration: StorageOptions.Message,
+                        storeParticipants: false
+                    }
+                });
+
+                const message = new StringGenerator((20 * 1024) + 1).generate();
+
+                const func = async () => {
+                    await encryptedTopic.submitMessage(message, StorageOptions.Message);
+                }
+                await expect(func).rejects.toThrowError('Final message after encryption exceeds maximum message size allowed for Consensus Service. Please use the File Service instead.');
+            });
             test("should submit a new message on the topic", async () => {
                 const mockHederaStub = new MockHederaStub();
                 const userOne = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
@@ -622,14 +611,13 @@ describe("The EncryptedTopic class", () => {
                     participants: [userOne.publicKey],
                     storageOptions: {
                         configuration: StorageOptions.Message,
-                        messages: StorageOptions.Message,
                         storeParticipants: false
                     }
                 });
 
                 const message = 'test';
 
-                const sequenceNumber = await encryptedTopic.submitMessage(message);
+                const sequenceNumber = await encryptedTopic.submitMessage(message, StorageOptions.Message);
                 await expect(sequenceNumber).toBeDefined();
                 // sequence number is 2 because the first message is the topic configuration message...
                 await expect(sequenceNumber).toEqual(2);
@@ -640,7 +628,6 @@ describe("The EncryptedTopic class", () => {
     describe("getMessage function", () => {
         describe("when the message storage medium is set to 'File'", () => {
             test("should get the message correctly", async () => {
-                let sequenceNumber: number = 0;
                 const mockHederaStub = new MockHederaStub();
                 const userOne = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
                 const encryptedTopic = new EncryptedTopic({
@@ -649,17 +636,16 @@ describe("The EncryptedTopic class", () => {
                     hederaPrivateKey: configuration.hederaPrivateKey
                 }, mockHederaStub);
                 const message = 'test';
-                await encryptedTopic.create({
+                const topicId = await encryptedTopic.create({
                     algorithm: EncryptionAlgorithms.Kyber512,
                     participants: [userOne.publicKey],
                     storageOptions: {
                         configuration: StorageOptions.Message,
-                        messages: StorageOptions.File,
                         storeParticipants: false
                     }
                 });
 
-                sequenceNumber = await encryptedTopic.submitMessage(message);
+                const sequenceNumber = await encryptedTopic.submitMessage(message, StorageOptions.File);
 
                 const messageFromTopic = await encryptedTopic.getMessage(sequenceNumber);
                 await expect(message).toEqual(messageFromTopic);
@@ -678,7 +664,6 @@ describe("The EncryptedTopic class", () => {
                     participants: [userOne.publicKey],
                     storageOptions: {
                         configuration: StorageOptions.Message,
-                        messages: StorageOptions.File,
                         storeParticipants: false
                     }
                 });
@@ -691,9 +676,7 @@ describe("The EncryptedTopic class", () => {
         });
 
         describe("when the message storage medium is set to 'Message'", () => {
-
             test("should get the message correctly", async () => {
-                let sequenceNumber: number = 0;
                 const mockHederaStub = new MockHederaStub();
                 const userOne = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
                 const encryptedTopic = new EncryptedTopic({
@@ -707,12 +690,11 @@ describe("The EncryptedTopic class", () => {
                     participants: [userOne.publicKey],
                     storageOptions: {
                         configuration: StorageOptions.Message,
-                        messages: StorageOptions.Message,
                         storeParticipants: false
                     }
                 });
 
-                sequenceNumber = await encryptedTopic.submitMessage(message);
+                const sequenceNumber = await encryptedTopic.submitMessage(message, StorageOptions.Message);
                 const messageFromTopic = await encryptedTopic.getMessage(sequenceNumber);
                 await expect(message).toEqual(messageFromTopic);
             });
@@ -734,7 +716,6 @@ describe("The EncryptedTopic class", () => {
                     participants: [userOne.publicKey],
                     storageOptions: {
                         configuration: StorageOptions.File,
-                        messages: StorageOptions.File,
                         storeParticipants: false
                     }
                 });
@@ -763,7 +744,6 @@ describe("The EncryptedTopic class", () => {
                     participants: [userOne.publicKey],
                     storageOptions: {
                         configuration: StorageOptions.Message,
-                        messages: StorageOptions.File,
                         storeParticipants: false
                     }
                 });

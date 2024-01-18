@@ -27,8 +27,7 @@ test("passes", async () => {
         algorithm: EncryptionAlgorithms.Kyber512,
         storageOptions: {
             storeParticipants: true,
-            configuration: StorageOptions.Message,
-            messages: StorageOptions.Message
+            configuration: StorageOptions.Message
         },
         metadata: {
             name: "Supply Chain Logistics"
@@ -37,7 +36,7 @@ test("passes", async () => {
 
     await expect(topicId).toBeDefined();
 
-    const firstMessageSequenceNumber = await encryptedTopicUserOne.submitMessage(message);
+    const firstMessageSequenceNumber = await encryptedTopicUserOne.submitMessage(message, StorageOptions.Message);
 
     await encryptedTopicUserOne.migrateConfigurationStorageMedium();
     await encryptedTopicUserOne.addParticipant(userTwoKyberPublicKey, false);

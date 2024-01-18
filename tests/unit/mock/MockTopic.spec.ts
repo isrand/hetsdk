@@ -61,9 +61,6 @@ describe("The MockTopic", () => {
                     p: {
                         p: false,
                         i: ''
-                    },
-                    m: {
-                        f: false,
                     }
                 }
             };

@@ -27,8 +27,7 @@ test("passes", async () => {
         algorithm: EncryptionAlgorithms.Kyber512,
         storageOptions: {
             storeParticipants: false,
-            configuration: StorageOptions.File,
-            messages: StorageOptions.Message
+            configuration: StorageOptions.File
         },
         metadata: {
             name: "Supply Chain Logistics"
@@ -44,8 +43,8 @@ test("passes", async () => {
         topicId: topicId
     });
 
-    // User one sends message
-    const messageFromUserOneSequenceNumber = await encryptedTopicUserOne.submitMessage(message);
+    // User one sends message, using Consensus Service
+    const messageFromUserOneSequenceNumber = await encryptedTopicUserOne.submitMessage(message, StorageOptions.Message);
 
     const messageOneAsParticipantOne = await encryptedTopicUserOne.getMessage(messageFromUserOneSequenceNumber);
     expect(messageOneAsParticipantOne).toEqual(message);
@@ -53,8 +52,8 @@ test("passes", async () => {
     const messageOneAsParticipantTwo = await encryptedTopicUserTwo.getMessage(messageFromUserOneSequenceNumber);
     expect (messageOneAsParticipantTwo).toEqual(message);
 
-    // User two sends message
-    const messageFromUserTwoSequenceNumber = await encryptedTopicUserTwo.submitMessage(message);
+    // User two sends message, using File Service this time
+    const messageFromUserTwoSequenceNumber = await encryptedTopicUserTwo.submitMessage(message, StorageOptions.File);
 
     const messageTwoAsParticipantOne = await encryptedTopicUserOne.getMessage(messageFromUserTwoSequenceNumber);
     expect(messageTwoAsParticipantOne).toEqual(message);

@@ -7,9 +7,6 @@ interface ITopicMemoStorageObject {
   // "c" is the key containing storage options for the topic configuration message
   c: ITopicMemoConfigurationStorageObject;
 
-  // "m" is the key containing storage options for all topic messages
-  m: ITopicMemoMessageStorageObject;
-
   // "p" is the key containing storage options for participants
   p: ITopicMemoParticipantsStorageObject;
 }
@@ -20,11 +17,6 @@ interface ITopicMemoConfigurationStorageObject {
 
   // "i" is the ID of the File where the topic configuration object is stored, if "u" is set to true
   i: string;
-}
-
-interface ITopicMemoMessageStorageObject {
-  // "f" is a boolean that indicates whether to use the File Service or not
-  f: boolean;
 }
 
 interface ITopicMemoParticipantsStorageObject {
