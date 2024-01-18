@@ -16,7 +16,7 @@ Encrypted Topics are standard Hedera topics that are configured and behave in sp
 - [API](#api-reference)
   - [generateKeyPair](#generatekeypair-algorithm)
   - [create](#create-createencryptedtopicconfiguration)
-  - [submitMessage](#submitmessage-message)
+  - [submitMessage](#submitmessage-message-medium)
   - [addParticipant](#addparticipant-publickey-forwardsecrecy)
   - [getMessage](#getmessage-messagesequencenumber)
   - [getParticipants](#getparticipants-)
@@ -99,8 +99,7 @@ async function main() {
     algorithm: EncryptionAlgorithms.Kyber512,
     storageOptions: {
       storeParticipants: false,
-      configuration: StorageOptions.Message,
-      messages: StorageOptions.Message
+      configuration: StorageOptions.Message
     },
     metadata: {
       name: "Supply Chain Logistics"
@@ -110,7 +109,7 @@ async function main() {
   console.log('Topic created. Topic ID: ', topicId);
 
   // Submit a message to the encrypted topic
-  const messageSequenceNumber = await encryptedTopic.submitMessage('Hey there!');
+  const messageSequenceNumber = await encryptedTopic.submitMessage('Hey there!', StorageOptions.Message);
 
   // Get a message from the encrypted topic
   const message = await encryptedTopic.getMessage(messageSequenceNumber);
@@ -154,7 +153,7 @@ async function main() {
   });
 
   // Submit a message to the encrypted topic
-  const messageSequenceNumber = await encryptedTopic.submitMessage('Hey there!');
+  const messageSequenceNumber = await encryptedTopic.submitMessage('Hey there!', StorageOptions.Message);
 
   // Get a message from the encrypted topic
   const message = await encryptedTopic.getMessage(messageSequenceNumber);
@@ -227,8 +226,7 @@ async function main() {
     algorithm: EncryptionAlgorithms.Kyber512,
     storageOptions: {
       storeParticipants: false,
-      configuration: StorageOptions.Message,
-      messages: StorageOptions.Message
+      configuration: StorageOptions.Message
     },
     metadata: {
       name: "Supply Chain Logistics"
@@ -238,7 +236,7 @@ async function main() {
   console.log('Topic created. Topic ID: ', topicId);
 
   // Submit a message to the encrypted topic
-  const messageSequenceNumber = await encryptedTopic.submitMessage('Hey there!');
+  const messageSequenceNumber = await encryptedTopic.submitMessage('Hey there!', StorageOptions.Message);
 
   // Get a message from the encrypted topic
   const message = await encryptedTopic.getMessage(messageSequenceNumber);
@@ -295,11 +293,8 @@ Please note that storing participants will incur in higher costs as **two** topi
   - `algorithm (EncryptionAlgorithms)`:  Enum that specifies the encryption algorithm and key size. Possible options are: `EncryptionAlgorithms.RSA2048`, `EncryptionAlgorithms.Kyber512`, `EncryptionAlgorithms.Kyber768`, `EncryptionAlgorithms.Kyber1024`.
   - `storageOptions (TopicStorageOptions)`: Object containing storage options for the topic artifacts:
     - `configuration (StorageOptions)`: Enum that specifies File Service (`StorageOptions.File`) or Consensus Service (`StorageOptions.Message`).
-    - `messages (StorageOptions)`: Enum that specifies File Service (`StorageOptions.File`) or Consensus Service (`StorageOptions.Message`).
     - `storeParticipants (boolean)`: Boolean that specifies whether to store the participants array in a separate topic or not.
   - `metadata (?any)`: Object containing topic metadata
-
-> For more information about artifact storage, check the [storage](#storage) section.
 
 **Usage**
 
@@ -309,8 +304,7 @@ const topicId = await encryptedTopic.create({
   algorithm: EncryptionAlgorithms.Kyber512,
   storageOptions: {
     storeParticipants: false,
-    configuration: StorageOptions.Message,
-    messages: StorageOptions.Message
+    configuration: StorageOptions.Message
   },
   metadata: {
     name: "Supply Chain Logistics"
@@ -324,7 +318,7 @@ const topicId = await encryptedTopic.create({
 
 ---
 
-### `submitMessage (message)`
+### `submitMessage (message, medium)`
 
 **Description**
 
@@ -333,11 +327,12 @@ Submit a message on an encrypted topic. The participant must have access to the 
 **Parameters**
 
 - `message (string)`: String containing the message contents. If you want to transact a JSON payload, make sure to `JSON.stringify()` it first.
+- `medium (StorageOptions)`: Enum specifying where the message will be stored, either as a file using the File Service or the Consensus Service. Available options are `StorageOptions.File` and `StorageOptions.Message`.
 
 **Usage**
 
 ```typescript
-const messageSequenceNumber = await encryptedTopic.submitMessage('Hey there!');
+const messageSequenceNumber = await encryptedTopic.submitMessage('Hey there!', StorageOptions.Message);
 ```
 
 **Return value**
@@ -346,7 +341,7 @@ const messageSequenceNumber = await encryptedTopic.submitMessage('Hey there!');
 
 or
 
-`ERROR`: if the user doesn't have access to the topic.
+`ERROR`: if the user doesn't have access to the topic or the message exceeds the maximum allowed size for a Consensus Service message.
 
 ---
 

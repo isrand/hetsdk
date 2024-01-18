@@ -1,5 +1,6 @@
 import { IEncryptedTopicConfiguration } from './hedera/interfaces/IEncryptedTopicConfiguration';
 import { ICreateEncryptedTopicConfiguration } from './hedera/interfaces/ICreateEncryptedTopicConfiguration';
+import { StorageOptions } from './hedera/enums/StorageOptions';
 import { EncryptionAlgorithms } from './crypto/enums/EncryptionAlgorithms';
 import { IKeyPair } from './crypto/interfaces/IKeyPair';
 import { IHederaStub } from './hedera/interfaces/IHederaStub';
@@ -16,13 +17,14 @@ export declare class EncryptedTopic {
     static generateKeyPair(encryptionAlgorithm: EncryptionAlgorithms): IKeyPair;
     create(createEncryptedTopicConfiguration: ICreateEncryptedTopicConfiguration): Promise<string>;
     addParticipant(publicKey: string, forwardSecrecy?: boolean): Promise<boolean>;
-    submitMessage(message: string): Promise<number>;
+    submitMessage(message: string, medium: StorageOptions): Promise<number>;
     getMessage(sequenceNumber: number): Promise<string>;
     getParticipants(): Promise<Array<string>>;
     rotateEncryptionKey(): Promise<void>;
     migrateConfigurationStorageMedium(): Promise<void>;
     private createTopicMessage;
     private createTopicConfigurationMessageObject;
+    private looksLikeFileId;
     private createMemoObject;
     private getCurrentTopicConfigurationMessageVersion;
     private createParticipantsTopic;

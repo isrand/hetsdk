@@ -118,9 +118,6 @@ describe("The MockHederaStub", () => {
                     p: {
                         p: false,
                         i: ''
-                    },
-                    m: {
-                        f: false,
                     }
                 }
             };
@@ -149,9 +146,6 @@ describe("The MockHederaStub", () => {
                     p: {
                         p: false,
                         i: ''
-                    },
-                    m: {
-                        f: false,
                     }
                 }
             };
@@ -167,9 +161,6 @@ describe("The MockHederaStub", () => {
                     p: {
                         p: false,
                         i: ''
-                    },
-                    m: {
-                        f: false,
                     }
                 }
             }

@@ -20,9 +20,7 @@ import {IHederaStub} from './hedera/interfaces/IHederaStub';
 import {RSA} from './crypto/adapters/RSA';
 import {Kyber} from './crypto/adapters/Kyber';
 import {ITopicEncryptedMessage} from './hedera/interfaces/ITopicEncryptedMessage';
-import {
-  ITopicConfigurationMessageObject
-} from './hedera/interfaces/ITopicConfigurationMessageObject';
+import {ITopicConfigurationMessageObject} from './hedera/interfaces/ITopicConfigurationMessageObject';
 
 export class EncryptedTopic {
   private readonly hederaStub: IHederaStub;
@@ -104,6 +102,11 @@ export class EncryptedTopic {
       metadata: createEncryptedTopicConfiguration.metadata
     });
     this.topicConfigurationMessage = `${topicConfigurationMessageObject.topicConfigurationMessage}${topicConfigurationMessageObject.participantsEncryptedTopicKeys}`;
+    const maxAllowedMessageSize = 20 * 1024;
+
+    if (this.topicConfigurationMessage.length > maxAllowedMessageSize && createEncryptedTopicConfiguration.storageOptions.configuration === StorageOptions.Message) {
+      throw new Error('Topic configuration object exceeds maximum message size allowed for Consensus Service. Please use the File Service instead.');
+    }
 
     let fileId;
 
@@ -182,16 +185,22 @@ export class EncryptedTopic {
    * "submitMessage" submits a message on an encrypted topic (if the user has access)
    * and returns the sequence number of the message
    */
-  public async submitMessage(message: string): Promise<number> {
+  public async submitMessage(message: string, medium: StorageOptions): Promise<number> {
     await this.setMemo();
     await this.setConfigurationMessage();
 
     const currentConfigurationMessageVersion = await this.getCurrentTopicConfigurationMessageVersion();
 
     const finalMessageInBase64 = await this.createTopicMessage(message, currentConfigurationMessageVersion);
+    const maxAllowedMessageSize = 20 * 1024;
+
+    if (finalMessageInBase64.length > maxAllowedMessageSize && medium === StorageOptions.Message) {
+      throw new Error('Final message after encryption exceeds maximum message size allowed for Consensus Service. Please use the File Service instead.');
+    }
+
     const submitKey = await this.getSubmitKey(currentConfigurationMessageVersion);
 
-    if (this.topicMemoObject.s.m.f) {
+    if (medium === StorageOptions.File) {
       const fileId = await this.hederaStub.createFile();
       await this.hederaStub.appendToFile(fileId, finalMessageInBase64);
 
@@ -205,29 +214,28 @@ export class EncryptedTopic {
   public async getMessage(sequenceNumber: number): Promise<string> {
     await this.setMemo();
     await this.setConfigurationMessage();
+
     const algorithm = await this.getEncryptionAlgorithmFromConfigurationMessage();
     const size = await this.getEncryptionSizeFromConfigurationMessage();
     this.initializeCrypto(algorithm, size);
 
-    let encryptedMessageInBase64;
-
-    if (this.topicMemoObject.s.m.f) {
-      let messageFileId = await this.getMessageFromTopic(sequenceNumber);
-
-      while (this.isBase64Encoded(messageFileId)) {
-        messageFileId = Buffer.from(messageFileId, 'base64').toString('utf8');
-      }
-
-      encryptedMessageInBase64 = await this.hederaStub.getFileContents(messageFileId);
-    } else {
-      encryptedMessageInBase64 = await this.getMessageFromTopic(sequenceNumber);
-    }
+    let encryptedMessageInBase64 = await this.getMessageFromTopic(sequenceNumber);
 
     while (this.isBase64Encoded(encryptedMessageInBase64)) {
       encryptedMessageInBase64 = Buffer.from(encryptedMessageInBase64, 'base64').toString('utf8');
     }
 
-    const encryptedMessage: ITopicEncryptedMessage = JSON.parse(encryptedMessageInBase64) as ITopicEncryptedMessage;
+    let finalMessage = encryptedMessageInBase64;
+
+    if (this.looksLikeFileId(encryptedMessageInBase64)) {
+      finalMessage = await this.hederaStub.getFileContents(encryptedMessageInBase64);
+
+      while (this.isBase64Encoded(finalMessage)) {
+        finalMessage = Buffer.from(finalMessage, 'base64').toString('utf8');
+      }
+    }
+
+    const encryptedMessage: ITopicEncryptedMessage = JSON.parse(finalMessage) as ITopicEncryptedMessage;
     const topicEncryptionKeyAndInitVector = await this.getEncryptionKeyAndInitVector(encryptedMessage.v);
     const decryptedMessageEncryptionKey = Buffer.from(this.crypto.symmetricDecrypt(encryptedMessage.k, Buffer.from(topicEncryptionKeyAndInitVector.encryptionKey, 'base64'), Buffer.from(topicEncryptionKeyAndInitVector.initVector, 'base64')), 'base64');
     const decryptedMessageInitVector = Buffer.from(this.crypto.symmetricDecrypt(encryptedMessage.i, Buffer.from(topicEncryptionKeyAndInitVector.encryptionKey, 'base64'), Buffer.from(topicEncryptionKeyAndInitVector.initVector, 'base64')), 'base64');
@@ -372,15 +380,16 @@ export class EncryptedTopic {
     };
   }
 
+  private looksLikeFileId(str: string): boolean {
+    return str.includes('0.0.');
+  }
+
   private createMemoObject(topicStorageOptions: ITopicStorageOptions, participantsTopicId?: string, topicConfigurationFileId?: string): ITopicMemoObject {
     return {
       s: {
         c: {
           i: topicConfigurationFileId || '',
           f: topicStorageOptions.configuration === StorageOptions.File
-        },
-        m: {
-          f: topicStorageOptions.messages === StorageOptions.File
         },
         p: {
           p: topicStorageOptions.storeParticipants,

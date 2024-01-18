@@ -11,7 +11,7 @@ export class MockFile {
       this.contents = '';
     }
 
-    this.fileId = String(Math.floor(Math.random() * 500));
+    this.fileId = `0.0.${String(Math.floor(Math.random() * 500))}`;
   }
 
   public getId(): string {

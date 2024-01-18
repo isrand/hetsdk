@@ -27,8 +27,7 @@ test("passes", async () => {
         algorithm: EncryptionAlgorithms.Kyber512,
         storageOptions: {
             storeParticipants: true,
-            configuration: StorageOptions.File,
-            messages: StorageOptions.Message
+            configuration: StorageOptions.File
         },
         metadata: {
             name: "Supply Chain Logistics"
@@ -37,7 +36,7 @@ test("passes", async () => {
 
     await expect(topicId).toBeDefined();
 
-    const firstMessageSequenceNumber = await encryptedTopicUserOne.submitMessage(message);
+    const firstMessageSequenceNumber = await encryptedTopicUserOne.submitMessage(message, StorageOptions.Message);
 
     const encryptedTopicUserTwo = new EncryptedTopic({
         hederaAccountId: configuration.hederaAccountId,
@@ -54,7 +53,7 @@ test("passes", async () => {
     const firstMessageFromUserThreeAsParticipantTwo = await encryptedTopicUserTwo.getMessage(firstMessageSequenceNumber);
     expect (firstMessageAsParticipantOne).toEqual(message);
 
-    const secondMessageSequenceNumber = await encryptedTopicUserOne.submitMessage(message);
+    const secondMessageSequenceNumber = await encryptedTopicUserOne.submitMessage(message, StorageOptions.Message);
 
     const secondMessageAsParticipantOne = await encryptedTopicUserOne.getMessage(secondMessageSequenceNumber);
     expect(secondMessageAsParticipantOne).toEqual(message);
