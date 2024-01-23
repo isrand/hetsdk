@@ -312,7 +312,6 @@ Cost calculator testing  initialises an EncryptedTopic object with a CostCalcula
 
 To run these tests, run `npm run test:cost` from the root folder of this repository.
 
-
 ## API Reference
 
 ### `addParticipant (publicKey, forwardSecrecy)`
