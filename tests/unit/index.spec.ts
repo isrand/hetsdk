@@ -757,4 +757,74 @@ describe("The EncryptedTopic class", () => {
             });
         });
     });
+
+    describe("storeParticipants function", () => {
+        describe("when the encrypted topic already stores participants in a separate topic", () => {
+            test("should not run", async () => {
+                const mockHederaStub = new MockHederaStub();
+                const userOne = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
+                const encryptedTopic = new EncryptedTopic({
+                    hederaAccountId: configuration.hederaAccountId,
+                    privateKey: userOne.privateKey,
+                    hederaPrivateKey: configuration.hederaPrivateKey
+                }, mockHederaStub);
+                await encryptedTopic.create({
+                    algorithm: EncryptionAlgorithms.Kyber512,
+                    participants: [userOne.publicKey],
+                    storageOptions: {
+                        configuration: StorageOptions.File,
+                        storeParticipants: true
+                    }
+                });
+
+                const func = async () => {
+                    await encryptedTopic.storeParticipants(['']);
+                };
+
+                await expect(func).rejects.toThrowError('Topic already stores participants in a separate topic.');
+            });
+        });
+        describe("when the encrypted topic does not yet store participants in a separate topic", () => {
+            test("should store them", async () => {
+                const mockHederaStub = new MockHederaStub();
+                const userOne = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
+                const encryptedTopic = new EncryptedTopic({
+                    hederaAccountId: configuration.hederaAccountId,
+                    privateKey: userOne.privateKey,
+                    hederaPrivateKey: configuration.hederaPrivateKey
+                }, mockHederaStub);
+                const topicId = await encryptedTopic.create({
+                    algorithm: EncryptionAlgorithms.Kyber512,
+                    participants: [userOne.publicKey],
+                    storageOptions: {
+                        configuration: StorageOptions.File,
+                        storeParticipants: false
+                    }
+                });
+
+                const participantsTopicId = await encryptedTopic.storeParticipants([userOne.publicKey]);
+
+                const encryptedTopicInStub = mockHederaStub.topics.get(topicId);
+                if (!encryptedTopicInStub) {
+                    fail('Encrypted topic not found in stub.');
+                }
+
+                const encryptedTopicMemo = JSON.parse(encryptedTopicInStub.getMemo()) as ITopicMemoObject;
+
+                expect(encryptedTopicMemo.s.p.p).toEqual(true);
+                expect(encryptedTopicMemo.s.p.i).toEqual(participantsTopicId);
+
+                const participantsTopicInStub = mockHederaStub.topics.get(participantsTopicId);
+                if (!participantsTopicInStub) {
+                    fail('Encrypted topic not found in stub.');
+                }
+
+                const firstMessageFromParticipantsTopic = participantsTopicInStub.getMessage(1);
+
+                expect(firstMessageFromParticipantsTopic).toEqual(Buffer.from(userOne.publicKey).toString('base64'));
+
+            });
+        });
+
+    });
 });

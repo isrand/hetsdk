@@ -119,7 +119,7 @@ export class EncryptedTopic {
     let participantsTopicId;
 
     if (createEncryptedTopicConfiguration.storageOptions.storeParticipants) {
-      participantsTopicId = await this.createParticipantsTopic(submitKey, createEncryptedTopicConfiguration);
+      participantsTopicId = await this.createParticipantsTopic(submitKey, Array.from(new Set(createEncryptedTopicConfiguration.participants)));
     }
 
     this.topicMemoObject = this.createMemoObject(createEncryptedTopicConfiguration.storageOptions, participantsTopicId, fileId);
@@ -326,6 +326,34 @@ export class EncryptedTopic {
   }
 
   /*
+   * "storeParticipants" allows the topic administrator to create a participant storage topic after the encrypted topic was created.
+   * It requires the old participants public keys to be passed as an argument, to ensure future topic encryption key rotations keep them into account.
+   * Failing to pass all the public keys will lock these participants from effective participation in the future.
+   */
+  public async storeParticipants(oldParticipantsPublicKeys: Array<string>): Promise<string> {
+    await this.setMemo();
+    await this.setConfigurationMessage();
+
+    if (this.topicMemoObject.s.p.p) {
+      throw new Error('Topic already stores participants in a separate topic.');
+    }
+
+    const currentConfigurationMessageVersion = await this.getCurrentTopicConfigurationMessageVersion();
+    const submitKey = await this.getSubmitKey(currentConfigurationMessageVersion);
+
+    const participantsTopicId = await this.createParticipantsTopic(submitKey, oldParticipantsPublicKeys);
+
+    const newTopicMemoObject: ITopicMemoObject = this.topicMemoObject;
+
+    newTopicMemoObject.s.p.p = true;
+    newTopicMemoObject.s.p.i = participantsTopicId;
+
+    await this.hederaStub.updateTopicMemo(newTopicMemoObject, this.topicId);
+
+    return participantsTopicId;
+  }
+
+  /*
    *
    *--- SDK INTERNAL METHODS ---
    *
@@ -409,11 +437,11 @@ export class EncryptedTopic {
     return currentTopicConfigurationMessage.length - 1;
   }
 
-  private async createParticipantsTopic(submitKey: string, createEncryptedTopicConfiguration: ICreateEncryptedTopicConfiguration): Promise<string> {
+  private async createParticipantsTopic(submitKey: string, participants: Array<string>): Promise<string> {
     const topicId = await this.hederaStub.createTopic(submitKey);
-    const participants = Array.from(new Set(createEncryptedTopicConfiguration.participants));
+    const uniqueParticipants = Array.from(new Set(participants));
 
-    for (const publicKey of participants) {
+    for (const publicKey of uniqueParticipants) {
       await this.hederaStub.submitMessageToTopic(submitKey, topicId, publicKey);
     }
 
