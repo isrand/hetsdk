@@ -22,6 +22,7 @@ export declare class EncryptedTopic {
     getParticipants(): Promise<Array<string>>;
     rotateEncryptionKey(): Promise<void>;
     migrateConfigurationStorageMedium(): Promise<void>;
+    storeParticipants(oldParticipantsPublicKeys: Array<string>): Promise<string>;
     private createTopicMessage;
     private createTopicConfigurationMessageObject;
     private looksLikeFileId;

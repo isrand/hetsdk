@@ -22,7 +22,7 @@ Encrypted Topics are standard Hedera topics that are configured and behave in sp
   - [getParticipants](#getparticipants-)
   - [rotateEncryptionKey](#rotateencryptionkey-)
   - [migrateConfigurationStorageMedium](#migrateconfigurationstoragemedium-)
-
+  - [storeParticipants](#storeparticipants-oldparticipantspublickeys)
 
 ## Introduction
 
@@ -440,6 +440,24 @@ Migrate the topic's configuration to the File Service. This method is useful whe
 
 ```typescript
 await encryptedTopic.migrateConfigurationStorageMedium();
+```
+
+---
+
+### `storeParticipants (oldParticipantsPublicKeys)`
+
+**Description**
+
+Start storing the topic participants in a separate topic, to allow the main topic's encryption key to be rotated in the future. New participants will automatically be added to the participants topic.
+
+Due to the way the SDK stores information, the old participants' public keys need to be passed as an argument to have a starting point. Failing to pass all the keys will lock some participants from future participation in the topic.
+
+This can be very disruptive, so be extremely careful when calling this function!
+
+**Usage**
+
+```typescript
+await encryptedTopic.storeParticipants([kyberPublicKey]);
 ```
 
 ---
