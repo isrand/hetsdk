@@ -283,6 +283,9 @@ The SDK testing strategy includes unit tests and flow tests.
 
 You can run both suites at once by running `npm run test:all` from the root folder of this repository.
 
+> [!NOTE]
+> To run the tests you will have to provide your own Hedera account id + Hedera private key. Duplicate the [.env.template](./tests/.env.template) file, rename it to `.env` and replace the values found there.
+
 ### Unit testing
 
 Unit testing is used to verify the main functionality of the SDK. Unit tests cover mostly cryptographic modules (`Kyber` and `RSA`) and the project's index file (`index.ts`).
