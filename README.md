@@ -9,10 +9,16 @@ Encrypted Topics are standard Hedera topics that are configured and behave in sp
 
 - [Introduction](#introduction)
 - [Encryption](#encryption)
+  - [Topic configuration](#topic-configuration)
+  - [Topic messages](#topic-messages)
+  - [Topic encryption key rotation](#topic-encryption-key-rotation)
 - [Installation](#installation)
 - [Example](#example)
 - [Cost calculator](#example)
 - [Testing](#testing)
+  - [Unit testing](#unit-testing)
+  - [Flow testing](#flow-testing)
+  - [Cost calculator testing](#cost-calculator-testing)
 - [API](#api-reference)
   - [addParticipant](#addparticipant-publickey-forwardsecrecy)
   - [create](#create-createencryptedtopicconfiguration)
@@ -61,7 +67,7 @@ The `tcm` contains all the necessary information to initialise the SDK and acces
 
 The `tcm` is stored either in the Consensus Service or in the File Service, depending on how the encrypted topic is set up.
 
-### Messages
+### Topic messages
 
 Messages are encrypted using `AES-256-GCM` with a one-time use symmetric key: `mek`, that in turn is encrypted with `tek` and placed next to the encrypted payload.
 
@@ -299,6 +305,13 @@ Flows are specific business settings that mimic real-life usage of the SDK. One 
 Check the [flow testing README](./tests/flows/README.md) for more information on the main flows.
 
 To run these tests, run `npm run test:flows` from the root folder of this repository.
+
+### Cost calculator testing
+
+Cost calculator testing  initialises an EncryptedTopic object with a CostCalculator, and one without. It then runs a standard flow with some operations, and calculates the costs given the current exchange rate in the Hedera Network, and the internal hardcoded values.
+
+To run these tests, run `npm run test:cost` from the root folder of this repository.
+
 
 ## API Reference
 
