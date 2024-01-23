@@ -40,15 +40,43 @@ The SDK provides a great deal of flexibility in terms of the amount of data that
 
 ## Encryption
 
-The SDK uses a topic-wide symmetric key for encryption: `tek`. The topic configuration object, containing the submit key for the topic and any extra metadata, is encrypted with `tek` using `AES-256-GCM`.
+### Topic configuration
 
-`tek` is encrypted with each participant's public key.
+The SDK uses a topic-wide symmetric key for encryption: `tek` (plus corresponding init vector, `tiv`). An object containing the submit key for the topic and any extra metadata is encrypted with `tek` + `tiv` using `AES-256-GCM`.
+
+`tek` is encrypted with each participant's public key and stored next to the encrypted submit key and metadata in a string called topic configuration message `tcm`.
+
+The `tcm` contains all the necessary information to initialise the SDK and access an encrypted topic. It has the following format:
+
+```
+
+   1     2     3                            4
+"{...}#{...}#{...}#{p1_tek}_{p1_tiv}_{?p1_c}#{p2_tek}_{p2_tiv}_{?p2_c}"
+
+{1}: Base64-encoded encrypted submit key + metadata
+{2}: Encryption algorithm (Kyber, RSA)
+{3}: Encryption key size (512, 768, 1024, 2048)
+{4}: Array of encrypted tek + tiv per participant (plus Kyber encapsulated symmetric key if necessary)
+```
+
+The `tcm` is stored either in the Consensus Service or in the File Service, depending on how the encrypted topic is set up.
+
+### Messages
 
 Messages are encrypted using `AES-256-GCM` with a one-time use symmetric key: `mek`, that in turn is encrypted with `tek` and placed next to the encrypted payload.
 
 Users with access to `tek` can then decrypt `mek` and see the contents of the message.
 
 Furthermore, messages can be decrypted and shared by distributing their `mek`, without compromising the privacy of the rest of the messages of the topic. This can be useful for auditing purposes.
+
+### Topic encryption key rotation
+
+At any given point, if the participant public keys are stored, the encrypted topic admin can choose to rotate the topic encryption key for security purposes, either through the `rotateEncryptionKey` public method or when adding a new participant via forward secrecy (check API reference for more information).
+
+This process creates a duplicate of the previous `tcm`, creating a new `tek` and `tiv` and encrypting them again with the participants' public keys. A comma `,` is added as a separating character for the SDK to be able to parse the different `tcm` versions.
+The length of the array resulting from splitting the `tcm` string (`tcm.split(',')`) determines the revisions of the `tcm`. The latest version (`length - 1`) is used as the authoritative version for encryption.
+
+Messages contain a reference to the version that was used to encrypt them. The SDK can fetch said version by parsing the `tcm` and decrypt messages that were encrypted before topic encryption key rotations.
 
 ## Installation
 
