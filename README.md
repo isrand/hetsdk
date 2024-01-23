@@ -14,15 +14,15 @@ Encrypted Topics are standard Hedera topics that are configured and behave in sp
 - [Cost calculator](#example)
 - [Testing](#testing)
 - [API](#api-reference)
-  - [generateKeyPair](#generatekeypair-algorithm)
-  - [create](#create-createencryptedtopicconfiguration)
-  - [submitMessage](#submitmessage-message-medium)
   - [addParticipant](#addparticipant-publickey-forwardsecrecy)
+  - [create](#create-createencryptedtopicconfiguration)
+  - [generateKeyPair](#generatekeypair-algorithm)
   - [getMessage](#getmessage-messagesequencenumber)
   - [getParticipants](#getparticipants-)
-  - [rotateEncryptionKey](#rotateencryptionkey-)
   - [migrateConfigurationStorageMedium](#migrateconfigurationstoragemedium-)
+  - [rotateEncryptionKey](#rotateencryptionkey-)
   - [storeParticipants](#storeparticipants-oldparticipantspublickeys)
+  - [submitMessage](#submitmessage-message-medium)
 
 ## Introduction
 
@@ -251,29 +251,50 @@ Furthermore, you can run `npm run test:cost` from the root folder of this reposi
 
 ## Testing
 
-Work in progress...
+The SDK testing strategy includes unit tests and flow tests.
+
+You can run both suites at once by running `npm run test:all` from the root folder of this repository.
+
+### Unit testing
+
+Unit testing is used to verify the main functionality of the SDK. Unit tests cover mostly cryptographic modules (`Kyber` and `RSA`) and the project's index file (`index.ts`).
+
+To run these tests, run `npm run test:unit` from the root folder of this repository.
+
+### Flow testing
+
+Flows are specific business settings that mimic real-life usage of the SDK. One example would be two parties interacting through an encrypted topic, adding a third one, exchanging messages, etc.
+
+Check the [flow testing README](./tests/flows/README.md) for more information on the main flows.
+
+To run these tests, run `npm run test:flows` from the root folder of this repository.
 
 ## API Reference
 
-### `generateKeyPair (algorithm)`
+### `addParticipant (publicKey, forwardSecrecy)`
 
 **Description**
 
-Static method that returns a public / private key pair given the algorithm. It does not require the `EncryptedTopic` object to have been initialized.
+Adds new participant to the encrypted topic, only if the storage medium of said topic for the configuration is set to File Service and the user can update the configuration file.
 
 **Parameters**
 
-- `algorithm (EncryptionAlgorithms)`:  Enum that specifies the encryption algorithm and key size. Possible options are: `EncryptionAlgorithms.RSA2048`, `EncryptionAlgorithms.Kyber512`, `EncryptionAlgorithms.Kyber768`, `EncryptionAlgorithms.Kyber1024`.
+- `publicKey (string)`: Base64-encoded public key of the new participant used for encryption. The key's algorithm must match the chosen topic encryption algorithm.
+- `forwardSecrecy (?boolean)`: Whether to rotate the topic encryption key before the new participant is added. If set to `true`, the new participant will **not** be able to decrypt the messages from the topic before they were added.
 
 **Usage**
 
 ```typescript
-const keyPair = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
+const additionSuccess = await encryptedTopic.addParticipant(otherKyberPublicKey, false);
 ```
 
 **Return value**
 
-`keyPair (KeyPair)`: Object containing `publicKey` and `privateKey`. Both are base64 encoded already.
+`additionSuccess (boolean)`: boolean determining if the participant was added correctly or not.
+
+or
+
+`ERROR`: if the user doesn't have access to the topic, the participant can't be added or the topic is configured to use the Consensus Servie as the storage medium for the topic configuration message.
 
 ---
 
@@ -318,57 +339,25 @@ const topicId = await encryptedTopic.create({
 
 ---
 
-### `submitMessage (message, medium)`
+### `generateKeyPair (algorithm)`
 
 **Description**
 
-Submit a message on an encrypted topic. The participant must have access to the topic in order to submit messages.
+Static method that returns a public / private key pair given the algorithm. It does not require the `EncryptedTopic` object to have been initialized.
 
 **Parameters**
 
-- `message (string)`: String containing the message contents. If you want to transact a JSON payload, make sure to `JSON.stringify()` it first.
-- `medium (StorageOptions)`: Enum specifying where the message will be stored, either as a file using the File Service or the Consensus Service. Available options are `StorageOptions.File` and `StorageOptions.Message`.
+- `algorithm (EncryptionAlgorithms)`:  Enum that specifies the encryption algorithm and key size. Possible options are: `EncryptionAlgorithms.RSA2048`, `EncryptionAlgorithms.Kyber512`, `EncryptionAlgorithms.Kyber768`, `EncryptionAlgorithms.Kyber1024`.
 
 **Usage**
 
 ```typescript
-const messageSequenceNumber = await encryptedTopic.submitMessage('Hey there!', StorageOptions.Message);
+const keyPair = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
 ```
 
 **Return value**
 
-`messageSequenceNumber (number)`: sequence number of the message in the topic.
-
-or
-
-`ERROR`: if the user doesn't have access to the topic or the message exceeds the maximum allowed size for a Consensus Service message.
-
----
-
-### `addParticipant (publicKey, forwardSecrecy)`
-
-**Description**
-
-Adds new participant to the encrypted topic, only if the storage medium of said topic for the configuration is set to File Service and the user can update the configuration file.
-
-**Parameters**
-
-- `publicKey (string)`: Base64-encoded public key of the new participant used for encryption. The key's algorithm must match the chosen topic encryption algorithm.
-- `forwardSecrecy (?boolean)`: Whether to rotate the topic encryption key before the new participant is added. If set to `true`, the new participant will **not** be able to decrypt the messages from the topic before they were added.
-
-**Usage**
-
-```typescript
-const additionSuccess = await encryptedTopic.addParticipant(otherKyberPublicKey, false);
-```
-
-**Return value**
-
-`additionSuccess (boolean)`: boolean determining if the participant was added correctly or not.
-
-or
-
-`ERROR`: if the user doesn't have access to the topic, the participant can't be added or the topic is configured to use the Consensus Servie as the storage medium for the topic configuration message.
+`keyPair (KeyPair)`: Object containing `publicKey` and `privateKey`. Both are base64 encoded already.
 
 ---
 
@@ -416,20 +405,6 @@ const participants = await encryptedTopic.getParticipants();
 
 ---
 
-### `rotateEncryptionKey ()`
-
-**Description**
-
-Rotate the topic encryption key. This method requires the storage of the topic participants to work.
-
-**Usage**
-
-```typescript
-await encryptedTopic.rotateEncryptionKey();
-```
-
----
-
 ### `migrateConfigurationStorageMedium ()`
 
 **Description**
@@ -440,6 +415,20 @@ Migrate the topic's configuration to the File Service. This method is useful whe
 
 ```typescript
 await encryptedTopic.migrateConfigurationStorageMedium();
+```
+
+---
+
+### `rotateEncryptionKey ()`
+
+**Description**
+
+Rotate the topic encryption key. This method requires the storage of the topic participants to work.
+
+**Usage**
+
+```typescript
+await encryptedTopic.rotateEncryptionKey();
 ```
 
 ---
@@ -459,5 +448,32 @@ This can be very disruptive, so be extremely careful when calling this function!
 ```typescript
 await encryptedTopic.storeParticipants([kyberPublicKey]);
 ```
+
+---
+
+### `submitMessage (message, medium)`
+
+**Description**
+
+Submit a message on an encrypted topic. The participant must have access to the topic in order to submit messages.
+
+**Parameters**
+
+- `message (string)`: String containing the message contents. If you want to transact a JSON payload, make sure to `JSON.stringify()` it first.
+- `medium (StorageOptions)`: Enum specifying where the message will be stored, either as a file using the File Service or the Consensus Service. Available options are `StorageOptions.File` and `StorageOptions.Message`.
+
+**Usage**
+
+```typescript
+const messageSequenceNumber = await encryptedTopic.submitMessage('Hey there!', StorageOptions.Message);
+```
+
+**Return value**
+
+`messageSequenceNumber (number)`: sequence number of the message in the topic.
+
+or
+
+`ERROR`: if the user doesn't have access to the topic or the message exceeds the maximum allowed size for a Consensus Service message.
 
 ---
