@@ -47,7 +47,7 @@ test("passes", async () => {
     ]);
 
     // Sleep for a bit to give the Hedera Network time to update the encrypted topic memo...
-    await sleep(20);
+    await sleep(5);
 
     await encryptedTopicUserOne.rotateEncryptionKey();
 
