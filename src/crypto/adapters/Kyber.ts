@@ -8,6 +8,7 @@ import {ITopicData} from '../../hedera/interfaces/ITopicData';
 import {ITopicEncryptionKeyAndInitVector} from '../../hedera/interfaces/ITopicEncryptionKeyAndInitVector';
 import {DefaultAdapter} from './DefaultAdapter';
 import {IKeyPair} from '../interfaces/IKeyPair';
+import {KyberKey} from "./utils/KyberKey";
 
 const kyber = require('crystals-kyber');
 
@@ -19,25 +20,25 @@ export class Kyber extends DefaultAdapter implements ICryptoAdapter {
   public generateKeyPair(): IKeyPair {
     switch (this.keySize) {
       case 512:
-        const KEYS_512 = kyber.KeyGen512();
+        const KEYS_512 = kyber.KeyGen512() as Array<Uint8Array>;
 
         return {
-          publicKey: Buffer.from(KEYS_512[0]).toString('base64'),
-          privateKey: Buffer.from(KEYS_512[1]).toString('base64')
+          publicKey: new KyberKey(KEYS_512[0]).toString('base64'),
+          privateKey: new KyberKey(KEYS_512[1]).toString('base64')
         };
       case 768:
-        const KEYS_768 = kyber.KeyGen768();
+        const KEYS_768 = kyber.KeyGen768() as Array<Uint8Array>;
 
         return {
-          publicKey: Buffer.from(KEYS_768[0]).toString('base64'),
-          privateKey: Buffer.from(KEYS_768[1]).toString('base64')
+          publicKey: new KyberKey(KEYS_768[0]).toString('base64'),
+          privateKey: new KyberKey(KEYS_768[1]).toString('base64')
         };
       case 1024:
-        const KEYS_1024 = kyber.KeyGen1024();
+        const KEYS_1024 = kyber.KeyGen1024() as Array<Uint8Array>;
 
         return {
-          publicKey: Buffer.from(KEYS_1024[0]).toString('base64'),
-          privateKey: Buffer.from(KEYS_1024[1]).toString('base64')
+          publicKey: new KyberKey(KEYS_1024[0]).toString('base64'),
+          privateKey: new KyberKey(KEYS_1024[1]).toString('base64')
         };
       default:
         throw new Error('Kyber adapter was initialized with wrong key size. Available sizes are 512, 768 and 1024.');
