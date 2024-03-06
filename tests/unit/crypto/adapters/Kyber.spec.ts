@@ -1,6 +1,7 @@
 import {Kyber} from "../../../../src/crypto/adapters/Kyber";
 import * as crypto from 'crypto';
 import {ITopicData} from "../../../../src/hedera/interfaces/ITopicData";
+import {Errors} from "../../../../src/errors/Errors";
 
 describe("The Kyber crypto adapter", () => {
     describe("constructor", () => {
@@ -44,7 +45,7 @@ describe("The Kyber crypto adapter", () => {
         });
 
         test("should fail if the key size is not 512, 768 or 1024", () => {
-            expect(() => { new Kyber(0).generateKeyPair() }).toThrowError('Kyber adapter was initialized with wrong key size. Available sizes are 512, 768 and 1024.');
+            expect(() => { new Kyber(0).generateKeyPair() }).toThrowError(Errors.KyberInitializedWithWrongSize);
         });
     });
 
@@ -53,7 +54,7 @@ describe("The Kyber crypto adapter", () => {
             const kyber512 = new Kyber(512);
             const keyPair512 = kyber512.generateKeyPair();
 
-            kyber512.validateParticipantKeys([keyPair512.publicKey], 512);
+            kyber512.validateParticipantKeys([keyPair512.publicKey]);
         });
 
         test("should fail when a wrong key size is passed", () => {
@@ -62,10 +63,10 @@ describe("The Kyber crypto adapter", () => {
 
             const kyber768 = new Kyber(768);
             const func = () => {
-                kyber768.validateParticipantKeys([keyPair512.publicKey], 512);
+                kyber768.validateParticipantKeys([keyPair512.publicKey]);
             };
 
-            expect(func).toThrowError(`Kyber public key ${keyPair512.publicKey} is of wrong size. Topic encryption algorithm key size is 512. (Is the key base64 encoded?)`)
+            expect(func).toThrowError(Errors.PublicKeyWrongSize);
         });
     });
 
@@ -123,7 +124,7 @@ describe("The Kyber crypto adapter", () => {
                 kyber.getEncryptedTopicKeysObject(topicEncryptionKey, topicInitVector, [keyPair1024.publicKey]);
             };
 
-            expect(func).toThrowError('Kyber adapter was initialized with wrong key size. Available sizes are 512, 768 and 1024.');
+            expect(func).toThrowError(Errors.KyberInitializedWithWrongSize);
         });
     });
 
@@ -171,7 +172,7 @@ describe("The Kyber crypto adapter", () => {
                 kyber512.decryptTopicData(encryptedTopicKeysObject, encryptedTopicDataInBase64, keyPair512.privateKey);
             };
 
-            expect(func).toThrowError('Encrypted topic keys object does not have encapsulated symmetric keys. (Are you trying to use Kyber on a non-Kyber encrypted topic?)');
+            expect(func).toThrowError(Errors.KyberUsedOnNonKyberTopic);
         });
 
         test("should fail with the wrong private key", () => {
@@ -195,7 +196,7 @@ describe("The Kyber crypto adapter", () => {
                 kyber512.decryptTopicData(encryptedTopicKeysObject, encryptedTopicDataInBase64, keyPair512Second.privateKey);
             };
 
-            expect(func).toThrowError('Error fetching topic data. Does user have access?');
+            expect(func).toThrowError(Errors.AccessDeniedFetchTopicData);
         });
     });
 
@@ -214,7 +215,7 @@ describe("The Kyber crypto adapter", () => {
                 kyber512.getTopicEncryptionKeyAndInitVector(encryptedTopicKeysObject, keyPair512.privateKey);
             };
 
-            expect(func).toThrowError('Encrypted topic keys object does not have encapsulated symmetric keys. (Are you trying to use Kyber on a non-Kyber encrypted topic?)');
+            expect(func).toThrowError(Errors.KyberUsedOnNonKyberTopic);
         });
 
         test("should fail when using the wrong private key", () => {
@@ -230,7 +231,7 @@ describe("The Kyber crypto adapter", () => {
                 kyber512.getTopicEncryptionKeyAndInitVector(encryptedTopicKeysObject, keyPair512Second.privateKey);
             };
 
-            expect(func).toThrowError('Error fetching topic encryption key and init vector. Does user have access?');
+            expect(func).toThrowError(Errors.AccessDeniedFetchTopicEncryptionKeyAndInitVector);
         });
 
         test("should return the expected objects with all valid key sizes", () => {
@@ -277,7 +278,7 @@ describe("The Kyber crypto adapter", () => {
                 kyber.getTopicEncryptionKeyAndInitVector(encryptedTopicKeysObject, keyPair512.privateKey);
             };
 
-            expect(func).toThrowError('Kyber adapter was initialized with wrong key size. Available sizes are 512, 768 and 1024.');
+            expect(func).toThrowError(Errors.KyberInitializedWithWrongSize);
         });
     });
 });

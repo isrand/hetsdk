@@ -13,5 +13,5 @@ export declare class RSA extends DefaultAdapter implements ICryptoAdapter {
     asymmetricDecrypt(dataToDecrypt: Buffer, privateKey: string): Buffer;
     decryptTopicData(encryptedTopicKeysObject: IEncryptedTopicKeysObject, encryptedTopicDataInBase64: string, privateKey: string): ITopicData;
     getTopicEncryptionKeyAndInitVector(encryptedTopicKeysObject: IEncryptedTopicKeysObject, privateKey: string): ITopicEncryptionKeyAndInitVector;
-    validateParticipantKeys(topicParticipants: Array<string>, topicEncryptionKeySize: number): void;
+    validateParticipantKeys(topicParticipants: Array<string>): void;
 }
