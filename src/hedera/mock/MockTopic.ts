@@ -4,6 +4,7 @@ import {ITopicMemoObject} from '../interfaces/ITopicMemoObject';
 import {TopicInfo} from '@hashgraph/sdk';
 import {Long} from '@hashgraph/sdk/lib/long';
 import {MockMessage} from './MockMessage';
+import {Errors} from '../../errors/Errors';
 
 export class MockTopic {
   private readonly topicId: string;
@@ -75,7 +76,7 @@ export class MockTopic {
 
   public getMessage(sequenceNumber: number): string {
     if (sequenceNumber > this.messages.length - 1) {
-      throw new Error('Sequence number requested is greater than topic has.');
+      throw new Error(Errors.TopicSequenceNumberLowerThanRequested);
     }
 
     const message = this.messages[sequenceNumber];

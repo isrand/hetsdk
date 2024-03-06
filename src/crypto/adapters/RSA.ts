@@ -6,6 +6,7 @@ import {ITopicData} from '../../hedera/interfaces/ITopicData';
 import {ITopicEncryptionKeyAndInitVector} from '../../hedera/interfaces/ITopicEncryptionKeyAndInitVector';
 import {DefaultAdapter} from './DefaultAdapter';
 import {IKeyPair} from '../interfaces/IKeyPair';
+import {Errors} from '../../errors/Errors';
 
 export class RSA extends DefaultAdapter implements ICryptoAdapter {
   // base64-encoded RSA public keys are 604 bytes in length
@@ -74,7 +75,7 @@ export class RSA extends DefaultAdapter implements ICryptoAdapter {
       }
     }
 
-    throw new Error('Error fetching topic data. Does user have access?');
+    throw new Error(Errors.AccessDeniedFetchTopicData);
   }
 
   public getTopicEncryptionKeyAndInitVector(encryptedTopicKeysObject: IEncryptedTopicKeysObject, privateKey: string): ITopicEncryptionKeyAndInitVector {
@@ -97,13 +98,13 @@ export class RSA extends DefaultAdapter implements ICryptoAdapter {
       }
     }
 
-    throw new Error('Error fetching topic encryption key and init vector. Does user have access?');
+    throw new Error(Errors.AccessDeniedFetchTopicEncryptionKeyAndInitVector);
   }
 
-  public validateParticipantKeys(topicParticipants: Array<string>, topicEncryptionKeySize: number): void {
+  public validateParticipantKeys(topicParticipants: Array<string>): void {
     for (const publicKey of topicParticipants) {
       if (publicKey.length !== this.expectedKeyLengthInBase64) {
-        throw new Error(`RSA public key ${publicKey} is of wrong size. Topic encryption algorithm key size is ${topicEncryptionKeySize}. (Is the key base64 encoded?)`);
+        throw new Error(Errors.PublicKeyWrongSize);
       }
     }
   }

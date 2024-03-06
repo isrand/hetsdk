@@ -21,6 +21,7 @@ import {RSA} from './crypto/adapters/RSA';
 import {Kyber} from './crypto/adapters/Kyber';
 import {ITopicEncryptedMessage} from './hedera/interfaces/ITopicEncryptedMessage';
 import {ITopicConfigurationMessageObject} from './hedera/interfaces/ITopicConfigurationMessageObject';
+import {Errors} from './errors/Errors';
 
 export class EncryptedTopic {
   private readonly hederaStub: IHederaStub;
@@ -105,7 +106,7 @@ export class EncryptedTopic {
     const maxAllowedMessageSize = 20 * 1024;
 
     if (this.topicConfigurationMessage.length > maxAllowedMessageSize && createEncryptedTopicConfiguration.storageOptions.configuration === StorageOptions.Message) {
-      throw new Error('Topic configuration object exceeds maximum message size allowed for Consensus Service. Please use the File Service instead.');
+      throw new Error(Errors.TopicConfigurationMessageMaximumConsensusMessageSizeExceeded);
     }
 
     let fileId;
@@ -148,12 +149,12 @@ export class EncryptedTopic {
     this.initializeCrypto(algorithm, size);
 
     if (!this.topicMemoObject.s.c.f) {
-      throw new Error('New participants can only be added to topics that use the File Service as storage medium for their configuration. Requested topic uses the Consensus Service.');
+      throw new Error(Errors.AddParticipantToConsensusServiceTopic);
     }
 
     const currentConfigurationMessageVersion = await this.getCurrentTopicConfigurationMessageVersion();
 
-    this.crypto.validateParticipantKeys([publicKey], size);
+    this.crypto.validateParticipantKeys([publicKey]);
 
     const topicEncryptionKeyAndInitVector = await this.getEncryptionKeyAndInitVector(currentConfigurationMessageVersion);
 
@@ -195,7 +196,7 @@ export class EncryptedTopic {
     const maxAllowedMessageSize = 20 * 1024;
 
     if (finalMessageInBase64.length > maxAllowedMessageSize && medium === StorageOptions.Message) {
-      throw new Error('Final message after encryption exceeds maximum message size allowed for Consensus Service. Please use the File Service instead.');
+      throw new Error(Errors.MaximumMessageSizeExceededAfterEncryption);
     }
 
     const submitKey = await this.getSubmitKey(currentConfigurationMessageVersion);
@@ -251,7 +252,7 @@ export class EncryptedTopic {
     await this.setMemo();
 
     if (!this.topicMemoObject.s.p.p) {
-      throw new Error('Topic did not choose to store participants upon creation, cannot fetch list of participants.');
+      throw new Error(Errors.GetParticipantsFromTopicWithoutStoredParticipants);
     }
 
     const topicInfo = await this.hederaStub.getTopicInfo(this.topicMemoObject.s.p.i);
@@ -275,11 +276,11 @@ export class EncryptedTopic {
     await this.setConfigurationMessage();
 
     if (!this.topicMemoObject.s.c.f) {
-      throw new Error('Topic encryption key rotation is only available in encrypted topics that use the File Service as storage medium for their configuration. Requested topic uses the Consensus Service.');
+      throw new Error(Errors.RotateEncryptionKeyOnConsensusServiceTopic);
     }
 
     if (!this.topicMemoObject.s.p.p) {
-      throw new Error('Topic did not choose to store participants upon creation, topic encryption key rotation is not possible.');
+      throw new Error(Errors.RotateEncryptionKeyOnTopicWithoutStoredParticipants);
     }
 
     const currentVersion = await this.getCurrentTopicConfigurationMessageVersion();
@@ -311,7 +312,7 @@ export class EncryptedTopic {
     await this.setConfigurationMessage();
 
     if (this.topicMemoObject.s.c.f) {
-      throw new Error('Cannot migrate configuration storage medium: topic already uses File Service as storage medium.');
+      throw new Error(Errors.MigrateFileServiceTopicToFileServiceTopic);
     }
 
     const fileId = await this.hederaStub.createFile();
@@ -335,7 +336,7 @@ export class EncryptedTopic {
     await this.setConfigurationMessage();
 
     if (this.topicMemoObject.s.p.p) {
-      throw new Error('Topic already stores participants in a separate topic.');
+      throw new Error(Errors.TopicParticipantsAlreadyStored);
     }
 
     const currentConfigurationMessageVersion = await this.getCurrentTopicConfigurationMessageVersion();
@@ -384,7 +385,7 @@ export class EncryptedTopic {
     const topicEncryptionInitVector = Buffer.from(crypto.randomBytes(16));
 
     this.initializeCrypto(algorithm, size);
-    this.crypto.validateParticipantKeys(participants, size);
+    this.crypto.validateParticipantKeys(participants);
 
     const encryptedTopicDataInBase64 = this.crypto.symmetricEncrypt(JSON.stringify(topicData), topicEncryptionKey, topicEncryptionInitVector);
 
@@ -576,7 +577,7 @@ export class EncryptedTopic {
     const topicInfo = await this.hederaStub.getTopicInfo(this.topicId);
 
     if (Number(sequenceNumber) > Number(topicInfo.sequenceNumber as Long)) {
-      throw new Error('Topic sequence number is less than the one provided.');
+      throw new Error(Errors.TopicSequenceNumberLowerThanRequested);
     }
 
     return this.hederaStub.getMessageFromTopic(sequenceNumber, this.topicId);

@@ -1,6 +1,7 @@
 import {RSA} from "../../../../src/crypto/adapters/RSA";
 import * as crypto from 'crypto';
 import {ITopicData} from "../../../../src/hedera/interfaces/ITopicData";
+import {Errors} from "../../../../src/errors/Errors";
 
 describe("The RSA crypto adapter", () => {
     describe("constructor", () => {
@@ -24,11 +25,11 @@ describe("The RSA crypto adapter", () => {
     });
 
     describe("validateParticipantKeys function", () => {
-        test("should pass without failing when a valid key size is passed", () => {
+        test("should pass when a valid key size is passed", () => {
             const rsa = new RSA();
             const keyPair = rsa.generateKeyPair();
 
-            rsa.validateParticipantKeys([keyPair.publicKey], 512);
+            rsa.validateParticipantKeys([keyPair.publicKey]);
         });
 
         test("should fail when a wrong key size is passed", () => {
@@ -37,10 +38,10 @@ describe("The RSA crypto adapter", () => {
             keyPair.publicKey += 'wrong_data_end_of_key'
 
             const func = () => {
-                rsa.validateParticipantKeys([keyPair.publicKey], 2048);
+                rsa.validateParticipantKeys([keyPair.publicKey]);
             };
 
-            expect(func).toThrowError(`RSA public key ${keyPair.publicKey} is of wrong size. Topic encryption algorithm key size is 2048. (Is the key base64 encoded?)`)
+            expect(func).toThrowError(Errors.PublicKeyWrongSize)
         });
     });
 
@@ -104,7 +105,7 @@ describe("The RSA crypto adapter", () => {
                 rsa.decryptTopicData(encryptedTopicKeysObject, encryptedTopicDataInBase64, thirdKeyPair.privateKey);
             };
 
-            expect(func).toThrowError('Error fetching topic data. Does user have access?');
+            expect(func).toThrowError(Errors.AccessDeniedFetchTopicData);
         });
 
         test("should fail with the wrong topic encryption key and init vector", () => {
@@ -131,7 +132,7 @@ describe("The RSA crypto adapter", () => {
                 rsa.decryptTopicData(encryptedTopicKeysObject, encryptedTopicDataInBase64, thirdKeyPair.privateKey);
             };
 
-            expect(func).toThrowError('Error fetching topic data. Does user have access?');
+            expect(func).toThrowError(Errors.AccessDeniedFetchTopicData);
         });
     });
 
@@ -149,7 +150,7 @@ describe("The RSA crypto adapter", () => {
                 rsa.getTopicEncryptionKeyAndInitVector(encryptedTopicKeysObject, keyPairSecond.privateKey);
             };
 
-            expect(func).toThrowError('Error fetching topic encryption key and init vector. Does user have access?');
+            expect(func).toThrowError(Errors.AccessDeniedFetchTopicEncryptionKeyAndInitVector);
         });
 
         test("should return the expected objects with all valid key sizes", () => {

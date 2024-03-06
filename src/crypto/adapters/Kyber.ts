@@ -9,6 +9,7 @@ import {ITopicEncryptionKeyAndInitVector} from '../../hedera/interfaces/ITopicEn
 import {DefaultAdapter} from './DefaultAdapter';
 import {IKeyPair} from '../interfaces/IKeyPair';
 import {KyberKey} from "./utils/KyberKey";
+import {Errors} from "../../errors/Errors";
 
 const kyber = require('crystals-kyber');
 
@@ -41,7 +42,7 @@ export class Kyber extends DefaultAdapter implements ICryptoAdapter {
           privateKey: new KyberKey(KEYS_1024[1]).toString('base64')
         };
       default:
-        throw new Error('Kyber adapter was initialized with wrong key size. Available sizes are 512, 768 and 1024.');
+        throw new Error(Errors.KyberInitializedWithWrongSize);
     }
   }
 
@@ -75,7 +76,7 @@ export class Kyber extends DefaultAdapter implements ICryptoAdapter {
 
   public decryptTopicData(encryptedTopicKeysObject: IEncryptedTopicKeysObject, encryptedTopicDataInBase64: string, privateKey: string): ITopicData {
     if (!encryptedTopicKeysObject.c) {
-      throw new Error('Encrypted topic keys object does not have encapsulated symmetric keys. (Are you trying to use Kyber on a non-Kyber encrypted topic?)');
+      throw new Error(Errors.KyberUsedOnNonKyberTopic);
     }
 
     for (const encapsulatedSymmetricKey of encryptedTopicKeysObject.c) {
@@ -104,12 +105,12 @@ export class Kyber extends DefaultAdapter implements ICryptoAdapter {
       }
     }
 
-    throw new Error('Error fetching topic data. Does user have access?');
+    throw new Error(Errors.AccessDeniedFetchTopicData);
   }
 
   public getTopicEncryptionKeyAndInitVector(encryptedTopicKeysObject: IEncryptedTopicKeysObject, privateKey: string): ITopicEncryptionKeyAndInitVector {
     if (!encryptedTopicKeysObject.c) {
-      throw new Error('Encrypted topic keys object does not have encapsulated symmetric keys. (Are you trying to use Kyber on a non-Kyber encrypted topic?)');
+      throw new Error(Errors.KyberUsedOnNonKyberTopic);
     }
 
     for (const encapsulatedSymmetricKey of encryptedTopicKeysObject.c) {
@@ -136,16 +137,16 @@ export class Kyber extends DefaultAdapter implements ICryptoAdapter {
       }
     }
 
-    throw new Error('Error fetching topic encryption key and init vector. Does user have access?');
+    throw new Error(Errors.AccessDeniedFetchTopicEncryptionKeyAndInitVector);
   }
 
-  public validateParticipantKeys(topicParticipants: Array<string>, topicEncryptionKeySize: number): void {
+  public validateParticipantKeys(topicParticipants: Array<string>): void {
     // base64-encoded Kyber keys are 1068, 1580 or 2092 characters in length
     const expectedKeyLengthInBase64 = (this.keySize * 2) + 44;
 
     for (const publicKey of topicParticipants) {
       if (publicKey.length !== expectedKeyLengthInBase64) {
-        throw new Error(`Kyber public key ${publicKey} is of wrong size. Topic encryption algorithm key size is ${topicEncryptionKeySize}. (Is the key base64 encoded?)`);
+        throw new Error(Errors.PublicKeyWrongSize);
       }
     }
   }
@@ -159,7 +160,7 @@ export class Kyber extends DefaultAdapter implements ICryptoAdapter {
       case 1024:
         return kyber.Decrypt1024(Buffer.from(encapsulatedSymmetricKey, 'base64'), Buffer.from(privateKey, 'base64'));
       default:
-        throw new Error('Kyber adapter was initialized with wrong key size. Available sizes are 512, 768 and 1024.');
+        throw new Error(Errors.KyberInitializedWithWrongSize);
     }
   }
 
@@ -172,7 +173,7 @@ export class Kyber extends DefaultAdapter implements ICryptoAdapter {
       case 1024:
         return kyber.Encrypt1024(publicKey);
       default:
-        throw new Error('Kyber adapter was initialized with wrong key size. Available sizes are 512, 768 and 1024.');
+        throw new Error(Errors.KyberInitializedWithWrongSize);
     }
   }
 

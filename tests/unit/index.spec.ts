@@ -5,6 +5,7 @@ import {StorageOptions} from "../../src/hedera/enums/StorageOptions";
 import {ITopicMemoObject} from "../../src/hedera/interfaces/ITopicMemoObject";
 import {EnvironmentConfigurationResolver} from "../utils/EnvironmentConfigurationResolver";
 import {StringGenerator} from "./utils/StringGenerator";
+import {Errors} from "../../src/errors/Errors";
 
 const configuration = new EnvironmentConfigurationResolver(String(process.env.NODE_ENV)).resolve();
 
@@ -92,7 +93,7 @@ describe("The EncryptedTopic class", () => {
                     });
                 }
 
-                await expect(func).rejects.toThrowError('Topic configuration object exceeds maximum message size allowed for Consensus Service. Please use the File Service instead.');
+                await expect(func).rejects.toThrowError(Errors.TopicConfigurationMessageMaximumConsensusMessageSizeExceeded);
             });
             test("should create a new topic using Kyber512 and return its Id", async () => {
                 const mockHederaStub = new MockHederaStub();
@@ -250,7 +251,7 @@ describe("The EncryptedTopic class", () => {
                     await encryptedTopic.addParticipant(userTwo.publicKey);
                 }
 
-                await expect(func).rejects.toThrowError('New participants can only be added to topics that use the File Service as storage medium for their configuration. Requested topic uses the Consensus Service.');
+                await expect(func).rejects.toThrowError(Errors.AddParticipantToConsensusServiceTopic);
             });
         });
 
@@ -311,7 +312,7 @@ describe("The EncryptedTopic class", () => {
                             await encryptedTopic.addParticipant(userTwo.publicKey, true);
                         }
 
-                        await expect(func).rejects.toThrowError('Topic did not choose to store participants upon creation, topic encryption key rotation is not possible.');
+                        await expect(func).rejects.toThrowError(Errors.RotateEncryptionKeyOnTopicWithoutStoredParticipants);
                     });
                 });
 
@@ -371,7 +372,7 @@ describe("The EncryptedTopic class", () => {
                         await encryptedTopic.addParticipant(userTwo.publicKey, true);
                     }
 
-                    await expect(func).rejects.toThrowError('Topic encryption key rotation is only available in encrypted topics that use the File Service as storage medium for their configuration. Requested topic uses the Consensus Service.');
+                    await expect(func).rejects.toThrowError(Errors.RotateEncryptionKeyOnConsensusServiceTopic);
                 });
             });
         });
@@ -401,7 +402,7 @@ describe("The EncryptedTopic class", () => {
                     await encryptedTopic.getParticipants();
                 }
 
-                await expect(func).rejects.toThrowError('Topic did not choose to store participants upon creation, cannot fetch list of participants.');
+                await expect(func).rejects.toThrowError(Errors.GetParticipantsFromTopicWithoutStoredParticipants);
             });
         });
 
@@ -457,7 +458,7 @@ describe("The EncryptedTopic class", () => {
                     await encryptedTopic.rotateEncryptionKey();
                 }
 
-                await expect(func).rejects.toThrowError('Topic encryption key rotation is only available in encrypted topics that use the File Service as storage medium for their configuration. Requested topic uses the Consensus Service.');
+                await expect(func).rejects.toThrowError(Errors.RotateEncryptionKeyOnConsensusServiceTopic);
             });
         });
         describe("when the encrypted topic admin chose to not store participants on topic creation", () => {
@@ -485,7 +486,7 @@ describe("The EncryptedTopic class", () => {
                     await encryptedTopic.rotateEncryptionKey();
                 }
 
-                await expect(func).rejects.toThrowError('Topic did not choose to store participants upon creation, topic encryption key rotation is not possible.');
+                await expect(func).rejects.toThrowError(Errors.RotateEncryptionKeyOnTopicWithoutStoredParticipants);
             });
         });
         describe("when the configuration storage medium is set to 'File'", () => {
@@ -595,7 +596,7 @@ describe("The EncryptedTopic class", () => {
                 const func = async () => {
                     await encryptedTopic.submitMessage(message, StorageOptions.Message);
                 }
-                await expect(func).rejects.toThrowError('Final message after encryption exceeds maximum message size allowed for Consensus Service. Please use the File Service instead.');
+                await expect(func).rejects.toThrowError(Errors.MaximumMessageSizeExceededAfterEncryption);
             });
             test("should submit a new message on the topic", async () => {
                 const mockHederaStub = new MockHederaStub();
@@ -671,7 +672,7 @@ describe("The EncryptedTopic class", () => {
                 const func = async () => {
                     await encryptedTopic.getMessage(25);
                 }
-                await expect(func).rejects.toThrowError('Topic sequence number is less than the one provided.');
+                await expect(func).rejects.toThrowError(Errors.TopicSequenceNumberLowerThanRequested);
             });
         });
 
@@ -724,7 +725,7 @@ describe("The EncryptedTopic class", () => {
                     await encryptedTopic.migrateConfigurationStorageMedium();
                 };
 
-                await expect(func).rejects.toThrowError('Cannot migrate configuration storage medium: topic already uses File Service as storage medium.');
+                await expect(func).rejects.toThrowError(Errors.MigrateFileServiceTopicToFileServiceTopic);
             });
         });
         describe("given a topic with its configuration storage medium is set to 'Message'", () => {
@@ -781,7 +782,7 @@ describe("The EncryptedTopic class", () => {
                     await encryptedTopic.storeParticipants(['']);
                 };
 
-                await expect(func).rejects.toThrowError('Topic already stores participants in a separate topic.');
+                await expect(func).rejects.toThrowError(Errors.TopicParticipantsAlreadyStored);
             });
         });
         describe("when the encrypted topic does not yet store participants in a separate topic", () => {

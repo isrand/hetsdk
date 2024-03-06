@@ -3,6 +3,7 @@ import {ITopicMemoObject} from '../interfaces/ITopicMemoObject';
 import {TopicInfo} from '@hashgraph/sdk';
 import {MockTopic} from './MockTopic';
 import {MockFile} from './MockFile';
+import {Errors} from '../../errors/Errors';
 
 export class MockHederaStub implements IHederaStub {
   public topics: Map<string, MockTopic> = new Map();
@@ -22,7 +23,7 @@ export class MockHederaStub implements IHederaStub {
     const file = this.files.get(fileId);
 
     if (!file) {
-      throw new Error(`File with Id ${fileId} does not exist.`);
+      throw new Error(Errors.FileDoesNotExist);
     }
 
     let index = 0;
@@ -50,7 +51,7 @@ export class MockHederaStub implements IHederaStub {
     const file = this.files.get(fileId);
 
     if (!file) {
-      throw new Error(`File with Id ${fileId} does not exist.`);
+      throw new Error(Errors.FileDoesNotExist);
     }
 
     return Promise.resolve(file.getContents());
@@ -69,7 +70,7 @@ export class MockHederaStub implements IHederaStub {
     const topic = this.topics.get(String(topicId));
 
     if (!topic) {
-      throw new Error(`Topic with Id ${topicId} does not exist.`);
+      throw new Error(Errors.TopicDoesNotExist);
     }
 
     topic.setMemo(topicMemoObject);
@@ -81,11 +82,11 @@ export class MockHederaStub implements IHederaStub {
     const topic = this.topics.get(String(topicId));
 
     if (!topic) {
-      throw new Error(`Topic with Id ${topicId} does not exist.`);
+      throw new Error(Errors.TopicDoesNotExist);
     }
 
     if (topic.getSubmitKey() !== submitKey) {
-      throw new Error('Wrong submit key used to submit messages on topic.');
+      throw new Error(Errors.WrongSubmitKeyUsed);
     }
 
     return Promise.resolve(topic.submitMessage(String(contents)));
@@ -95,7 +96,7 @@ export class MockHederaStub implements IHederaStub {
     const topic = this.topics.get(String(topicId));
 
     if (!topic) {
-      throw new Error(`Topic with Id ${topicId} does not exist.`);
+      throw new Error(Errors.TopicDoesNotExist);
     }
 
     return Promise.resolve(topic.getMessage(sequenceNumber));
@@ -105,7 +106,7 @@ export class MockHederaStub implements IHederaStub {
     const topic = this.topics.get(String(topicId));
 
     if (!topic) {
-      throw new Error(`Topic with Id ${topicId} does not exist.`);
+      throw new Error(Errors.TopicDoesNotExist);
     }
 
     return Promise.resolve(topic.getInfo());

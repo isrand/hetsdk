@@ -1,6 +1,7 @@
 import {MockHederaStub} from "../../../src/hedera/mock/MockHederaStub";
 import {ITopicMemoObject} from "../../../src/hedera/interfaces/ITopicMemoObject";
 import {StringGenerator} from "../utils/StringGenerator";
+import {Errors} from "../../../src/errors/Errors";
 
 describe("The MockHederaStub", () => {
     describe("constructor", () => {
@@ -47,7 +48,7 @@ describe("The MockHederaStub", () => {
                 await mockHederaStub.appendToFile(fileId, '');
             }
 
-            await expect(func).rejects.toThrowError(`File with Id ${fileId} does not exist.`)
+            await expect(func).rejects.toThrowError(Errors.FileDoesNotExist)
         });
 
         test("should append contents to a file, even when the contents go above the MAX_APPEND_TRANSACTION_SIZE", async () => {
@@ -91,7 +92,7 @@ describe("The MockHederaStub", () => {
                 await mockHederaStub.getFileContents(fileId);
             }
 
-            await expect(func).rejects.toThrowError(`File with Id ${fileId} does not exist.`);
+            await expect(func).rejects.toThrowError(Errors.FileDoesNotExist);
         });
 
         test("should return the file contents correctly", async () => {
@@ -185,7 +186,7 @@ describe("The MockHederaStub", () => {
                 await mockHederaStub.submitMessageToTopic(submitKey, topicId, 'contents');
             }
 
-            await expect(func).rejects.toThrowError(`Topic with Id ${topicId} does not exist.`);
+            await expect(func).rejects.toThrowError(Errors.TopicDoesNotExist);
         });
 
         test("should throw an error if the wrong submit key is used", async () => {
@@ -198,7 +199,7 @@ describe("The MockHederaStub", () => {
                 await mockHederaStub.submitMessageToTopic(wrongSubmitKey, topicId, 'contents');
             }
 
-            await expect(func).rejects.toThrowError('Wrong submit key used to submit messages on topic.');
+            await expect(func).rejects.toThrowError(Errors.WrongSubmitKeyUsed);
         });
 
         test("should submit a message correctly, and the message should be found in the topic object", async () => {
@@ -227,7 +228,7 @@ describe("The MockHederaStub", () => {
                 await mockHederaStub.getMessageFromTopic(1, topicId);
             }
 
-            await expect(func).rejects.toThrowError(`Topic with Id ${topicId} does not exist.`);
+            await expect(func).rejects.toThrowError(Errors.TopicDoesNotExist);
         });
 
         test("should throw an error if the sequence number is greater than the one in the topic", async () => {
@@ -239,7 +240,7 @@ describe("The MockHederaStub", () => {
                 await mockHederaStub.getMessageFromTopic(1, topicId);
             }
 
-            await expect(func).rejects.toThrowError('Sequence number requested is greater than topic has.');
+            await expect(func).rejects.toThrowError(Errors.TopicSequenceNumberLowerThanRequested);
         });
 
         test("should return a message from the topic given its sequence number", async () => {
@@ -263,7 +264,7 @@ describe("The MockHederaStub", () => {
                 await mockHederaStub.getTopicInfo(topicId);
             }
 
-            await expect(func).rejects.toThrowError(`Topic with Id ${topicId} does not exist.`);
+            await expect(func).rejects.toThrowError(Errors.TopicDoesNotExist);
         });
 
         test("should return the topic info ", async () => {

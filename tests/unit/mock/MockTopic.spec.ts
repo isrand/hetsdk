@@ -1,6 +1,7 @@
 import {MockTopic} from "../../../src/hedera/mock/MockTopic";
 import {ITopicMemoObject} from "../../../src/hedera/interfaces/ITopicMemoObject";
 import {MockMessage} from "../../../src/hedera/mock/MockMessage";
+import {Errors} from "../../../src/errors/Errors";
 
 describe("The MockTopic", () => {
     describe("constructor", () => {
@@ -19,7 +20,7 @@ describe("The MockTopic", () => {
                 mockTopic.getMessage(1);
             }
 
-            expect(func).toThrowError('Sequence number requested is greater than topic has.');
+            expect(func).toThrowError(Errors.TopicSequenceNumberLowerThanRequested);
         });
 
         test("should return the correct message if it's found in the topic", () => {

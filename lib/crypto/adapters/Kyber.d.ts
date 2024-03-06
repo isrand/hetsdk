@@ -12,7 +12,7 @@ export declare class Kyber extends DefaultAdapter implements ICryptoAdapter {
     getEncryptedTopicKeysObject(topicEncryptionKey: Buffer, topicEncryptionInitVector: Buffer, publicKeys: Array<string>): IEncryptedTopicKeysObject;
     decryptTopicData(encryptedTopicKeysObject: IEncryptedTopicKeysObject, encryptedTopicDataInBase64: string, privateKey: string): ITopicData;
     getTopicEncryptionKeyAndInitVector(encryptedTopicKeysObject: IEncryptedTopicKeysObject, privateKey: string): ITopicEncryptionKeyAndInitVector;
-    validateParticipantKeys(topicParticipants: Array<string>, topicEncryptionKeySize: number): void;
+    validateParticipantKeys(topicParticipants: Array<string>): void;
     private decryptEncapsulatedSymmetricKey;
     private getSymmetricAndEncapsulatedKey;
     private getInitVectorFromSymmetricKeyNumberArray;
