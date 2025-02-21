@@ -1,12 +1,15 @@
-# Hedera Hashgraph Encrypted Topic SDK (HETSDK)
-![](https://img.shields.io/badge/license-Apache_2.0-green)
 
-This repository contains an NPM package that can be used to create and interact with Encrypted Topics in the Hedera network.
+<div align="center">
+  <img src="img/hedera.png" style="width:100px;">
+</div><br><br>  
+
+The **Hedera Hashgraph Encrypted Topic SDK** (`hetsdk`) is an NPM package that provides a layer of abstraction on top of the `@hashgraph/sdk` package when dealing with Consensus Service topics. It adds an extra layer of privacy for users that want to implement multi-party private message exchanges using the Hedera Network.
 
 Encrypted Topics are standard Hedera topics that are configured and behave in specific ways to implement private messaging exchanges, most notably with a quantum-resistant encryption algorithm: [CRYSTALS-Kyber](https://pq-crystals.org/kyber/).
 
 ## Table of contents
 
+- [Table of contents](#table-of-contents)
 - [Introduction](#introduction)
 - [Encryption](#encryption)
   - [Topic configuration](#topic-configuration)
@@ -16,21 +19,21 @@ Encrypted Topics are standard Hedera topics that are configured and behave in sp
 - [Example](#example)
   - [Creating a new topic](#creating-a-new-topic)
   - [Targeting an existing encrypted topic](#targeting-an-existing-encrypted-topic)
-- [Cost calculator](#example)
+- [Cost calculator](#cost-calculator)
 - [Testing](#testing)
   - [Unit testing](#unit-testing)
   - [Flow testing](#flow-testing)
   - [Cost calculator testing](#cost-calculator-testing)
-- [API reference](#api-reference)
-  - [addParticipant](#addparticipant-publickey-forwardsecrecy)
-  - [create](#create-createencryptedtopicconfiguration)
-  - [generateKeyPair](#generatekeypair-algorithm)
-  - [getMessage](#getmessage-messagesequencenumber)
-  - [getParticipants](#getparticipants-)
-  - [migrateConfigurationStorageMedium](#migrateconfigurationstoragemedium-)
-  - [rotateEncryptionKey](#rotateencryptionkey-)
-  - [storeParticipants](#storeparticipants-oldparticipantspublickeys)
-  - [submitMessage](#submitmessage-message-medium)
+- [API Reference](#api-reference)
+  - [`addParticipant (publicKey, forwardSecrecy)`](#addparticipant-publickey-forwardsecrecy)
+  - [`create (createEncryptedTopicConfiguration)`](#create-createencryptedtopicconfiguration)
+  - [`generateKeyPair (algorithm)`](#generatekeypair-algorithm)
+  - [`getMessage (messageSequenceNumber)`](#getmessage-messagesequencenumber)
+  - [`getParticipants ()`](#getparticipants-)
+  - [`migrateConfigurationStorageMedium ()`](#migrateconfigurationstoragemedium-)
+  - [`rotateEncryptionKey ()`](#rotateencryptionkey-)
+  - [`storeParticipants (oldParticipantsPublicKeys)`](#storeparticipants-oldparticipantspublickeys)
+  - [`submitMessage (message, medium)`](#submitmessage-message-medium)
 
 ## Introduction
 
