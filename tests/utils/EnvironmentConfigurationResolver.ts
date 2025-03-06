@@ -20,7 +20,9 @@ export class EnvironmentConfigurationResolver {
 
         return {
             hederaAccountId: String(process.env.HEDERA_ACCOUNT_ID),
-            hederaPrivateKey: String(process.env.HEDERA_PRIVATE_KEY)
+            hederaPrivateKey: String(process.env.HEDERA_PRIVATE_KEY),
+            hederaAccountIdTwo: String(process.env.HEDERA_ACCOUNT_ID_2),
+            hederaPrivateKeyTwo: String(process.env.HEDERA_PRIVATE_KEY_2)
         }
     }
 }

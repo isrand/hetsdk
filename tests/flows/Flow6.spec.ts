@@ -40,7 +40,7 @@ test("passes", async () => {
 
     await expect(topicId).toBeDefined();
 
-    const messageSequenceNumber = await encryptedTopicUserOne.submitMessage(message, StorageOptions.Message);
+    await encryptedTopicUserOne.submitMessage(message, StorageOptions.Message);
 
     const encryptedTopicUserTwo = new EncryptedTopic({
         hederaAccountId: configuration.hederaAccountId,

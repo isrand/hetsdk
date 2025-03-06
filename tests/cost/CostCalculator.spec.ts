@@ -13,11 +13,9 @@ const userOneKyberPrivateKey = userOne.privateKey;
 
 const userTwo = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
 const userTwoKyberPublicKey = userTwo.publicKey;
-const userTwoKyberPrivateKey = userTwo.privateKey;
 
 const userThree = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
 const userThreeKyberPublicKey = userThree.publicKey;
-const userThreeKyberPrivateKey = userThree.privateKey;
 
 const hederaStubCostCalculator = new HederaStubCostCalculator();
 
@@ -34,71 +32,71 @@ const encryptedTopicWithCostCalculator = new EncryptedTopic({
 }, hederaStubCostCalculator);
 
 describe("The HederaStubCostCalculator", () => {
-   test("should provide the approximate cost of a flow", async () => {
-       const exchangeRateInCents = await getCurrentHederaNetworkExchangeRateInCents(configuration.hederaPrivateKey, configuration.hederaAccountId);
-       const accountBalanceBeforeTest = await getHederaAcountBalance(configuration.hederaPrivateKey, configuration.hederaAccountId);
+    test("should provide the approximate cost of a flow", async () => {
+        const exchangeRateInCents = await getCurrentHederaNetworkExchangeRateInCents(configuration.hederaPrivateKey, configuration.hederaAccountId);
+        const accountBalanceBeforeTest = await getHederaAcountBalance(configuration.hederaPrivateKey, configuration.hederaAccountId);
+        
+        await encryptedTopicWithoutCostCalculator.create({
+            participants: [userOneKyberPublicKey],
+            algorithm: EncryptionAlgorithms.Kyber512,
+            storageOptions: {
+                storeParticipants: true,
+                configuration: StorageOptions.Message
+            },
+            metadata: {
+                name: "Supply Chain Logistics"
+            },
+        });
 
-       await encryptedTopicWithoutCostCalculator.create({
-           participants: [userOneKyberPublicKey],
-           algorithm: EncryptionAlgorithms.Kyber512,
-           storageOptions: {
-               storeParticipants: true,
-               configuration: StorageOptions.Message
-           },
-           metadata: {
-               name: "Supply Chain Logistics"
-           },
-       });
+        await encryptedTopicWithCostCalculator.create({
+            participants: [userOneKyberPublicKey],
+            algorithm: EncryptionAlgorithms.Kyber512,
+            storageOptions: {
+                storeParticipants: true,
+                configuration: StorageOptions.Message
+            },
+            metadata: {
+                name: "Supply Chain Logistics"
+            },
+        });
 
-       await encryptedTopicWithCostCalculator.create({
-           participants: [userOneKyberPublicKey],
-           algorithm: EncryptionAlgorithms.Kyber512,
-           storageOptions: {
-               storeParticipants: true,
-               configuration: StorageOptions.Message
-           },
-           metadata: {
-               name: "Supply Chain Logistics"
-           },
-       });
+        // Demo flow with most of the functions from the SDK...
+        const messageSequenceNumberWithoutCostCalculator = await encryptedTopicWithoutCostCalculator.submitMessage('test', StorageOptions.File);
+        const messageSequenceNumberWithCostCalculator = await encryptedTopicWithCostCalculator.submitMessage('test',  StorageOptions.File);
 
-       // Demo flow with most of the functions from the SDK...
-       const messageSequenceNumberWithoutCostCalculator = await encryptedTopicWithoutCostCalculator.submitMessage('test', StorageOptions.File);
-       const messageSequenceNumberWithCostCalculator = await encryptedTopicWithCostCalculator.submitMessage('test',  StorageOptions.File);
+        await encryptedTopicWithoutCostCalculator.getMessage(messageSequenceNumberWithoutCostCalculator);
+        await encryptedTopicWithCostCalculator.getMessage(messageSequenceNumberWithCostCalculator);
 
-       await encryptedTopicWithoutCostCalculator.getMessage(messageSequenceNumberWithoutCostCalculator);
-       await encryptedTopicWithCostCalculator.getMessage(messageSequenceNumberWithCostCalculator);
+        await encryptedTopicWithoutCostCalculator.migrateConfigurationStorageMedium();
+        await encryptedTopicWithCostCalculator.migrateConfigurationStorageMedium();
 
-       await encryptedTopicWithoutCostCalculator.migrateConfigurationStorageMedium();
-       await encryptedTopicWithCostCalculator.migrateConfigurationStorageMedium();
+        await encryptedTopicWithoutCostCalculator.addParticipant(userTwoKyberPublicKey);
+        await encryptedTopicWithCostCalculator.addParticipant(userTwoKyberPublicKey);
 
-       await encryptedTopicWithoutCostCalculator.addParticipant(userTwoKyberPublicKey);
-       await encryptedTopicWithCostCalculator.addParticipant(userTwoKyberPublicKey);
+        await encryptedTopicWithoutCostCalculator.rotateEncryptionKey();
+        await encryptedTopicWithCostCalculator.rotateEncryptionKey();
 
-       await encryptedTopicWithoutCostCalculator.rotateEncryptionKey();
-       await encryptedTopicWithCostCalculator.rotateEncryptionKey();
+        await encryptedTopicWithoutCostCalculator.submitMessage('test',  StorageOptions.File);
+        await encryptedTopicWithCostCalculator.submitMessage('test',  StorageOptions.File);
 
-       await encryptedTopicWithoutCostCalculator.submitMessage('test',  StorageOptions.File);
-       await encryptedTopicWithCostCalculator.submitMessage('test',  StorageOptions.File);
+        await encryptedTopicWithoutCostCalculator.addParticipant(userThreeKyberPublicKey, true);
+        await encryptedTopicWithCostCalculator.addParticipant(userThreeKyberPublicKey, true);
 
-       await encryptedTopicWithoutCostCalculator.addParticipant(userThreeKyberPublicKey, true);
-       await encryptedTopicWithCostCalculator.addParticipant(userThreeKyberPublicKey, true);
+        const accountBalanceAfterTest = await getHederaAcountBalance(configuration.hederaPrivateKey, configuration.hederaAccountId);
+        const realCost = accountBalanceBeforeTest - accountBalanceAfterTest; // This cost is in HBAR
+        const realCostInCents = (realCost * exchangeRateInCents) / 100;
 
-       const accountBalanceAfterTest = await getHederaAcountBalance(configuration.hederaPrivateKey, configuration.hederaAccountId);
-       const realCost = accountBalanceBeforeTest - accountBalanceAfterTest; // This cost is in HBAR
-       const realCostInCents = (realCost * exchangeRateInCents) / 100;
+        const estimatedCost = hederaStubCostCalculator.getTotalCost();
 
-       const estimatedCost = hederaStubCostCalculator.getTotalCost();
+        console.log(`Estimated cost during dry-run: ${estimatedCost.toFixed(4)}$`);
+        console.log(`Real cost: ${realCostInCents.toFixed(4)}$`);
 
-       console.log(`Estimated cost during dry-run: ${estimatedCost.toFixed(4)}$`);
-       console.log(`Real cost: ${realCostInCents.toFixed(4)}$`);
+        const max = Math.max(realCostInCents, estimatedCost);
+        const min = Math.min(realCostInCents, estimatedCost);
 
-       const max = Math.max(realCostInCents, estimatedCost);
-       const min = Math.min(realCostInCents, estimatedCost);
-
-       const accuracyPercentage = (min / max) * 100;
-       console.log(`SDK internal cost calculator returns ${accuracyPercentage.toFixed(4)}% of the real value.`);
-   }, 2147483647);
+        const accuracyPercentage = (min / max) * 100;
+        console.log(`SDK internal cost calculator returns ${accuracyPercentage.toFixed(4)}% of the real value.`);
+    }, 2147483647);
 });
 
 // Test-specific helper function to get the real Hedera Account balance before and after an operation,
