@@ -37,20 +37,20 @@ test("passes", async () => {
             name: "Supply Chain Logistics"
         }
     });
-    
+
     await encryptedTopicUserOne.submitMessage(message, StorageOptions.Message);
-    
+
     // Whoops, forgot one participant
     await encryptedTopicUserOne.storeParticipants([
         userOneKyberPublicKey,
         userTwoKyberPublicKey
     ]);
-    
+
     // Sleep for a bit to give the Hedera Network time to update the encrypted topic memo...
     await sleep(5);
-    
+
     await encryptedTopicUserOne.rotateEncryptionKey();
-    
+
     const encryptedTopicUserTwo = new EncryptedTopic({
         hederaAccountId: configuration.hederaAccountId,
         hederaPrivateKey: configuration.hederaPrivateKey,
@@ -59,14 +59,14 @@ test("passes", async () => {
     });
     
     const secondMessageSequenceNumber = await encryptedTopicUserOne.submitMessage(message, StorageOptions.Message);
-    
+
     // First two users can see the message still...
     const secondMessageAsParticipantOne = await encryptedTopicUserOne.getMessage(secondMessageSequenceNumber);
     expect (secondMessageAsParticipantOne).toEqual(message);
-    
+
     const secondMessageAsParticipantTwo = await encryptedTopicUserTwo.getMessage(secondMessageSequenceNumber);
     expect (secondMessageAsParticipantTwo).toEqual(message);
-    
+
     // But since user three wasn't in the array of original topic participants when the "storeParticipants" function was called, they can't see the contents of the latest message
     const encryptedTopicUserThree = new EncryptedTopic({
         hederaAccountId: configuration.hederaAccountId,
@@ -74,11 +74,11 @@ test("passes", async () => {
         privateKey: userThreeKyberPrivateKey,
         topicId: topicId
     });
-    
+
     const func = async () => {
         await encryptedTopicUserThree.getMessage(secondMessageSequenceNumber);
     }
-    
+
     await expect(func).rejects.toThrow('Error fetching topic encryption key and init vector. Does user have access?');
 }, 2147483647);
 
