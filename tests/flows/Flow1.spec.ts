@@ -11,7 +11,6 @@ const userOneKyberPrivateKey = userOne.privateKey;
 
 const userTwo = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
 const userTwoKyberPublicKey = userTwo.publicKey;
-const userTwoKyberPrivateKey = userTwo.privateKey;
 
 const encryptedTopicUserOne = new EncryptedTopic({
     hederaAccountId: configuration.hederaAccountId,

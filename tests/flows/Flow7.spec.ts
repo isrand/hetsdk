@@ -50,7 +50,7 @@ test("passes", async () => {
     const firstMessageAsParticipantOne = await encryptedTopicUserOne.getMessage(firstMessageSequenceNumber);
     expect(firstMessageAsParticipantOne).toEqual(message);
 
-    const firstMessageFromUserThreeAsParticipantTwo = await encryptedTopicUserTwo.getMessage(firstMessageSequenceNumber);
+    await encryptedTopicUserTwo.getMessage(firstMessageSequenceNumber);
     expect (firstMessageAsParticipantOne).toEqual(message);
 
     const secondMessageSequenceNumber = await encryptedTopicUserOne.submitMessage(message, StorageOptions.Message);

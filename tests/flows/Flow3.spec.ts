@@ -11,10 +11,8 @@ const userOneKyberPrivateKey = userOne.privateKey;
 
 const userTwo = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
 const userTwoKyberPublicKey = userTwo.publicKey;
-const userTwoKyberPrivateKey = userTwo.privateKey;
 
 const userThree = EncryptedTopic.generateKeyPair(EncryptionAlgorithms.Kyber512);
-const userThreeKyberPublicKey = userThree.publicKey;
 const userThreeKyberPrivateKey = userThree.privateKey;
 
 const encryptedTopicUserOne = new EncryptedTopic({
@@ -42,13 +40,6 @@ test("passes", async () => {
 
     const messageSequenceNumber = await encryptedTopicUserOne.submitMessage(message, StorageOptions.Message);
 
-    const encryptedTopicUserTwo = new EncryptedTopic({
-        hederaAccountId: configuration.hederaAccountId,
-        hederaPrivateKey: configuration.hederaPrivateKey,
-        privateKey: userTwoKyberPrivateKey,
-        topicId: topicId
-    });
-
     const encryptedTopicUserThree = new EncryptedTopic({
         hederaAccountId: configuration.hederaAccountId,
         hederaPrivateKey: configuration.hederaPrivateKey,
@@ -57,8 +48,8 @@ test("passes", async () => {
     });
 
     const func = async () => {
-        const message = await encryptedTopicUserThree.getMessage(messageSequenceNumber);
+        await encryptedTopicUserThree.getMessage(messageSequenceNumber);
     }
 
-    await expect(func).rejects.toThrowError('Error fetching topic encryption key and init vector. Does user have access?');
+    await expect(func).rejects.toThrow('Error fetching topic encryption key and init vector. Does user have access?');
 }, 2147483647);
