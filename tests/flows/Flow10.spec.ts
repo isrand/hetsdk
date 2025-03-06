@@ -57,7 +57,7 @@ test("passes", async () => {
         privateKey: userTwoKyberPrivateKey,
         topicId: topicId
     });
-    
+
     const secondMessageSequenceNumber = await encryptedTopicUserOne.submitMessage(message, StorageOptions.Message);
 
     // First two users can see the message still...

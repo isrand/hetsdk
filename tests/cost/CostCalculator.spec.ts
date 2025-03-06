@@ -123,7 +123,7 @@ async function getCurrentHederaNetworkExchangeRateInCents(hederaPrivateKey: stri
 
     fileCreateTransaction.freezeWith(client);
     await fileCreateTransaction.sign(PrivateKey.fromString(hederaPrivateKey));
-    
+
     const fileCreateTransactionResponse = await fileCreateTransaction.execute(client);
     const fileCreateTransactionReceipt = await fileCreateTransactionResponse.getReceipt(client);
 
